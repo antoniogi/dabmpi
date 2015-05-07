@@ -20,12 +20,13 @@
 __author__ = ' AUTHORS:     Antonio Gomez(antonio.gomez@csiro.au)'
 
 
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   1.1  - 09-01-2015'
 
 """
 HISTORY
     Version 0.1(12-04-2013):   Creation of the file.
     Version 1.0(15-01-2014):   Fist stable version.
+    Version 1.1(09-01-2015):   Using numpy and new function.
 """
 import math
 import string
@@ -38,6 +39,8 @@ import sys
 import time
 import glob
 import commands
+
+import numpy as np
 
 subProcFound = False
 try:
@@ -246,40 +249,54 @@ class VMECProcess(object):
         try:
             if(not self.run_vmec()):
                 os.chdir(self.__currentPath)
-                return -u.infinity
+                if (u.objective == u.objectiveType.MAXIMIZE):
+                    return -u.infinity
+                return u.infinity
 
             if(not self.run_mercier()):
                 os.chdir(self.__currentPath)
-                return -u.infinity
+                if (u.objective == u.objectiveType.MAXIMIZE):
+                    return -u.infinity
+                return u.infinity
 
             if(not self.run_threed()):
                 os.chdir(self.__currentPath)
-                return -u.infinity
+                if (u.objective == u.objectiveType.MAXIMIZE):
+                    return -u.infinity
+                return u.infinity
             else:
                 val = self.__beta
 
             if(not self.run_ballooning()):
                 os.chdir(self.__currentPath)
-                return -u.infinity
+                if (u.objective == u.objectiveType.MAXIMIZE):
+                    return -u.infinity
+                return u.infinity
+
 
             if(self.__bgradb):
                 if(not self.run_b_grad_b()):
                     os.chdir(self.__currentPath)
-                    return -u.infinity
+                    if (u.objective == u.objectiveType.MAXIMIZE):
+                        return -u.infinity
+                    return u.infinity
                 else:
                     val = self.__bgradbval
 
             if(self.__dkes):
                 if(not self.run_dkes()):
                     os.chdir(self.__currentPath)
-                    return -u.infinity
+                    if (u.objective == u.objectiveType.MAXIMIZE):
+                        return -u.infinity
+                    return u.infinity
                 else:
                     val = self.__bootstrap
 
             if(not self.__is_mercier_stable):
                 u.logger.info("Unstable mercier")
-                return -u.infinity
-
+                if (u.objective == u.objectiveType.MAXIMIZE):
+                    return -u.infinity
+                return u.infinity
             self.save_configuration()
             u.logger.info("VALID configuration(" + self.__rank + "). Val: " +
                            str(val))
@@ -342,24 +359,24 @@ class VMECProcess(object):
             file_wout.readline()
             file_wout.readline()
 
-            m = []
-            n = []
+            m = np.zeros(nmax, dtype=numpy.int)
+            n = np.zeros(nmax, dtype=numpy.int)
 
             rmn = u.Matrix(ns, nmax)
             zmn = u.Matrix(ns, nmax)
             bmn = u.Matrix(ns, nmax)
 
             iotas = []
-            phi = []
-            rho = []
+            phi = np.zeros(ns)
+            rho = np.zeros(ns)
 
             for i in range(0, ns):
                 for j in range(0, nmax):
                     if(i == 0):
                         line = file_wout.readline()
                         parts = map(string.strip, string.split(line))
-                        m.append(int(parts[0]))
-                        n.append(int(parts[1]))
+                        m[j] = int(parts[0])
+                        n[j] = int(parts[1])
                         u.logger.debug("m " + parts[0] + " n " + parts[1])
 
                     line = file_wout.readline()
@@ -385,15 +402,15 @@ class VMECProcess(object):
                 file_wout.readline()
                 line = file_wout.readline()
                 parts = map(string.strip, string.split(line))
-                phi.append(float(parts[1]))
-                rho.append(math.sqrt(abs(phi[i])))
+                phi[i] = float(parts[1])
+                rho[i] = math.sqrt(abs(phi[i]))
                 file_wout.readline()
                 file_wout.readline()
 
             file_wout.close()
 
             file_out = open(filepath_out, 'w')
-            file_out.write('Br, Bphi, Bz, dBr, dBphi, dBz \n')
+            file_out.write('Br, Bphi, Bz, dBr, dBphi, dBz , rho\n')
 
             delta = 0.000001
             for i in range(0, ns, 10):
@@ -433,7 +450,7 @@ class VMECProcess(object):
                             file_out.write(str('%e' % BR) + ', ' + str(
                             '%e' % BPHI) + ', ' + str('%e' % BZ) + ', ' + str(
                             '%e' % dBR) + ', ' + str('%e' % dBphi) + ', ' +
-                            str('%e' % dBZ) + '\n')
+                            str('%e' % dBZ) + ', ' + str('%e' % rho[i]) + '\n')
 
             file_out.close()
             return True
@@ -465,6 +482,7 @@ class VMECProcess(object):
                 dBr = float(parts[3])
                 dBphi = float(parts[4])
                 dBz = float(parts[5])
+                rho = float(parts[6])
                 if(Br != 0.0) or (Bz != 0.0) or (Bphi != 0.0):
                     divisor = (Br ** 3 + Bz ** 3 + Bphi ** 3)
                     if(divisor == 0.0):
@@ -473,7 +491,7 @@ class VMECProcess(object):
                     tempBz = (Bz * dBz) / divisor
                     tempBphi = (Bphi * dBphi) / divisor
                     temp = abs(math.sqrt(
-                        abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
+                        abs(rho(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2))))
                     fitness = fitness + temp
                 lineRPhiZ = file_out.readline()
             file_out.close()
@@ -543,7 +561,8 @@ class VMECProcess(object):
                             rho = math.sqrt(float(parts[0]))
                             sum += d31*rho
                         except:
-                            pass
+                            self.__bootstrap = u.infinity
+                            return False
                 self.__bootstrap = sum
             except:
                 return False

@@ -37,6 +37,7 @@ class SolutionBase (object):
             self.__value = util.infinity
         else:
             self.__value = -util.infinity
+        self.__value = util.infinity #### REMOVE!!
         self.__isValid = True
         return
 

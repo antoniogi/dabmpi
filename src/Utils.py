@@ -26,7 +26,9 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.1 (09-01-2015):   Use Numpy for the Matrix.
 """
+import numpy as np
 
 """
 Global constants and structures
@@ -126,13 +128,15 @@ class Matrix(object):
         self.rows = rows
         logger.debug("Init matrix [" + str(cols) + "][" + str(rows) + "]")
         # initialize matrix and fill with zeroes
-        self.matrix = []
+        self.matrix = numpy.full(shape=(rows,cols), init, dtype=np.dtype('d'))
+        """
         for i in range(rows):
             logger.debug("Row " + str(i))
             ea_row = []
             for j in range(cols):
                 ea_row.append(init)
             self.matrix.append(ea_row)
+        """
         logger.debug("Matrix initialised")
 
     def getNumRows(self):

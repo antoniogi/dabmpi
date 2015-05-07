@@ -750,40 +750,40 @@ class SolverDAB (SolverBase):
                 u.logger.error("MASTER (comm). " + str(e) + " line: " +
                            str(sys.exc_traceback.tb_lineno))
             try:
-                if (float(solVal[0]) >= 0.0):
-                    if (float(solVal[0] < u.infinity / 10)):
-                        #Add the solution to the list of best solutions (the method will implement the
-                        #priority list)
-                        solutionTemp = None
-                        try:
-                            if (self.__problemType == u.problemType.FUSION):
-                                solutionTemp = SolutionFusion(self.__infile)
-                            elif (self.__problemType == u.problemType.NONSEPARABLE):
-                                solutionTemp = SolutionNonSeparable(self.__infile)
+                if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
+                    #Add the solution to the list of best solutions (the method will implement the
+                    #priority list)
+                    solutionTemp = None
+                    try:
+                        if (self.__problemType == u.problemType.FUSION):
+                            solutionTemp = SolutionFusion(self.__infile)
+                        elif (self.__problemType == u.problemType.NONSEPARABLE):
+                            solutionTemp = SolutionNonSeparable(self.__infile)
 
-                            if (solutionTemp is None):
-                                u.logger.error("Solution is None after creation (type " + str(self.__problemType) + ")")
-                            else:
-                                solutionTemp.setParametersValues(buff)
-                            if (self.__useMatrix):
-                                for i in range(self.__probMatrix.getNumRows()):
-                                    for j in range(self.__probMatrix.getNumCols()):
-                                        val = self.__probMatrix.getitem(i, j)
-                                        newVal = max(1.0, val - 0.01)
-                                        self.__probMatrix.setitem(i, j, newVal)
+                        if (solutionTemp is None):
+                            u.logger.error("Solution is None after creation (type " + str(self.__problemType) + ")")
+                        else:
+                            solutionTemp.setParametersValues(buff)
+                        if (self.__useMatrix):
+                            for i in range(self.__probMatrix.getNumRows()):
+                                for j in range(self.__probMatrix.getNumCols()):
+                                    val = self.__probMatrix.getitem(i, j)
+                                    newVal = max(1.0, val - 0.01)
+                                    self.__probMatrix.setitem(i, j, newVal)
 
-                                parameters = solutionTemp.getParameters()
-                                for i in range(len(parameters)):
-                                    idx = (parameters[i].get_value() - parameters[i].get_min_value())
-                                    idx = idx / parameters[i].get_gap()
-                                    idx = round(idx)
-                                    idx = int(idx)
-                                    val = self.__probMatrix.getitem(i, idx)
-                                    self.__probMatrix.setitem(i, idx, val + 0.5)
-                        except Exception, e:
-                            u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
-                        self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
-                        self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
+                            parameters = solutionTemp.getParameters()
+                            for i in range(len(parameters)):
+                                idx = (parameters[i].get_value() - parameters[i].get_min_value())
+                                idx = idx / parameters[i].get_gap()
+                                idx = round(idx)
+                                idx = int(idx)
+                                val = self.__probMatrix.getitem(i, idx)
+                                self.__probMatrix.setitem(i, idx, val + 0.5)
+                    except Exception, e:
+                        u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                    self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
+                    self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
+                    
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bestSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bestSolution.getValue()))):
                         filenametime = "0"
@@ -825,7 +825,7 @@ class SolverDAB (SolverBase):
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
                     u.logger.info("MASTER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
-                    if (solVal[0] >= 0.0):
+                    if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
                         if (isNewBest):
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):
@@ -848,13 +848,13 @@ class SolverDAB (SolverBase):
                         #Update the best local solution in the bees
                         reset = False
                         if (int(beeIdx[0]) >= 0 and int(beeIdx[0]) < len(self.__bees)):
-                            u.logger.info("Bee " + str(beeIdx[0]) + ". Best local " + str(self.__bees[beeIdx[0]].getBestLocalValue()) + " new best " + str(solVal[0]))
                             if (float(solVal[0]) >= 0.0):
                                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bees[beeIdx[0]].getBestLocalValue())) or
                                     (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bees[beeIdx[0]].getBestLocalValue()))):
                                     u.logger.info("Bee " + str(beeIdx[0]) + ". Resetting counter")
                                     self.__bees[beeIdx[0]].setIter(0)
                                     solutionTemp.setValue(solVal[0])
+                                    u.logger.info("Bee " + str(beeIdx[0]) + ". Best local " + str(self.__bees[beeIdx[0]].getBestLocalValue()) + " new best " + str(solVal[0]))
                                     self.__bees[beeIdx[0]].setSolution(solutionTemp)
                                     reset = True
                         if not reset:
@@ -915,6 +915,8 @@ class SolverDAB (SolverBase):
                 self.__problem.solve(newSolution)
                 solutionValue = float(newSolution.getValue())
 
+                if (solutionValue<=0.0 or solutionValue>u.infinity/100.0):
+                    continue
                 self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestSolution.getValue())) or
                     (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestSolution.getValue()))):
@@ -962,6 +964,9 @@ class SolverDAB (SolverBase):
                     self.__bees[bee].setSolution(newSolution)
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
+                    
+                    if (solutionValue<=0.0 or solutionValu>=u.infinity/100.0):
+                        continue
 
                     if ((u.objective == u.objectiveType.MAXIMIZE and
                         float(solutionValue) > float(self.__bestSolution.getValue())) or
