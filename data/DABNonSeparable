@@ -1,0 +1,58 @@
+[Bees]
+#Number of employed bees
+nemployed: 10
+#Number of onlooker bees
+nonlooker: 4
+#Modification factor used by the onlooker bees
+onlookerModFactor: 0.0001
+#Number of iterations before a solution is abandoned
+iterationsAbandoned: 30
+#probability for an employed to change a parameter (defined as 1/value)
+probEmployedChange: 10
+#probability for an onlooker to change a parameter (defined as 1/value)
+probOnlookerChange: 40
+#size of elite queue
+eliteQueue: 200
+#use probability matrix for employed
+useProbMatrix: True
+
+[Algorithm]
+#Execution time
+time: 7200
+#Size of the queue that stores the solutions that haven't been set yet
+pendingSize: 30
+#Objective of the optimization: max (maximize), min (miminize)
+objective: min
+
+[Fusion]
+#Execute bgradb
+bgradb: False
+
+#Execute mercier
+mercier: True
+#Min radius considered for mercier
+min_mercier_radius: 0.8
+
+#Execute ballooning
+ballooning: False
+
+#Extra checks in the threed1
+threed1: False
+
+#Get the beta
+get_beta: False
+
+min_beta: 0.0
+max_beta: 5.0
+
+#Execute dkes
+dkes: True
+
+#Save intermediate configurations
+save_configurations: False
+
+[General]
+#communication model (valid values: MASTERSLAVE, ALL2ALL)
+commModel = MASTERSLAVE
+#netcdf library path
+netcdf: /apps/netcdf/4.2.1.1-pgi/lib/

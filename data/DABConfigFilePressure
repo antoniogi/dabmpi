@@ -1,0 +1,51 @@
+[Bees]
+#Number of employed bees
+nemployed: 5
+#Number of onlooker bees
+nonlooker: 3
+#Modification factor used by the onlooker bees
+onlookerModFactor: 0.0001
+#Number of iterations before a solution is abandoned
+iterationsAbandoned: 5
+#probability for an employed to change a parameter (defined as 1/value)
+probEmployedChange: 4
+
+[Algorithm]
+#Execution time
+time: 72000
+#Size of the queue that stores the solutions that haven't been set yet
+pendingSize: 350
+#maximize or minimize
+objective: max
+
+
+[Fusion]
+#Execute bgradb
+bgradb: False
+
+#Execute mercier
+mercier: True
+#Min radius considered for mercier
+min_mercier_radius: 0.8
+
+#Execute ballooning
+ballooning: False
+
+#Extra checks in the threed1
+threed1: False 
+
+#Get the beta
+get_beta: True
+
+min_beta: 0.0
+max_beta: 100.0
+
+#Execute dkes
+dkes: False
+
+#Save intermediate configurations
+save_configurations: False
+
+[General]
+#netcdf library path
+netcdf: /apps/netcdf/4.2.1.1-pgi/lib/

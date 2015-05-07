@@ -1,0 +1,2836 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<input_data_file>
+<indata>
+  <mgrid_file>'mgrid.'</mgrid_file>
+  <lfreeb>T</lfreeb>
+  <loptim>F</loptim>
+  <delt>0.97</delt>
+  <tcon0>2.</tcon0>
+  <nfp>4</nfp>
+  <ncurr>1</ncurr>
+  <mpol>8</mpol>
+  <ntor>12</ntor>
+  <nzeta>64</nzeta>
+  <ns>
+  	<val>10</val>
+	<val>41</val>
+  	<val>91</val>
+  	<val>191</val>
+  </ns>
+  <niter>4500</niter>
+  <nstep>100</nstep>
+  <nvacskip>8</nvacskip>
+  <gamma>0.00000000E+00</gamma>
+  <ftol>
+  	<val>5.00000000E-07</val>
+	<val>1.00000000E-09</val>
+  	<val>1.00000000E-09</val>
+  	<val>5.00000000E-12</val>
+  </ftol>
+  <phiedge>-1.3000000E-01</phiedge>
+  <extcur>
+  	<val>-2.39458284800000E+05</val>
+  	<val>2.44612125000000E+05</val>
+  	<val>2.17433000000000E+05</val>
+  	<val>1.02453103900000E+05</val>
+  	<val>-1.05383715200000E+04</val>
+  </extcur>
+  <curtor>-4.0000E+03</curtor>
+  <spres_ped>1.0000E+00</spres_ped>
+  <am>
+	  <val>0.1700E+04</val>
+	  <val>-0.1700E+04</val>
+	  <val>0.0000E+04</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+04</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+  </am>
+  <ai>
+	  <val>2.4872E-01</val>
+	  <val>5.5284E-02</val>
+	  <val>1.8578E-01</val>
+	  <val>-1.2957E+00</val>
+	  <val>1.2675E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+	  <val>0.0000E+00</val>
+  </ai>
+  <ac>
+	  <val>9.8879</val>
+	  <val> -158.69</val>
+	  <val>1419.45</val>
+	  <val> -7240</val>
+	  <val>21641.5</val>
+	  <val>-38598</val>
+	  <val>40365.5</val>
+	  <val>-22811.2</val>
+	  <val>5371.83</val>
+	  <val>0.</val>
+	  <val>0.</val>
+  </ac>
+  <raxis>
+	  <val>1.5022</val>
+	  <val>0.2296800000000001</val>
+  </raxis>
+  <zaxis>
+	  <val>0.</val>
+	  <val>0.2330100000000002</val>
+  </zaxis>
+  <lineas_config>
+	  <linea>
+		<rbc>
+			<coord1>-12</coord1>
+			<coord2>0</coord2>
+			<val>-2.1527E-06</val>
+		</rbc>
+		<zbs>
+			<coord1>-12</coord1>
+			<coord2>0</coord2>
+			<val>-5.6359E-05</val>
+		</zbs>
+	</linea>
+   <linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>0</coord2>
+<val>7.2506E-05</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>0</coord2>
+<val>1.2472E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>0</coord2>
+<val>1.9424E-04</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>0</coord2>
+<val>-7.1611E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>0</coord2>
+<val>-6.0215E-04</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>0</coord2>
+<val>2.8137E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>0</coord2>
+<val>4.7634E-04</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>0</coord2>
+<val>2.4693E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>0</coord2>
+<val>4.3034E-03</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>0</coord2>
+<val>3.4468E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>0</coord2>
+<val>-2.7694E-03</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>0</coord2>
+<val>-2.5637E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>0</coord2>
+<val>9.8603E-04</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>0</coord2>
+<val>1.2929E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>0</coord2>
+<val>-9.9311E-04</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>0</coord2>
+<val>-9.0551E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>0</coord2>
+<val>1.8012E-03</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>0</coord2>
+<val>-7.2884E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>0</coord2>
+<val>3.2281E-03</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>0</coord2>
+<val>-3.7157E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>0</coord2>
+<val>1.3276E-01</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>0</coord2>
+<val>-1.3276E-01</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>0</coord2>
+<val>1.5102E+00</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>0</coord2>
+<val>0.0000E+00</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>1</coord2>
+<val>-6.3203E-05</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>1</coord2>
+<val>-1.0526E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>1</coord2>
+<val>8.1551E-04</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>1</coord2>
+<val>-6.8644E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>1</coord2>
+<val>6.4705E-04</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>1</coord2>
+<val>-1.1861E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>1</coord2>
+<val>-1.4972E-03</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>1</coord2>
+<val>1.3900E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>1</coord2>
+<val>-5.4394E-05</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>1</coord2>
+<val>-1.2273E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>1</coord2>
+<val>1.4745E-03</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>1</coord2>
+<val>2.1905E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>1</coord2>
+<val>-7.7466E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>1</coord2>
+<val>-1.3750E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>1</coord2>
+<val>1.1198E-03</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>1</coord2>
+<val>7.7862E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>1</coord2>
+<val>-5.0580E-04</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>1</coord2>
+<val>2.2757E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>1</coord2>
+<val>8.6220E-04</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>1</coord2>
+<val>-1.2516E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>1</coord2>
+<val>-5.2075E-02</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>1</coord2>
+<val>5.3250E-02</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>1</coord2>
+<val>3.6167E-03</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>1</coord2>
+<val>-8.9629E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>1</coord2>
+<val>1.8312E-01</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>1</coord2>
+<val>1.8863E-01</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>1</coord2>
+<val>-2.3141E-03</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>1</coord2>
+<val>-3.0320E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>1</coord2>
+<val>4.4473E-04</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>1</coord2>
+<val>7.3014E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>1</coord2>
+<val>1.9565E-05</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>1</coord2>
+<val>7.1747E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>1</coord2>
+<val>8.5781E-04</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>1</coord2>
+<val>-1.1360E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>1</coord2>
+<val>-4.5354E-07</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>1</coord2>
+<val>1.8989E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>1</coord2>
+<val>-1.2446E-03</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>1</coord2>
+<val>-9.0506E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>1</coord2>
+<val>1.7370E-03</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>1</coord2>
+<val>1.9280E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>1</coord2>
+<val>-5.8608E-04</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>1</coord2>
+<val>-6.9561E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>1</coord2>
+<val>2.2789E-05</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>1</coord2>
+<val>-1.2995E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>1</coord2>
+<val>-2.5363E-04</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>1</coord2>
+<val>-2.8546E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>1</coord2>
+<val>1.2302E-04</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>1</coord2>
+<val>6.0558E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>1</coord2>
+<val>-3.5430E-05</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>1</coord2>
+<val>-1.3303E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>2</coord2>
+<val>-3.3749E-04</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>2</coord2>
+<val>3.6896E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>2</coord2>
+<val>-2.6455E-04</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>2</coord2>
+<val>4.2140E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>2</coord2>
+<val>-3.5628E-04</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>2</coord2>
+<val>-1.9650E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>2</coord2>
+<val>-1.6801E-03</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>2</coord2>
+<val>-1.2635E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>2</coord2>
+<val>2.0476E-03</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>2</coord2>
+<val>1.2533E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>2</coord2>
+<val>-1.3225E-03</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>2</coord2>
+<val>-7.0061E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>2</coord2>
+<val>-3.4422E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>2</coord2>
+<val>2.2285E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>2</coord2>
+<val>2.7944E-04</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>2</coord2>
+<val>2.0008E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>2</coord2>
+<val>-9.4252E-05</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>2</coord2>
+<val>-4.6214E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>2</coord2>
+<val>2.7547E-02</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>2</coord2>
+<val>-2.9012E-02</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>2</coord2>
+<val>-6.4334E-03</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>2</coord2>
+<val>5.1983E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>2</coord2>
+<val>7.9566E-02</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>2</coord2>
+<val>8.6151E-02</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>2</coord2>
+<val>-2.2605E-03</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>2</coord2>
+<val>-4.6466E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>2</coord2>
+<val>-3.6565E-04</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>2</coord2>
+<val>-7.1536E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>2</coord2>
+<val>-3.4729E-05</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>2</coord2>
+<val>-1.9197E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>2</coord2>
+<val>-1.1996E-03</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>2</coord2>
+<val>1.3127E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>2</coord2>
+<val>1.6655E-03</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>2</coord2>
+<val>-1.4941E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>2</coord2>
+<val>-1.2447E-03</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>2</coord2>
+<val>8.6517E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>2</coord2>
+<val>-8.2607E-04</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>2</coord2>
+<val>-7.1442E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>2</coord2>
+<val>9.1547E-04</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>2</coord2>
+<val>1.1329E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>2</coord2>
+<val>4.5984E-05</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>2</coord2>
+<val>-8.1340E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>2</coord2>
+<val>1.1148E-04</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>2</coord2>
+<val>2.4329E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>2</coord2>
+<val>-5.8273E-05</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>2</coord2>
+<val>-2.8788E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>2</coord2>
+<val>9.0123E-05</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>2</coord2>
+<val>2.8968E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>2</coord2>
+<val>-1.4791E-04</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>2</coord2>
+<val>-2.5726E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>3</coord2>
+<val>2.1533E-04</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>3</coord2>
+<val>6.6554E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>3</coord2>
+<val>-2.9593E-04</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>3</coord2>
+<val>-2.2162E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>3</coord2>
+<val>1.2089E-05</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>3</coord2>
+<val>5.4416E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>3</coord2>
+<val>-6.4263E-04</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>3</coord2>
+<val>-1.3319E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>3</coord2>
+<val>-5.1098E-05</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>3</coord2>
+<val>-6.3639E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>3</coord2>
+<val>-3.9316E-04</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>3</coord2>
+<val>-7.0042E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>3</coord2>
+<val>2.5404E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>3</coord2>
+<val>3.7970E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>3</coord2>
+<val>-3.5514E-04</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>3</coord2>
+<val>5.3675E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>3</coord2>
+<val>-1.3250E-02</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>3</coord2>
+<val>1.2338E-02</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>3</coord2>
+<val>1.6723E-03</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>3</coord2>
+<val>-2.0270E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>3</coord2>
+<val>1.1868E-03</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>3</coord2>
+<val>-1.7563E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>3</coord2>
+<val>2.2009E-04</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>3</coord2>
+<val>-8.9693E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>3</coord2>
+<val>-4.7853E-04</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>3</coord2>
+<val>-2.9676E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>3</coord2>
+<val>-3.6889E-04</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>3</coord2>
+<val>-6.4395E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>3</coord2>
+<val>3.4156E-04</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>3</coord2>
+<val>1.6203E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>3</coord2>
+<val>3.8076E-04</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>3</coord2>
+<val>-3.2550E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>3</coord2>
+<val>4.8722E-04</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>3</coord2>
+<val>1.6464E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>3</coord2>
+<val>-1.5454E-03</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>3</coord2>
+<val>-1.3048E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>3</coord2>
+<val>8.8609E-04</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>3</coord2>
+<val>6.9167E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>3</coord2>
+<val>-1.2076E-04</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>3</coord2>
+<val>-2.1445E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>3</coord2>
+<val>3.9973E-04</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>3</coord2>
+<val>2.9095E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>3</coord2>
+<val>-2.5282E-04</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>3</coord2>
+<val>-1.0903E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>3</coord2>
+<val>4.1519E-05</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>3</coord2>
+<val>-1.1026E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>3</coord2>
+<val>-1.5965E-04</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>3</coord2>
+<val>-5.3301E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>3</coord2>
+<val>1.0341E-04</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>3</coord2>
+<val>1.2879E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>4</coord2>
+<val>7.3333E-05</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>4</coord2>
+<val>1.6332E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>4</coord2>
+<val>3.1764E-04</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>4</coord2>
+<val>-2.1552E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>4</coord2>
+<val>2.6422E-04</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>4</coord2>
+<val>-6.7665E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>4</coord2>
+<val>-3.6251E-04</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>4</coord2>
+<val>-3.8322E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>4</coord2>
+<val>8.8904E-05</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>4</coord2>
+<val>1.2215E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>4</coord2>
+<val>-2.0288E-05</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>4</coord2>
+<val>-1.1254E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>4</coord2>
+<val>3.3497E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>4</coord2>
+<val>-1.9449E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>4</coord2>
+<val>4.0890E-03</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>4</coord2>
+<val>-3.8678E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>4</coord2>
+<val>-4.2629E-04</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>4</coord2>
+<val>6.5150E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>4</coord2>
+<val>-2.4487E-03</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>4</coord2>
+<val>-2.3214E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>4</coord2>
+<val>4.4582E-04</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>4</coord2>
+<val>9.3247E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>4</coord2>
+<val>3.7770E-04</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>4</coord2>
+<val>-2.2554E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>4</coord2>
+<val>2.5227E-05</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>4</coord2>
+<val>-4.8208E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>4</coord2>
+<val>-1.3148E-04</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>4</coord2>
+<val>2.3767E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>4</coord2>
+<val>3.2195E-04</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>4</coord2>
+<val>1.1411E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>4</coord2>
+<val>9.7910E-05</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>4</coord2>
+<val>8.0722E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>4</coord2>
+<val>2.5866E-04</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>4</coord2>
+<val>-2.3667E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>4</coord2>
+<val>-1.9000E-04</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>4</coord2>
+<val>-4.9706E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>4</coord2>
+<val>6.4005E-05</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>4</coord2>
+<val>1.5562E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>4</coord2>
+<val>9.8234E-06</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>4</coord2>
+<val>6.2190E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>4</coord2>
+<val>-5.6627E-06</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>4</coord2>
+<val>3.8429E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>4</coord2>
+<val>-4.2328E-05</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>4</coord2>
+<val>-2.1873E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>4</coord2>
+<val>9.0150E-05</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>4</coord2>
+<val>2.0568E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>4</coord2>
+<val>-3.3715E-04</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>4</coord2>
+<val>-3.2298E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>4</coord2>
+<val>1.9656E-04</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>4</coord2>
+<val>1.3978E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>5</coord2>
+<val>-1.4009E-04</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>5</coord2>
+<val>-1.2125E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>5</coord2>
+<val>1.8379E-05</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>5</coord2>
+<val>2.3179E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>5</coord2>
+<val>8.4154E-05</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>5</coord2>
+<val>1.6022E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>5</coord2>
+<val>2.9820E-05</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>5</coord2>
+<val>6.6673E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>5</coord2>
+<val>-9.2433E-05</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>5</coord2>
+<val>8.1057E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>5</coord2>
+<val>-8.3525E-05</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>5</coord2>
+<val>3.2271E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>5</coord2>
+<val>-3.6434E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>5</coord2>
+<val>3.8687E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>5</coord2>
+<val>9.2609E-06</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>5</coord2>
+<val>6.0331E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>5</coord2>
+<val>1.0842E-03</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>5</coord2>
+<val>1.1973E-03</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>5</coord2>
+<val>-1.9551E-04</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>5</coord2>
+<val>4.9537E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>5</coord2>
+<val>2.1402E-04</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>5</coord2>
+<val>-1.2120E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>5</coord2>
+<val>5.3615E-05</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>5</coord2>
+<val>1.6356E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>5</coord2>
+<val>-1.7777E-05</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>5</coord2>
+<val>-1.8749E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>5</coord2>
+<val>-2.3645E-04</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>5</coord2>
+<val>5.5421E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>5</coord2>
+<val>-9.4128E-05</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>5</coord2>
+<val>-2.6078E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>5</coord2>
+<val>2.0795E-04</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>5</coord2>
+<val>2.1955E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>5</coord2>
+<val>-7.1343E-05</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>5</coord2>
+<val>-4.7121E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>5</coord2>
+<val>2.5869E-05</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>5</coord2>
+<val>2.5058E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>5</coord2>
+<val>2.3767E-05</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>5</coord2>
+<val>-8.4203E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>5</coord2>
+<val>1.4994E-05</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>5</coord2>
+<val>4.7789E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>5</coord2>
+<val>-5.0990E-05</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>5</coord2>
+<val>9.4692E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>5</coord2>
+<val>4.1580E-05</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>5</coord2>
+<val>-2.2251E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>5</coord2>
+<val>2.1771E-05</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>5</coord2>
+<val>1.0983E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>5</coord2>
+<val>-4.4814E-05</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>5</coord2>
+<val>1.2190E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>5</coord2>
+<val>2.1256E-05</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>5</coord2>
+<val>4.1585E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>6</coord2>
+<val>-5.3372E-05</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>6</coord2>
+<val>-1.0998E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>6</coord2>
+<val>5.1594E-05</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>6</coord2>
+<val>-3.7366E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>6</coord2>
+<val>-4.4279E-05</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>6</coord2>
+<val>-7.3780E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>6</coord2>
+<val>5.2083E-05</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>6</coord2>
+<val>2.8167E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>6</coord2>
+<val>-3.2807E-05</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>6</coord2>
+<val>3.6785E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>6</coord2>
+<val>-5.6027E-04</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>6</coord2>
+<val>4.8283E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>6</coord2>
+<val>5.3170E-05</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>6</coord2>
+<val>-1.5400E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>6</coord2>
+<val>-5.0019E-04</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>6</coord2>
+<val>-5.7838E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>6</coord2>
+<val>-4.1556E-05</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>6</coord2>
+<val>6.4492E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>6</coord2>
+<val>-1.8963E-04</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>6</coord2>
+<val>1.2654E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>6</coord2>
+<val>-1.0092E-05</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>6</coord2>
+<val>-3.8844E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>6</coord2>
+<val>4.8237E-05</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>6</coord2>
+<val>7.8574E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>6</coord2>
+<val>5.0661E-05</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>6</coord2>
+<val>9.6171E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>6</coord2>
+<val>6.1818E-05</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>6</coord2>
+<val>8.8466E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>6</coord2>
+<val>-1.3721E-04</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>6</coord2>
+<val>-5.9496E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>6</coord2>
+<val>2.6645E-05</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>6</coord2>
+<val>-2.8161E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>6</coord2>
+<val>-2.2241E-05</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>6</coord2>
+<val>-1.0191E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>6</coord2>
+<val>-2.4368E-05</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>6</coord2>
+<val>2.6845E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>6</coord2>
+<val>-1.2390E-05</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>6</coord2>
+<val>-1.3384E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>6</coord2>
+<val>1.0727E-04</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>6</coord2>
+<val>-5.9212E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>6</coord2>
+<val>-7.2042E-05</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>6</coord2>
+<val>-8.5009E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>6</coord2>
+<val>1.0816E-04</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>6</coord2>
+<val>8.8953E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>6</coord2>
+<val>-6.6158E-05</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>6</coord2>
+<val>-4.3812E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>6</coord2>
+<val>-7.9616E-07</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>6</coord2>
+<val>-2.9674E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>6</coord2>
+<val>3.0156E-05</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>6</coord2>
+<val>3.5812E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-12</coord1>
+<coord2>7</coord2>
+<val>-2.5054E-05</val>
+</rbc>
+<zbs>
+<coord1>-12</coord1>
+<coord2>7</coord2>
+<val>7.9869E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-11</coord1>
+<coord2>7</coord2>
+<val>9.3542E-06</val>
+</rbc>
+<zbs>
+<coord1>-11</coord1>
+<coord2>7</coord2>
+<val>2.4473E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-10</coord1>
+<coord2>7</coord2>
+<val>-3.1802E-06</val>
+</rbc>
+<zbs>
+<coord1>-10</coord1>
+<coord2>7</coord2>
+<val>-2.9231E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-9</coord1>
+<coord2>7</coord2>
+<val>5.0425E-05</val>
+</rbc>
+<zbs>
+<coord1>-9</coord1>
+<coord2>7</coord2>
+<val>-3.9322E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-8</coord1>
+<coord2>7</coord2>
+<val>3.8488E-04</val>
+</rbc>
+<zbs>
+<coord1>-8</coord1>
+<coord2>7</coord2>
+<val>-3.4844E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-7</coord1>
+<coord2>7</coord2>
+<val>-2.4242E-05</val>
+</rbc>
+<zbs>
+<coord1>-7</coord1>
+<coord2>7</coord2>
+<val>9.1167E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-6</coord1>
+<coord2>7</coord2>
+<val>1.9144E-04</val>
+</rbc>
+<zbs>
+<coord1>-6</coord1>
+<coord2>7</coord2>
+<val>1.9013E-04</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-5</coord1>
+<coord2>7</coord2>
+<val>4.3157E-05</val>
+</rbc>
+<zbs>
+<coord1>-5</coord1>
+<coord2>7</coord2>
+<val>-4.3647E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-4</coord1>
+<coord2>7</coord2>
+<val>-4.8405E-05</val>
+</rbc>
+<zbs>
+<coord1>-4</coord1>
+<coord2>7</coord2>
+<val>6.6744E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-3</coord1>
+<coord2>7</coord2>
+<val>1.1304E-04</val>
+</rbc>
+<zbs>
+<coord1>-3</coord1>
+<coord2>7</coord2>
+<val>-9.3353E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-2</coord1>
+<coord2>7</coord2>
+<val>7.1970E-06</val>
+</rbc>
+<zbs>
+<coord1>-2</coord1>
+<coord2>7</coord2>
+<val>3.5025E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>-1</coord1>
+<coord2>7</coord2>
+<val>-3.0543E-07</val>
+</rbc>
+<zbs>
+<coord1>-1</coord1>
+<coord2>7</coord2>
+<val>1.3029E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>0</coord1>
+<coord2>7</coord2>
+<val>-9.5669E-06</val>
+</rbc>
+<zbs>
+<coord1>0</coord1>
+<coord2>7</coord2>
+<val>-1.8751E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>1</coord1>
+<coord2>7</coord2>
+<val>3.1395E-05</val>
+</rbc>
+<zbs>
+<coord1>1</coord1>
+<coord2>7</coord2>
+<val>1.3320E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>2</coord1>
+<coord2>7</coord2>
+<val>6.5208E-06</val>
+</rbc>
+<zbs>
+<coord1>2</coord1>
+<coord2>7</coord2>
+<val>1.8916E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>3</coord1>
+<coord2>7</coord2>
+<val>3.0230E-05</val>
+</rbc>
+<zbs>
+<coord1>3</coord1>
+<coord2>7</coord2>
+<val>1.2884E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>4</coord1>
+<coord2>7</coord2>
+<val>-1.4623E-05</val>
+</rbc>
+<zbs>
+<coord1>4</coord1>
+<coord2>7</coord2>
+<val>5.8636E-06</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>5</coord1>
+<coord2>7</coord2>
+<val>3.0467E-05</val>
+</rbc>
+<zbs>
+<coord1>5</coord1>
+<coord2>7</coord2>
+<val>-2.5057E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>6</coord1>
+<coord2>7</coord2>
+<val>-1.0024E-04</val>
+</rbc>
+<zbs>
+<coord1>6</coord1>
+<coord2>7</coord2>
+<val>7.6791E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>7</coord1>
+<coord2>7</coord2>
+<val>6.2750E-05</val>
+</rbc>
+<zbs>
+<coord1>7</coord1>
+<coord2>7</coord2>
+<val>-3.9191E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>8</coord1>
+<coord2>7</coord2>
+<val>-6.5360E-05</val>
+</rbc>
+<zbs>
+<coord1>8</coord1>
+<coord2>7</coord2>
+<val>-2.9291E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>9</coord1>
+<coord2>7</coord2>
+<val>3.7793E-05</val>
+</rbc>
+<zbs>
+<coord1>9</coord1>
+<coord2>7</coord2>
+<val>1.6825E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>10</coord1>
+<coord2>7</coord2>
+<val>-8.9638E-07</val>
+</rbc>
+<zbs>
+<coord1>10</coord1>
+<coord2>7</coord2>
+<val>1.0789E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>11</coord1>
+<coord2>7</coord2>
+<val>-8.7597E-06</val>
+</rbc>
+<zbs>
+<coord1>11</coord1>
+<coord2>7</coord2>
+<val>-1.2617E-05</val>
+</zbs>
+</linea>
+<linea>
+<rbc>
+<coord1>12</coord1>
+<coord2>7</coord2>
+<val>-2.8573E-05</val>
+</rbc>
+<zbs>
+<coord1>12</coord1>
+<coord2>7</coord2>
+<val>-3.9407E-05</val>
+</zbs>
+</linea>
+  </lineas_config>
+  </indata>
+<optimum>
+	<epsfcn>6.000000000000005E-3</epsfcn>
+	<niter_opt>200</niter_opt>
+	<lreset_opt>F</lreset_opt>
+	<lprof_opt>F</lprof_opt>
+	<lbmn>F</lbmn>
+	<lfix_ntor>61*F</lfix_ntor>
+	<lsurf_mask>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>F</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+		<val>T</val>
+	</lsurf_mask>
+	<target_aspectratio>3.5</target_aspectratio>
+	<target_beta>3.000000000000002E-2</target_beta>
+	<target_maxcurrent>50000.</target_maxcurrent>
+	<target_rmax>1.850000000000001</target_rmax>
+	<target_rmin>1.049999999999997</target_rmin>
+	<target_iota>
+		<val>2.4872E-01</val>
+		<val>5.5284E-02</val>
+		<val>1.8578E-01</val>
+		<val>-1.2957E+00</val>
+		<val>1.2675E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+	</target_iota>
+	<target_well>
+		<val>0.0000E+00</val>
+		<val>-7.0300E-01</val>
+		<val>3.1700E-01</val>
+		<val>-1.2400E-01</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+		<val>0.0000E+00</val>
+	</target_well>
+	<sigma_aspect>0.1000000000000001</sigma_aspect>
+	<sigma_cur>100.0000000000009</sigma_cur>
+	<sigma_beta>2.000000000000012E-2</sigma_beta>
+	<sigma_kink>0.1000000000000001E+01</sigma_kink>
+	<sigma_maxcurrent>9.999999999999986E+29</sigma_maxcurrent>
+	<sigma_rmax>1.E+2</sigma_rmax>
+	<sigma_rmin>1.E+2</sigma_rmin>
+	<sigma_iota>
+		<val>1.0000E+01</val>
+		<val>1.0000E+01</val>
+		<val>1.0000E+01</val>
+		<val>1.0000E+01</val>
+		<val>1.0000E+01</val>
+		<val>1.0000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+		<val>2.5000E+01</val>
+	</sigma_iota>
+	<sigma_vp>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+		<val>2.0000E+00</val>
+	</sigma_vp>
+	<sigma_bmin>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+		<val>1.5000E+01</val>
+	</sigma_bmin>
+	<sigma_bmax>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+		<val>3.0000E+01</val>
+	</sigma_bmax>
+	<sigma_ripple>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+		<val>2.0000E+01</val>
+	</sigma_ripple>
+	<sigma_jstar>
+		<index>1</index>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+	</sigma_jstar>
+	<sigma_jstar>
+		<index>2</index>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+	</sigma_jstar>
+	<sigma_jstar>
+		<index>3</index>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+	</sigma_jstar>
+	<sigma_jstar>
+		<index>4</index>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+		<val>1.000E+03</val>
+	</sigma_jstar>
+	<sigma_balloon>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+		<val>1.000E-01</val>
+	</sigma_balloon>
+	<sigma_pgrad>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+		<val>1.000E-02</val>
+	</sigma_pgrad>
+	<sigma_pedge>1.000E-02</sigma_pedge>
+	<lballon_test>T</lballon_test>
+	<bal_zeta0>0.000E+00</bal_zeta0>
+	<bal_theta0>0.000E+00</bal_theta0>
+	<bal_xmax>1.500E+01</bal_xmax>
+	<bal_np0>201</bal_np0>
+	<bal_kth>1</bal_kth>
+	<bal_x0>0.000E+00</bal_x0>
+</optimum>
+<bootin>
+<nrh0>90</nrh0>
+<mbuse>12</mbuse>
+<nbuse>32</nbuse>
+<zeff1>1.0</zeff1>
+<damp>0.0001E-01</damp>
+<isymm0>0</isymm0>
+<ate>
+	<val>1.0</val>
+	<val>-1.0</val>
+	<val>0.0</val>
+	<val>0.0</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+</ate>
+<ati>	
+	<val>0.15</val>
+	<val>-0.15</val>
+	<val>0.0</val>
+	<val>0.0</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+	<val>0.</val>
+</ati>
+</bootin>
+</input_data_file>
