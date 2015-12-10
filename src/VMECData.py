@@ -87,8 +87,11 @@ class VMECData (object):
         self.curtor = None
         self.spres_ped = None
         self.pres_scale = None
+        self.pmass = None
         self.am = []
+        self.piota = None
         self.ai = []
+        self.pcurr = None        
         self.ac = []
         self.raxis = []
         self.zaxis = []
@@ -1038,38 +1041,47 @@ class VMECData (object):
         if (index == 61):
             self.pres_scale = parameter
             return 1
-        if (index >= 62 and index <= 81):
-            if ((index - 62) >= len(self.am)):
+        if (index == 62):
+            self.pres = parameter
+            return 1
+        if (index >= 63 and index <= 82):
+            if ((index - 63) >= len(self.am)):
                 self.am.append(parameter)
             else:
-                self.am[index - 62] = parameter
+                self.am[index - 63] = parameter
             return 1
-        if (index >= 82 and index <= 102):
-            if ((index - 82) >= len(self.ai)):
+        if (index==83):
+            self.piota = parameter
+            return 1
+        if (index >= 84 and index <= 104):
+            if ((index - 84) >= len(self.ai)):
                 self.ai.append(parameter)
             else:
-                self.ai[index - 82] = parameter
+                self.ai[index - 84] = parameter
             return 1
-        if (index >= 103 and index <= 125):
-            if ((index - 103) >= len(self.ac)):
+        if (index==105):
+            self.pcurr = parameter
+            return 1
+        if (index >= 106 and index <= 128):
+            if ((index - 106) >= len(self.ac)):
                 self.ac.append(parameter)
             else:
-                self.ac[index - 103] = parameter
+                self.ac[index - 106] = parameter
             return 1
-        if (index >= 126 and index <= 136):
-            if ((index - 126) >= len(self.raxis)):
+        if (index >= 129 and index <= 139):
+            if ((index - 129) >= len(self.raxis)):
                 self.raxis.append(parameter)
             else:
-                self.raxis[index - 126] = parameter
+                self.raxis[index - 129] = parameter
             return 1
-        if (index >= 137 and index <= 147):
-            if ((index - 137) >= len(self.zaxis)):
+        if (index >= 140 and index <= 150):
+            if ((index - 140) >= len(self.zaxis)):
                 self.zaxis.append(parameter)
             else:
-                self.zaxis[index - 137] = parameter
+                self.zaxis[index - 140] = parameter
             return 1
-        if (index >= 148 and index <= 621):
-            pos = int(math.floor((index - 148) / 2))
+        if (index >= 151 and index <= 624):
+            pos = int(math.floor((index - 151) / 2))
             if (index % 2 == 0):
                 if (pos >= len(self.rbc)):
                     self.rbc.append(parameter)
@@ -1081,187 +1093,187 @@ class VMECData (object):
                 else:
                     self.zbc[pos] = parameter
             return 1
-        if (index == 622):
+        if (index == 625):
             self.epsfcn = parameter
             return 1
-        if (index == 623):
+        if (index == 626):
             self.niter_opt = parameter
             return 1
-        if (index == 624):
+        if (index == 627):
             self.lreset_opt = parameter
             return 1
-        if (index == 625):
+        if (index == 628):
             self.lprof_opt = parameter
             return 1
-        if (index == 626):
+        if (index == 629):
             self.lbmn = parameter
             return 1
-        if (index == 627):
+        if (index == 630):
             self.lfix_ntor = parameter
             return 1
-        if (index == 628):
+        if (index == 631):
             self.lsurf_mask = parameter
             return 1
-        if (index == 629):
+        if (index == 632):
             self.target_aspectratio = parameter
             return 1
-        if (index == 630):
+        if (index == 633):
             self.target_beta = parameter
             return 1
-        if (index == 631):
+        if (index == 634):
             self.target_maxcurrent = parameter
             return 1
-        if (index == 632):
+        if (index == 635):
             self.target_rmax = parameter
             return 1
-        if (index == 633):
+        if (index == 636):
             self.target_rmin = parameter
             return 1
-        if (index >= 634 and index <= 644):
-            if ((index - 634) >= len(self.target_iota)):
+        if (index >= 637 and index <= 647):
+            if ((index - 637) >= len(self.target_iota)):
                 self.target_iota.append(parameter)
             else:
-                self.target_iota[index - 634] = parameter
+                self.target_iota[index - 637] = parameter
             return 1
-        if (index >= 645 and index <= 655):
-            if ((index - 645) >= len(self.target_well)):
+        if (index >= 648 and index <= 658):
+            if ((index - 648) >= len(self.target_well)):
                 self.target_well.append(parameter)
             else:
-                self.target_well[index - 645] = parameter
-            return 1
-        if (index == 656):
-            self.sigma_aspect = parameter
-            return 1
-        if (index == 657):
-            self.sigma_curv = parameter
-            return 1
-        if (index == 658):
-            self.sigma_beta = parameter
+                self.target_well[index - 648] = parameter
             return 1
         if (index == 659):
-            self.sigma_kink = parameter
+            self.sigma_aspect = parameter
             return 1
         if (index == 660):
-            self.sigma_maxcurrent = parameter
+            self.sigma_curv = parameter
             return 1
         if (index == 661):
-            self.sigma_rmax = parameter
+            self.sigma_beta = parameter
             return 1
         if (index == 662):
+            self.sigma_kink = parameter
+            return 1
+        if (index == 663):
+            self.sigma_maxcurrent = parameter
+            return 1
+        if (index == 664):
+            self.sigma_rmax = parameter
+            return 1
+        if (index == 665):
             self.sigma_rmin = parameter
             return 1
-        if (index >= 663 and index <= 693):
-            if ((index - 663) >= len(self.sigma_iota)):
+        if (index >= 666 and index <= 696):
+            if ((index - 666) >= len(self.sigma_iota)):
                 self.sigma_iota.append(parameter)
             else:
-                self.sigma_iota[index - 663] = parameter
+                self.sigma_iota[index - 666] = parameter
             return 1
-        if (index >= 694 and index <= 724):
-            if ((index - 694) >= len(self.sigma_vp)):
+        if (index >= 697 and index <= 727):
+            if ((index - 697) >= len(self.sigma_vp)):
                 self.sigma_vp.append(parameter)
             else:
-                self.sigma_vp[index - 694] = parameter
+                self.sigma_vp[index - 697] = parameter
             return 1
-        if (index >= 725 and index <= 755):
-            if ((index - 725) >= len(self.sigma_bmin)):
+        if (index >= 728 and index <= 758):
+            if ((index - 728) >= len(self.sigma_bmin)):
                 self.sigma_bmin.append(parameter)
             else:
-                self.sigma_bmin[index - 725] = parameter
+                self.sigma_bmin[index - 728] = parameter
             return 1
-        if (index >= 756 and index <= 786):
-            if ((index - 756) >= len(self.sigma_bmax)):
+        if (index >= 759 and index <= 789):
+            if ((index - 759) >= len(self.sigma_bmax)):
                 self.sigma_bmax.append(parameter)
             else:
-                self.sigma_bmax[index - 756] = parameter
+                self.sigma_bmax[index - 759] = parameter
             return 1
-        if (index >= 787 and index <= 817):
-            if ((index - 787) >= len(self.sigma_ripple)):
+        if (index >= 790 and index <= 820):
+            if ((index - 790) >= len(self.sigma_ripple)):
                 self.sigma_ripple.append(parameter)
             else:
-                self.sigma_ripple[index - 787] = parameter
+                self.sigma_ripple[index - 790] = parameter
             return 1
-        if (index >= 818 and index <= 848):
-            if ((index - 818) >= len(self.sigma_jstar0)):
+        if (index >= 821 and index <= 851):
+            if ((index - 821) >= len(self.sigma_jstar0)):
                 self.sigma_jstar0.append(parameter)
             else:
-                self.sigma_jstar0[index - 818] = parameter
+                self.sigma_jstar0[index - 821] = parameter
             return 1
-        if (index >= 849 and index <= 879):
-            if ((index - 849) >= len(self.sigma_jstar1)):
+        if (index >= 852 and index <= 882):
+            if ((index - 852) >= len(self.sigma_jstar1)):
                 self.sigma_jstar1.append(parameter)
             else:
-                self.sigma_jstar1[index - 849] = parameter
+                self.sigma_jstar1[index - 852] = parameter
             return 1
-        if (index >= 880 and index <= 910):
-            if ((index - 880) >= len(self.sigma_jstar2)):
+        if (index >= 883 and index <= 913):
+            if ((index - 883) >= len(self.sigma_jstar2)):
                 self.sigma_jstar2.append(parameter)
             else:
-                self.sigma_jstar2[index - 880] = parameter
+                self.sigma_jstar2[index - 883] = parameter
             return 1
-        if (index >= 911 and index <= 941):
-            if ((index - 911) >= len(self.sigma_jstar3)):
+        if (index >= 914 and index <= 944):
+            if ((index - 914) >= len(self.sigma_jstar3)):
                 self.sigma_jstar3.append(parameter)
             else:
-                self.sigma_jstar3[index - 911] = parameter
+                self.sigma_jstar3[index - 914] = parameter
             return 1
-        if (index >= 942 and index <= 972):
-            if ((index - 942) >= len(self.sigma_balloon)):
+        if (index >= 945 and index <= 975):
+            if ((index - 945) >= len(self.sigma_balloon)):
                 self.sigma_balloon.append(parameter)
             else:
-                self.sigma_balloon[index - 942] = parameter
+                self.sigma_balloon[index - 945] = parameter
             return 1
-        if (index >= 973 and index <= 1003):
-            if ((index - 973) >= len(self.sigma_pgrad)):
+        if (index >= 976 and index <= 1006):
+            if ((index - 976) >= len(self.sigma_pgrad)):
                 self.sigma_pgrad.append(parameter)
             else:
-                self.sigma_pgrad[index - 973] = parameter
-            return 1
-        if (index == 1004):
-            self.sigma_pedge = parameter
-            return 1
-        if (index == 1005):
-            self.lballon_test = parameter
-            return 1
-        if (index == 1006):
-            self.bal_zeta0 = parameter
+                self.sigma_pgrad[index - 976] = parameter
             return 1
         if (index == 1007):
-            self.bal_theta0 = parameter
+            self.sigma_pedge = parameter
             return 1
         if (index == 1008):
-            self.bal_xmax = parameter
+            self.lballon_test = parameter
             return 1
         if (index == 1009):
-            self.bal_np0 = parameter
+            self.bal_zeta0 = parameter
             return 1
         if (index == 1010):
-            self.bal_kth = parameter
+            self.bal_theta0 = parameter
             return 1
         if (index == 1011):
-            self.bal_x0 = parameter
+            self.bal_xmax = parameter
             return 1
         if (index == 1012):
-            self.nrh = parameter
+            self.bal_np0 = parameter
             return 1
         if (index == 1013):
-            self.mbuse = parameter
+            self.bal_kth = parameter
             return 1
         if (index == 1014):
-            self.nbuse = parameter
+            self.bal_x0 = parameter
             return 1
         if (index == 1015):
-            self.zeff1 = parameter
+            self.nrh = parameter
             return 1
         if (index == 1016):
-            self.damp = parameter
+            self.mbuse = parameter
             return 1
         if (index == 1017):
-            self.isymm0 = parameter
+            self.nbuse = parameter
             return 1
         if (index == 1018):
-            self.ate = parameter
+            self.zeff1 = parameter
             return 1
         if (index == 1019):
+            self.damp = parameter
+            return 1
+        if (index == 1020):
+            self.isymm0 = parameter
+            return 1
+        if (index == 1021):
+            self.ate = parameter
+            return 1
+        if (index == 1022):
             self.ati = parameter
             return 1
         u.logger.warning("Unassigned element with index: " + str(index))
@@ -1445,7 +1457,8 @@ class VMECData (object):
             if (self.pres_scale.get_display()):
                 fInput.write("  PRES_SCALE = " + str(
                     "%E" % float(self.pres_scale.get_value())) + "\n")
-
+            if (self.pmass.get_display()):
+                fInput.write("  PMASS_TYPE = " + self.pmass.get_value() + "\n")
             display = False
             for i in self.am:
                 if (i.get_display()):
@@ -1462,7 +1475,9 @@ class VMECData (object):
                         temptxt = temptxt + "  " + str(
                                   "%E" % float(i.get_value()))
                 fInput.write(temptxt + "\n")
-
+            if (self.piota.get_display()):
+                fInput.write("  PIOTA_TYPE = " + self.piota.get_value() + "\n")
+                            
             display = False
             for i in self.ai:
                 if (i.get_display()):
@@ -1478,7 +1493,9 @@ class VMECData (object):
                         cont = cont + 1
                         temptxt = temptxt + "  " + str("%E" % float(i.get_value()))
                 fInput.write(temptxt + "\n")
-
+            if (self.pcurr.get_display()):
+                fInput.write("  PCURR_TYPE = " + self.pcurr.get_value() + "\n")
+                            
             display = False
             for i in self.ac:
                 if (i.get_display()):
