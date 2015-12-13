@@ -30,7 +30,7 @@ HISTORY
 import Utils as util
 
 
-class SolutionBase (object):
+class SolutionBase(object):
     def __init__(self, infile):
         #initial value of the solution is the min value represented by a float
         if (util.objective == util.objectiveType.MINIMIZE):

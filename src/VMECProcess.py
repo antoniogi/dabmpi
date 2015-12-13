@@ -552,7 +552,7 @@ class VMECProcess(object):
                 lines = [line.strip() for line in open("OUTPUT/results.av")]
                 sum = 0.0
                 for l in lines:
-                    if (l.find('average')>0):
+                    if (l.find('average') > 0):
                         parts = map(string.strip, string.split(l))
                         try:
                             d31 = abs(float(parts[4]))

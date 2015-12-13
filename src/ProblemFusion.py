@@ -43,7 +43,7 @@ import Utils as u
 import sys
 
 
-class ProblemFusion (ProblemBase):
+class ProblemFusion(ProblemBase):
 
     def __init__(self):
         try:

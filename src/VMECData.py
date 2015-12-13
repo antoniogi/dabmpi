@@ -47,7 +47,7 @@ except ImportError:
     subProcFound = False
 
 
-class VMECData (object):
+class VMECData(object):
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
@@ -91,7 +91,7 @@ class VMECData (object):
         self.am = []
         self.piota = None
         self.ai = []
-        self.pcurr = None        
+        self.pcurr = None
         self.ac = []
         self.raxis = []
         self.zaxis = []
@@ -948,7 +948,8 @@ class VMECData (object):
             parameters.append(self.ati)
 
         if (int(self.__numParams) != len(parameters)):
-            u.logger.error("VMECData. Incorrect number of parameters (" + str(self.__numParams) + "--" + str(len(parameters)) + ")")
+            u.logger.error("VMECData. Incorrect number of parameters (" +
+                           str(self.__numParams) + "--" + str(len(parameters)) + ")")
         return parameters
 
     """
@@ -1050,7 +1051,7 @@ class VMECData (object):
             else:
                 self.am[index - 63] = parameter
             return 1
-        if (index==83):
+        if (index == 83):
             self.piota = parameter
             return 1
         if (index >= 84 and index <= 104):
@@ -1059,7 +1060,7 @@ class VMECData (object):
             else:
                 self.ai[index - 84] = parameter
             return 1
-        if (index==105):
+        if (index == 105):
             self.pcurr = parameter
             return 1
         if (index >= 106 and index <= 128):
@@ -1476,7 +1477,7 @@ class VMECData (object):
                 fInput.write(temptxt + "\n")
             if (self.piota.get_display()):
                 fInput.write("  PIOTA_TYPE = " + self.piota.get_value() + "\n")
-                            
+
             display = False
             for i in self.ai:
                 if (i.get_display()):
@@ -1815,7 +1816,6 @@ class VMECData (object):
         except Exception, e:
             u.logger.warning("Error writting optimum " +
                     str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
-            pass
         return True
 
     """

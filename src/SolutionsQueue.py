@@ -45,7 +45,7 @@ import Utils as util
 from Parameter import Parameter
 
 
-class SolutionsQueue (object):
+class SolutionsQueue(object):
     def __init__(self, filename, solutionType, infile, writeToFile,
                  isPriority=False):
         try:

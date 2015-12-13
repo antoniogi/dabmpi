@@ -64,7 +64,7 @@ that created that solution and set the value for that solution in the bee
 """
 
 
-class BeeBase (object):
+class BeeBase(object):
     def __init__(self, ProblemType, infile):
         random.seed()
         self.__solutionType = 0
@@ -177,7 +177,7 @@ Employed bees
 """
 
 
-class Employed (BeeBase):
+class Employed(BeeBase):
     def __init__(self, problemType, infile, change, useMatrix):
         BeeBase.__init__(self, problemType, infile)
         #list of neighbours of the current best local solution. This list is
@@ -215,7 +215,8 @@ class Employed (BeeBase):
                         selectedPos = j
                         break
                 if (selectedPos == -1):
-                    u.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " + str(val) + " -- " + str(sumRow))
+                    u.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " +
+                                     str(val) + " -- " + str(sumRow))
                 value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
                 parameters[i].set_value(value)
             solutionCopy.setParameters(parameters)
@@ -300,7 +301,7 @@ Scout bees
 """
 
 
-class Scout (BeeBase):
+class Scout(BeeBase):
     def __init__(self, problemType, infile):
         BeeBase.__init__(self, problemType, infile)
         return
@@ -321,7 +322,7 @@ Onlooker bees
 """
 
 
-class Onlooker (BeeBase):
+class Onlooker(BeeBase):
     def __init__(self, problemType, infile, modFactor, probChange):
         self.__modFactor = modFactor
         BeeBase.__init__(self, problemType, infile)
@@ -404,7 +405,7 @@ Solver DAB main class
 """
 
 
-class SolverDAB (SolverBase):
+class SolverDAB(SolverBase):
     def __init__(self, problemType, infile, configfile):
         try:
             u.logger.info("SolverDAB init")
@@ -778,7 +779,8 @@ class SolverDAB (SolverBase):
                         if (self.__problemType == u.solutionType.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
-                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
+                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' +
+                                            filenametime)
                             try:
                                 shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
                             except:
@@ -801,7 +803,7 @@ class SolverDAB (SolverBase):
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
                     u.logger.info("MASTER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
-                    if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
+                    if (float(solVal[0]) > 0.0 and float(solVal[0]) < (u.infinity/100.0)):
                         if (isNewBest):
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):
@@ -891,7 +893,7 @@ class SolverDAB (SolverBase):
                 self.__problem.solve(newSolution)
                 solutionValue = float(newSolution.getValue())
 
-                if (solutionValue<=0.0 or solutionValue>u.infinity/100.0):
+                if (solutionValue <= 0.0 or solutionValue > u.infinity/100.0):
                     continue
                 self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestSolution.getValue())) or
@@ -940,7 +942,7 @@ class SolverDAB (SolverBase):
                     self.__bees[bee].setSolution(newSolution)
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
-                    
+
                     if (solutionValue<=0.0 or solutionValu>=u.infinity/100.0):
                         continue
 

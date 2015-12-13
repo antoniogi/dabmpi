@@ -65,29 +65,28 @@ def init():
     util.logger.addHandler(ch)
     util.rank = 0
 
-    
-def create_bootstrap_folder (index):
-    folderName = "bootstrap/"+str(index)
+
+def create_bootstrap_folder(index):
+    folderName = "bootstrap/" + str(index)
     if not os.path.exists(folderName):
         os.makedirs(folderName)
 
 
 def create_script_file():
-    fout = open("send_bootstrap",'w')
-    fout.write ("#!/bin/bash\n")
-    fout.write ("#PBS -N bootstrap\n")
-    fout.write ("#PBS -e bootstrap.err\n")
-    fout.write ("#PBS -o bootstrap.out\n")
-    fout.write ("#PBS -m e\n")
-    fout.write ("#PBS -M antonio.gomez@csiro.au\n")
-    fout.write ("#PBS -l nodes=1:ppn=1\n")
-    fout.write ("#PBS -l walltime=1:30:00\n")
-    fout.write ("#PBS -l vmem=10GB\n")
-    fout.write ("#PBS -V\n")
-    fout.write ("cd $PBS_O_WORKDIR\n")
-    fout.write ("python remote_bootstrap.py input.tj0")
+    fout = open("send_bootstrap", 'w')
+    fout.write("#!/bin/bash\n")
+    fout.write("#PBS -N bootstrap\n")
+    fout.write("#PBS -e bootstrap.err\n")
+    fout.write("#PBS -o bootstrap.out\n")
+    fout.write("#PBS -m e\n")
+    fout.write("#PBS -l nodes=1:ppn=1\n")
+    fout.write("#PBS -l walltime=1:30:00\n")
+    fout.write("#PBS -l vmem=10GB\n")
+    fout.write("#PBS -V\n")
+    fout.write("cd $PBS_O_WORKDIR\n")
+    fout.write("python remote_bootstrap.py input.tj0")
     fout.close()
-    
+
 def main(argv):
     try:
         inputfile = "../finished.queue"
@@ -105,7 +104,7 @@ def main(argv):
                 xmlFile = val
             else:
                 assert False, "unhandled option"
-    
+
         solutionBase = SolutionFusion(xmlFile)
 
         init()
@@ -114,36 +113,36 @@ def main(argv):
         if not os.path.exists("bootstrap"):
             os.makedirs("bootstrap")
         savedPath = os.getcwd()
-        
+
         create_script_file()
-        
+
         for line in f.readlines():
-            solTuple = line.split ('#')
-            solValue = float (solTuple[1])
-            if (solValue<0.0):
+            solTuple = line.split('#')
+            solValue = float(solTuple[1])
+            if (solValue < 0.0):
                 continue
-            util.logger.info ("Processing solution " + str(i+1) + " with value " + str(solValue))
+            util.logger.info("Processing solution " + str(i+1) + " with value " + str(solValue))
             create_bootstrap_folder(i)
-            sol = solTuple [0]
+            sol = solTuple[0]
             parameters = sol.split(',')
             params = []
             for p in parameters:
-                params.append (float (p.split(':')[1]))
-            solutionBase.setParametersValues (params)
-            solutionBase.getData().create_input_file("bootstrap/"+str(i)+"/input.tj0")
+                params.append(float(p.split(':')[1]))
+            solutionBase.setParametersValues(params)
+            solutionBase.getData().create_input_file("bootstrap/" + str(i) + "/input.tj0")
             os.chdir(savedPath+"/bootstrap/"+str(i))
-            commands.getoutput ("ln -s " + savedPath + "/remote_bootstrap.py remote_bootstrap.py")
-            commands.getoutput ("ln -s " + savedPath + "/send_bootstrap send_bootstrap")
+            commands.getoutput("ln -s " + savedPath + "/remote_bootstrap.py remote_bootstrap.py")
+            commands.getoutput("ln -s " + savedPath + "/send_bootstrap send_bootstrap")
 
-            util.logger.info ("Submitting job")
+            util.logger.info("Submitting job")
             commands.getoutput("qsub send_bootstrap")
             os.chdir(savedPath)
-            i+=1
+            i += 1
         f.close()
-    
+
 
     except Exception, e:
-        print("bootstrap " + str(sys.exc_traceback.tb_lineno)+ " " +str(e))
+        print("bootstrap " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

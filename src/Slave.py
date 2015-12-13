@@ -48,7 +48,7 @@ import ConfigParser
 import sys
 
 
-class Slave (object):
+class Slave(object):
     def __init__(self, comm, ProblemType):
         try:
             self.__comm = comm

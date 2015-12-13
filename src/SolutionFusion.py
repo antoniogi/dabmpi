@@ -33,7 +33,7 @@ from VMECData import VMECData
 import Utils as u
 
 
-class SolutionFusion (SolutionBase):
+class SolutionFusion(SolutionBase):
     def __init__(self, infile):
         SolutionBase.__init__(self, infile)
         self.__data = VMECData()

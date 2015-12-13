@@ -36,7 +36,7 @@ from Parameter import Parameter
 from array import array
 
 
-class NonSeparableData (object):
+class NonSeparableData(object):
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
