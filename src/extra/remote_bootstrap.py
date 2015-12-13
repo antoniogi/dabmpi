@@ -51,7 +51,7 @@ def main(argv):
         print("source EXE/dab.sh")
         out = commands.getoutput("source EXE/dab.sh")
         print(out)
-        commands.getoutput ("source EXE/recoge_res.sh")
+        commands.getoutput("source EXE/recoge_res.sh")
 
     except Exception, e:
         print("remote_bootstrap " + str(sys.exc_traceback.tb_lineno) + " " + str(e))

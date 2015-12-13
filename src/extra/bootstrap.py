@@ -109,7 +109,7 @@ def main(argv):
 
         init()
         i = 0
-        f = open(inputfile,'r')
+        f = open(inputfile, 'r')
         if not os.path.exists("bootstrap"):
             os.makedirs("bootstrap")
         savedPath = os.getcwd()

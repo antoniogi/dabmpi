@@ -943,7 +943,7 @@ class SolverDAB(SolverBase):
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
 
-                    if (solutionValue<=0.0 or solutionValu>=u.infinity/100.0):
+                    if (solutionValue <= 0.0 or solutionValue >= u.infinity/100.0):
                         continue
 
                     if ((u.objective == u.objectiveType.MAXIMIZE and
@@ -965,7 +965,7 @@ class SolverDAB(SolverBase):
                         if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                             (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                             self.__bestGlobalSolution = self.__bestSolution
-                    
+
                         buff = self.__bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 

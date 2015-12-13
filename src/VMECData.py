@@ -1495,7 +1495,7 @@ class VMECData(object):
                 fInput.write(temptxt + "\n")
             if (self.pcurr.get_display()):
                 fInput.write("  PCURR_TYPE = " + self.pcurr.get_value() + "\n")
-                            
+
             display = False
             for i in self.ac:
                 if (i.get_display()):
@@ -1849,7 +1849,6 @@ class VMECData(object):
         except Exception, e:
             u.logger.warning("Error writting booting " + str(e) +
             " line: " + str(sys.exc_traceback.tb_lineno))
-            pass
         return True
 
     """
