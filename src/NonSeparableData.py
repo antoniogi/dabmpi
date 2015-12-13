@@ -145,7 +145,6 @@ class NonSeparableData (object):
                         traceback.print_tb(sys.exc_info()[2])
                         u.logger.warning("Problem calculating max range: " +
                                          str(e))
-                        pass
             u.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")

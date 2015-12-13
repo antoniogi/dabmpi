@@ -1341,7 +1341,6 @@ class VMECData (object):
                             except Exception, e:
                                 traceback.print_tb(sys.exc_info()[2])
                                 u.logger.warning("Problem calculating max range: " + str(e))
-                                pass
         except Exception, e:
             u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). Problem reading input xml file: " + str(e))
             traceback.print_tb(sys.exc_info()[2])

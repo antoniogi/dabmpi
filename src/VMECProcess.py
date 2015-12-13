@@ -490,8 +490,7 @@ class VMECProcess(object):
                     tempBr = (Br * dBr) / divisor
                     tempBz = (Bz * dBz) / divisor
                     tempBphi = (Bphi * dBphi) / divisor
-                    temp = abs(math.sqrt(
-                        abs(rho(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2))))
+                    temp = abs(math.sqrt(abs(rho(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2))))
                     fitness = fitness + temp
                 lineRPhiZ = file_out.readline()
             file_out.close()
@@ -503,7 +502,6 @@ class VMECProcess(object):
                 file_out.close()
             except:
                 pass
-            pass
         if(fitness < 1.0e+2):
             fitness = -u.infinity
         return fitness

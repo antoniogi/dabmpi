@@ -315,31 +315,6 @@ class Scout (BeeBase):
         u.logger.info('create new candidate scout')
         solution = self.createRandomSolution()
         return solution, -1
-        """
-        solution = self.getBestLocalSolution()
-        params = solution.getParameters()
-        u.logger.debug('number of parameters: ' + str(len(params)))
-        for i in range(len(params)):
-            ptype = params[i].get_type()
-            newVal = None
-            if (ptype == "double") or (ptype == "float"):
-                minVal = params[i].get_min_value()
-                maxVal = params[i].get_max_value()
-                if (params[i].get_gap()==0.0):
-                    newVal = random.uniform (minVal, maxVal)
-                else:
-                    newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
-            elif (ptype == "bool"):
-                val = random.randint (0,1)
-                newVal = (val==0)
-            else:
-                minVal = params[i].get_min_value()
-                maxVal = params[i].get_max_value()
-                newVal = random.randint (minVal, maxVal)
-            params[i].set_value(newVal)
-        solution.setParameters(params)
-        return solution, -1
-        """
 
 """
 Onlooker bees
@@ -491,6 +466,7 @@ class SolverDAB (SolverBase):
             self.__probOnlookerChange = 50
             self.__maxNumTopSolutions = 100
 
+            self.__bestGlobalSolution = None
             self.__pendingSolutions = None
             self.__finishedSolutions = None
             self.__topSolutions = None
@@ -729,7 +705,7 @@ class SolverDAB (SolverBase):
     def receiveSolutions(self):
         status = MPI.Status()
         sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
-                
+
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self.__requestSolution)):
@@ -783,7 +759,7 @@ class SolverDAB (SolverBase):
                         u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
-                    
+
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bestSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bestSolution.getValue()))):
                         filenametime = "0"
@@ -934,7 +910,7 @@ class SolverDAB (SolverBase):
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                         self.__bestGlobalSolution = self.__bestSolution
-                    
+
                     buff = self.__bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
