@@ -1572,7 +1572,6 @@ class VMECData (object):
             u.logger.warning("Error writting indata:" +
                 str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
             sys.exit(111)
-            pass
         return True
 
     """
