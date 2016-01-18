@@ -1652,8 +1652,7 @@
 		<gap>2</gap>
 		<min_value>0.0001</min_value>
 		<max_value>2</max_value>
-	</param>
-<param>
+	</param
 <param>
 <index>151</index>
 <name>rbc0</name>
