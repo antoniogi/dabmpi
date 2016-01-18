@@ -107,7 +107,7 @@ class VMECProcess(object):
                         subprocess.call(["ln", "-s", "../../external/xgrid",
                                           "xgrid"])
                     if(not os.path.lexists("xvmec2000")):
-                        subprocess.call(["ln", "-s", "../../external/xvmec2000",
+                        subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
                                           "xvmec2000"])
                 except Exception, e:
                     u.logger.error("VMECProcess(" +
@@ -122,12 +122,12 @@ class VMECProcess(object):
                     if(not os.path.lexists("xgrid")):
                         commands.getoutput("ln -s ../../external/xgrid xgrid")
                     if(not os.path.lexists("xvmec2000")):
-                        commands.getoutput("ln -s ../../external/xvmec2000 xvmec2000")
+                        commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
                 except Exception, e:
                     u.logger.warning("VMECProcess(" +
                                     str(sys.exc_traceback.tb_lineno) + "). " +
                                     str(e))
-                    commands.getoutput("ln -s ../../external/xvmec2000 xvmec2000")
+                    commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
                     commands.getoutput("ln -s ../../external/xgrid xgrid")
         except Exception, e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
@@ -490,7 +490,8 @@ class VMECProcess(object):
                     tempBr = (Br * dBr) / divisor
                     tempBz = (Bz * dBz) / divisor
                     tempBphi = (Bphi * dBphi) / divisor
-                    temp = abs(math.sqrt(abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
+                    temp = abs(math.sqrt(
+                        abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
                     fitness = fitness + temp
                 lineRPhiZ = file_out.readline()
             file_out.close()
@@ -502,6 +503,7 @@ class VMECProcess(object):
                 file_out.close()
             except:
                 pass
+            pass
         if(fitness < 1.0e+2):
             fitness = -u.infinity
         return fitness
@@ -552,7 +554,7 @@ class VMECProcess(object):
                 lines = [line.strip() for line in open("OUTPUT/results.av")]
                 sum = 0.0
                 for l in lines:
-                    if (l.find('average') > 0):
+                    if (l.find('average')>0):
                         parts = map(string.strip, string.split(l))
                         try:
                             d31 = abs(float(parts[4]))
@@ -796,12 +798,12 @@ class VMECProcess(object):
             if(not os.path.exists("input.tj" + str(self.__rank))):
                 return False
             if(subProcFound):
-                proc = subprocess.Popen(["./xvmec2000", "tj" + self.__rank],
+                proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", "tj" + self.__rank],
                                         stdout=subprocess.PIPE)
                 output = proc.stdout.read()
                 u.logger.debug(output)
             else:
-                commands.getoutput("./xvmec2000 tj" + self.__rank)
+                commands.getoutput("/home/fraguas/bin/xvmec2000nc tj" + self.__rank)
             try:
                 if(os.path.exists("core")):
                     os.remove("core")

@@ -56,7 +56,7 @@ import ConfigParser
 import SolutionsQueue as solQueue
 
 
-class SolverSA(SolverBase):
+class SolverSA (SolverBase):
     def readConfigFile(self, configfile):
         config = ConfigParser.ConfigParser()
         config.read(configfile)

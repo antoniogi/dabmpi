@@ -1654,7 +1654,6 @@
 		<max_value>2</max_value>
 	</param>
 <param>
-<param>
 <index>151</index>
 <name>rbc0</name>
 <value x="0" y="0">5.5399E+00</value>
@@ -6044,15 +6043,15 @@
 <max_value>0.2</max_value>
 </param>
 <param>
-<index>550</index>
-<name>zbs199</name>
-<value x="10" y="9">-3.8078e-05</value>
-<type>double</type>
-<display>False</display>
-<fixed>False</fixed>
-<gap>0.001</gap>
-<min_value>-0.2</min_value>
-<max_value>0.2</max_value>
+    <index>550</index>
+    <name>zbs199</name>
+    <value x="10" y="9">-3.8078e-05</value>
+    <type>double</type>
+    <display>False</display>
+    <fixed>False</fixed>
+    <gap>0.001</gap>
+    <min_value>-0.2</min_value>
+    <max_value>0.2</max_value>
 </param>
 </indata>
 <optimum display="False">

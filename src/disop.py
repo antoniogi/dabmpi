@@ -71,7 +71,7 @@ def init(cfile):
     util.logger = logging.getLogger('disop')
     util.logger.setLevel(logging.DEBUG)
 
-    #default model
+    #default model    
     util.commModel = util.commModelType.MASTERSLAVE
 
     # create file handler which logs even debug messages
@@ -264,7 +264,7 @@ def main(argv):
             #clean everything
             solver.finish()
             util.logger.info("RANK " + str(rank) + " END OF THE EXECUTION")
-
+            
         dump = array('i', [0]) * 1
         util.comm.Bcast(dump)
     except Exception, e:

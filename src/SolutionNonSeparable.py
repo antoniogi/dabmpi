@@ -32,7 +32,7 @@ from SolutionBase import SolutionBase
 from NonSeparableData import NonSeparableData
 
 
-class SolutionNonSeparable(SolutionBase):
+class SolutionNonSeparable (SolutionBase):
     def __init__(self, infile):
         SolutionBase.__init__(self, infile)
         self.__data = NonSeparableData()

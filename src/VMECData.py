@@ -47,7 +47,7 @@ except ImportError:
     subProcFound = False
 
 
-class VMECData(object):
+class VMECData (object):
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
@@ -91,7 +91,7 @@ class VMECData(object):
         self.am = []
         self.piota = None
         self.ai = []
-        self.pcurr = None
+        self.pcurr = None        
         self.ac = []
         self.raxis = []
         self.zaxis = []
@@ -693,263 +693,266 @@ class VMECData(object):
     """
     def getParameters(self):
         parameters = []
-        if (self.mgrid_file.to_be_modified()):
-            parameters.append(self.mgrid_file)
-        if (self.lfreeb.to_be_modified()):
-            parameters.append(self.lfreeb)
-        if (self.loldout.to_be_modified()):
-            parameters.append(self.loldout)
-        if (self.lwouttxt.to_be_modified()):
-            parameters.append(self.lwouttxt)
-        if (self.ldiagno.to_be_modified()):
-            parameters.append(self.ldiagno)
-        if (self.loptim.to_be_modified()):
-            parameters.append(self.loptim)
-        if (self.delt.to_be_modified()):
-            parameters.append(self.delt)
-
-        if (self.tcon0.to_be_modified()):
-            parameters.append(self.tcon0)
-
-        if (self.nfp.to_be_modified()):
-            parameters.append(self.nfp)
+        try:
+            if (self.mgrid_file.to_be_modified()):
+                parameters.append(self.mgrid_file)
+            if (self.lfreeb.to_be_modified()):
+                parameters.append(self.lfreeb)
+            if (self.loldout.to_be_modified()):
+                parameters.append(self.loldout)
+            if (self.lwouttxt.to_be_modified()):
+                parameters.append(self.lwouttxt)
+            if (self.ldiagno.to_be_modified()):
+                parameters.append(self.ldiagno)
+            if (self.loptim.to_be_modified()):
+                parameters.append(self.loptim)
+            if (self.delt.to_be_modified()):
+                parameters.append(self.delt)
+
+            if (self.tcon0.to_be_modified()):
+                parameters.append(self.tcon0)
+    
+            if (self.nfp.to_be_modified()):
+                parameters.append(self.nfp)
+
+            if (self.ncurr.to_be_modified()):
+                parameters.append(self.ncurr)
+
+            if (self.mpol.to_be_modified()):
+                parameters.append(self.mpol)
+
+            if (self.ntor.to_be_modified()):
+                parameters.append(self.ntor)
+
+            if (self.nzeta.to_be_modified()):
+                parameters.append(self.nzeta)
+
+            for i in range(len(self.ns)):
+                if (self.ns[i].to_be_modified()):
+                    parameters.append(self.ns[i])
+
+            if (self.niter.to_be_modified()):
+                parameters.append(self.niter)
 
-        if (self.ncurr.to_be_modified()):
-            parameters.append(self.ncurr)
+            if (self.nstep.to_be_modified()):
+                parameters.append(self.nstep)
 
-        if (self.mpol.to_be_modified()):
-            parameters.append(self.mpol)
+            if (self.nvacskip.to_be_modified()):
+                parameters.append(self.nvacskip)
 
-        if (self.ntor.to_be_modified()):
-            parameters.append(self.ntor)
+            if (self.gamma.to_be_modified()):
+                parameters.append(self.gamma)
 
-        if (self.nzeta.to_be_modified()):
-            parameters.append(self.nzeta)
+            for i in range(len(self.ftol)):
+                if (self.ftol[i].to_be_modified()):
+                    parameters.append(self.ftol[i])
 
-        for i in range(len(self.ns)):
-            if (self.ns[i].to_be_modified()):
-                parameters.append(self.ns[i])
+            if (self.phiedge.to_be_modified()):
+                parameters.append(self.phiedge)
+            if (self.bloat.to_be_modified()):
+                parameters.append(self.bloat)
 
-        if (self.niter.to_be_modified()):
-            parameters.append(self.niter)
+            for i in range(len(self.extcur)):
+                if (self.extcur[i].to_be_modified()):
+                    parameters.append(self.extcur[i])
 
-        if (self.nstep.to_be_modified()):
-            parameters.append(self.nstep)
+            if (self.curtor.to_be_modified()):
+                parameters.append(self.curtor)
+            if (self.spres_ped.to_be_modified()):
+                parameters.append(self.spres_ped)
+            if (self.pres_scale.to_be_modified()):
+                parameters.append(self.pres_scale)
 
-        if (self.nvacskip.to_be_modified()):
-            parameters.append(self.nvacskip)
+            for i in range(len(self.am)):
+                if (self.am[i].to_be_modified()):
+                    parameters.append(self.am[i])
 
-        if (self.gamma.to_be_modified()):
-            parameters.append(self.gamma)
+            for i in range(len(self.ai)):
+                if (self.ai[i].to_be_modified()):
+                    parameters.append(self.ai[i])
 
-        for i in range(len(self.ftol)):
-            if (self.ftol[i].to_be_modified()):
-                parameters.append(self.ftol[i])
+            for i in range(len(self.ac)):
+                if (self.ac[i].to_be_modified()):
+                    parameters.append(self.ac[i])
 
-        if (self.phiedge.to_be_modified()):
-            parameters.append(self.phiedge)
-        if (self.bloat.to_be_modified()):
-            parameters.append(self.bloat)
+            for i in range(len(self.raxis)):
+                if (self.raxis[i].to_be_modified()):
+                    parameters.append(self.raxis[i])
 
-        for i in range(len(self.extcur)):
-            if (self.extcur[i].to_be_modified()):
-                parameters.append(self.extcur[i])
+            for i in range(len(self.zaxis)):
+                if (self.zaxis[i].to_be_modified()):
+                    parameters.append(self.zaxis[i])
 
-        if (self.curtor.to_be_modified()):
-            parameters.append(self.curtor)
-        if (self.spres_ped.to_be_modified()):
-            parameters.append(self.spres_ped)
-        if (self.pres_scale.to_be_modified()):
-            parameters.append(self.pres_scale)
+            for i in range(len(self.rbc)):
+                if (self.rbc[i].to_be_modified()):
+                    parameters.append(self.rbc[i])
 
-        for i in range(len(self.am)):
-            if (self.am[i].to_be_modified()):
-                parameters.append(self.am[i])
+            for i in range(len(self.zbc)):
+                if (self.zbc[i].to_be_modified()):
+                    parameters.append(self.zbc[i])
 
-        for i in range(len(self.ai)):
-            if (self.ai[i].to_be_modified()):
-                parameters.append(self.ai[i])
+            if (self.epsfcn.to_be_modified()):
+                parameters.append(self.epsfcn)
 
-        for i in range(len(self.ac)):
-            if (self.ac[i].to_be_modified()):
-                parameters.append(self.ac[i])
+            if (self.niter_opt.to_be_modified()):
+                parameters.append(self.niter_opt)
 
-        for i in range(len(self.raxis)):
-            if (self.raxis[i].to_be_modified()):
-                parameters.append(self.raxis[i])
+            if (self.lreset_opt.to_be_modified()):
+                parameters.append(self.lreset_opt)
 
-        for i in range(len(self.zaxis)):
-            if (self.zaxis[i].to_be_modified()):
-                parameters.append(self.zaxis[i])
+            if (self.lprof_opt.to_be_modified()):
+                parameters.append(self.lprof_opt)
 
-        for i in range(len(self.rbc)):
-            if (self.rbc[i].to_be_modified()):
-                parameters.append(self.rbc[i])
+            if (self.lbmn.to_be_modified()):
+                parameters.append(self.lbmn)
 
-        for i in range(len(self.zbc)):
-            if (self.zbc[i].to_be_modified()):
-                parameters.append(self.zbc[i])
+            if (self.lfix_ntor.to_be_modified()):
+                parameters.append(self.lfix_ntor)
 
-        if (self.epsfcn.to_be_modified()):
-            parameters.append(self.epsfcn)
+            if (self.lsurf_mask.to_be_modified()):
+                parameters.append(self.lsurf_mask)
 
-        if (self.niter_opt.to_be_modified()):
-            parameters.append(self.niter_opt)
+            if (self.target_aspectratio.to_be_modified()):
+                parameters.append(self.target_aspectratio)
 
-        if (self.lreset_opt.to_be_modified()):
-            parameters.append(self.lreset_opt)
+            if (self.target_beta.to_be_modified()):
+                parameters.append(self.target_beta)
 
-        if (self.lprof_opt.to_be_modified()):
-            parameters.append(self.lprof_opt)
+            if (self.target_maxcurrent.to_be_modified()):
+                parameters.append(self.target_maxcurrent)
 
-        if (self.lbmn.to_be_modified()):
-            parameters.append(self.lbmn)
+            if (self.target_rmax.to_be_modified()):
+                parameters.append(self.target_rmax)
 
-        if (self.lfix_ntor.to_be_modified()):
-            parameters.append(self.lfix_ntor)
+            if (self.target_rmin.to_be_modified()):
+                parameters.append(self.target_rmin)
 
-        if (self.lsurf_mask.to_be_modified()):
-            parameters.append(self.lsurf_mask)
+            for i in range(len(self.target_iota)):
+                if (self.target_iota[i].to_be_modified()):
+                    parameters.append(self.target_iota[i])
 
-        if (self.target_aspectratio.to_be_modified()):
-            parameters.append(self.target_aspectratio)
+            for i in range(len(self.target_well)):
+                if (self.target_well[i].to_be_modified()):
+                    parameters.append(self.target_well[i])
 
-        if (self.target_beta.to_be_modified()):
-            parameters.append(self.target_beta)
+            if (self.sigma_aspect.to_be_modified()):
+                parameters.append(self.sigma_aspect)
 
-        if (self.target_maxcurrent.to_be_modified()):
-            parameters.append(self.target_maxcurrent)
+            if (self.sigma_curv.to_be_modified()):
+                parameters.append(self.sigma_curv)
 
-        if (self.target_rmax.to_be_modified()):
-            parameters.append(self.target_rmax)
+            if (self.sigma_beta.to_be_modified()):
+                parameters.append(self.sigma_beta)
 
-        if (self.target_rmin.to_be_modified()):
-            parameters.append(self.target_rmin)
+            if (self.sigma_kink.to_be_modified()):
+                parameters.append(self.sigma_kink)
 
-        for i in range(len(self.target_iota)):
-            if (self.target_iota[i].to_be_modified()):
-                parameters.append(self.target_iota[i])
+            if (self.sigma_maxcurrent.to_be_modified()):
+                parameters.append(self.sigma_maxcurrent)
 
-        for i in range(len(self.target_well)):
-            if (self.target_well[i].to_be_modified()):
-                parameters.append(self.target_well[i])
+            if (self.sigma_rmax.to_be_modified()):
+                parameters.append(self.sigma_rmax)
 
-        if (self.sigma_aspect.to_be_modified()):
-            parameters.append(self.sigma_aspect)
+            if (self.sigma_rmin.to_be_modified()):
+                parameters.append(self.sigma_rmin)
 
-        if (self.sigma_curv.to_be_modified()):
-            parameters.append(self.sigma_curv)
+            for i in range(len(self.sigma_iota)):
+                if (self.sigma_iota[i].to_be_modified()):
+                    parameters.append(self.sigma_iota[i])
 
-        if (self.sigma_beta.to_be_modified()):
-            parameters.append(self.sigma_beta)
+            for i in range(len(self.sigma_vp)):
+                if (self.sigma_vp[i].to_be_modified()):
+                    parameters.append(self.sigma_vp[i])
 
-        if (self.sigma_kink.to_be_modified()):
-            parameters.append(self.sigma_kink)
+            for i in range(len(self.sigma_bmin)):
+                if (self.sigma_bmin[i].to_be_modified()):
+                    parameters.append(self.sigma_bmin[i])
 
-        if (self.sigma_maxcurrent.to_be_modified()):
-            parameters.append(self.sigma_maxcurrent)
+            for i in range(len(self.sigma_bmax)):
+                if (self.sigma_bmax[i].to_be_modified()):
+                    parameters.append(self.sigma_bmax[i])
 
-        if (self.sigma_rmax.to_be_modified()):
-            parameters.append(self.sigma_rmax)
+            for i in range(len(self.sigma_ripple)):
+                if (self.sigma_ripple[i].to_be_modified()):
+                    parameters.append(self.sigma_ripple[i])
 
-        if (self.sigma_rmin.to_be_modified()):
-            parameters.append(self.sigma_rmin)
+            for i in range(len(self.sigma_jstar0)):
+                if (self.sigma_jstar0[i].to_be_modified()):
+                    parameters.append(self.sigma_jstar0[i])
 
-        for i in range(len(self.sigma_iota)):
-            if (self.sigma_iota[i].to_be_modified()):
-                parameters.append(self.sigma_iota[i])
+            for i in range(len(self.sigma_jstar1)):
+                if (self.sigma_jstar1[i].to_be_modified()):
+                    parameters.append(self.sigma_jstar1[i])
 
-        for i in range(len(self.sigma_vp)):
-            if (self.sigma_vp[i].to_be_modified()):
-                parameters.append(self.sigma_vp[i])
+            for i in range(len(self.sigma_jstar2)):
+                if (self.sigma_jstar2[i].to_be_modified()):
+                    parameters.append(self.sigma_jstar2[i])
 
-        for i in range(len(self.sigma_bmin)):
-            if (self.sigma_bmin[i].to_be_modified()):
-                parameters.append(self.sigma_bmin[i])
+            for i in range(len(self.sigma_jstar3)):
+                if (self.sigma_jstar3[i].to_be_modified()):
+                    parameters.append(self.sigma_jstar3[i])
 
-        for i in range(len(self.sigma_bmax)):
-            if (self.sigma_bmax[i].to_be_modified()):
-                parameters.append(self.sigma_bmax[i])
+            for i in range(len(self.sigma_balloon)):
+                if (self.sigma_balloon[i].to_be_modified()):
+                    parameters.append(self.sigma_balloon[i])
 
-        for i in range(len(self.sigma_ripple)):
-            if (self.sigma_ripple[i].to_be_modified()):
-                parameters.append(self.sigma_ripple[i])
+            for i in range(len(self.sigma_pgrad)):
+                if (self.sigma_pgrad[i].to_be_modified()):
+                    parameters.append(self.sigma_pgrad[i])
 
-        for i in range(len(self.sigma_jstar0)):
-            if (self.sigma_jstar0[i].to_be_modified()):
-                parameters.append(self.sigma_jstar0[i])
+            if (self.sigma_pedge.to_be_modified()):
+                parameters.append(self.sigma_pedge)
 
-        for i in range(len(self.sigma_jstar1)):
-            if (self.sigma_jstar1[i].to_be_modified()):
-                parameters.append(self.sigma_jstar1[i])
+            if (self.lballon_test.to_be_modified()):
+                parameters.append(self.lballon_test)
 
-        for i in range(len(self.sigma_jstar2)):
-            if (self.sigma_jstar2[i].to_be_modified()):
-                parameters.append(self.sigma_jstar2[i])
+            if (self.bal_zeta0.to_be_modified()):
+                parameters.append(self.bal_zeta0)
 
-        for i in range(len(self.sigma_jstar3)):
-            if (self.sigma_jstar3[i].to_be_modified()):
-                parameters.append(self.sigma_jstar3[i])
+            if (self.bal_theta0.to_be_modified()):
+                parameters.append(self.bal_theta0)
 
-        for i in range(len(self.sigma_balloon)):
-            if (self.sigma_balloon[i].to_be_modified()):
-                parameters.append(self.sigma_balloon[i])
+            if (self.bal_xmax.to_be_modified()):
+                parameters.append(self.bal_xmax)
 
-        for i in range(len(self.sigma_pgrad)):
-            if (self.sigma_pgrad[i].to_be_modified()):
-                parameters.append(self.sigma_pgrad[i])
+            if (self.bal_np0.to_be_modified()):
+                parameters.append(self.bal_np0)
 
-        if (self.sigma_pedge.to_be_modified()):
-            parameters.append(self.sigma_pedge)
+            if (self.bal_kth.to_be_modified()):
+                parameters.append(self.bal_kth)
 
-        if (self.lballon_test.to_be_modified()):
-            parameters.append(self.lballon_test)
+            if (self.bal_x0.to_be_modified()):
+                parameters.append(self.bal_x0)
 
-        if (self.bal_zeta0.to_be_modified()):
-            parameters.append(self.bal_zeta0)
+            if (self.nrh.to_be_modified()):
+                parameters.append(self.nrh)
 
-        if (self.bal_theta0.to_be_modified()):
-            parameters.append(self.bal_theta0)
+            if (self.mbuse.to_be_modified()):
+                parameters.append(self.mbuse)
 
-        if (self.bal_xmax.to_be_modified()):
-            parameters.append(self.bal_xmax)
+            if (self.nbuse.to_be_modified()):
+                parameters.append(self.nbuse)
 
-        if (self.bal_np0.to_be_modified()):
-            parameters.append(self.bal_np0)
+            if (self.zeff1.to_be_modified()):
+                parameters.append(self.zeff1)
 
-        if (self.bal_kth.to_be_modified()):
-            parameters.append(self.bal_kth)
+            if (self.damp.to_be_modified()):
+                parameters.append(self.damp)
 
-        if (self.bal_x0.to_be_modified()):
-            parameters.append(self.bal_x0)
+            if (self.isymm0.to_be_modified()):
+                parameters.append(self.isymm0)
 
-        if (self.nrh.to_be_modified()):
-            parameters.append(self.nrh)
+            if (self.ate.to_be_modified()):
+                parameters.append(self.ate)
 
-        if (self.mbuse.to_be_modified()):
-            parameters.append(self.mbuse)
+            if (self.ati.to_be_modified()):
+                parameters.append(self.ati)
 
-        if (self.nbuse.to_be_modified()):
-            parameters.append(self.nbuse)
-
-        if (self.zeff1.to_be_modified()):
-            parameters.append(self.zeff1)
-
-        if (self.damp.to_be_modified()):
-            parameters.append(self.damp)
-
-        if (self.isymm0.to_be_modified()):
-            parameters.append(self.isymm0)
-
-        if (self.ate.to_be_modified()):
-            parameters.append(self.ate)
-
-        if (self.ati.to_be_modified()):
-            parameters.append(self.ati)
-
+        except Exception, e:
+            u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). " + str(e))
+            
         if (int(self.__numParams) != len(parameters)):
-            u.logger.error("VMECData. Incorrect number of parameters (" +
-                           str(self.__numParams) + "--" + str(len(parameters)) + ")")
+            u.logger.error("VMECData. Incorrect number of parameters (" + str(self.__numParams) + "--" + str(len(parameters)) + ")")
         return parameters
 
     """
@@ -1043,7 +1046,7 @@ class VMECData(object):
             self.pres_scale = parameter
             return 1
         if (index == 62):
-            self.pres = parameter
+            self.pmass = parameter
             return 1
         if (index >= 63 and index <= 82):
             if ((index - 63) >= len(self.am)):
@@ -1051,7 +1054,7 @@ class VMECData(object):
             else:
                 self.am[index - 63] = parameter
             return 1
-        if (index == 83):
+        if (index==83):
             self.piota = parameter
             return 1
         if (index >= 84 and index <= 104):
@@ -1060,7 +1063,7 @@ class VMECData(object):
             else:
                 self.ai[index - 84] = parameter
             return 1
-        if (index == 105):
+        if (index==105):
             self.pcurr = parameter
             return 1
         if (index >= 106 and index <= 128):
@@ -1081,7 +1084,7 @@ class VMECData(object):
             else:
                 self.zaxis[index - 140] = parameter
             return 1
-        if (index >= 151 and index <= 624):
+        if (index >= 151 and index <= 550):
             pos = int(math.floor((index - 151) / 2))
             if (index % 2 == 0):
                 if (pos >= len(self.rbc)):
@@ -1094,187 +1097,187 @@ class VMECData(object):
                 else:
                     self.zbc[pos] = parameter
             return 1
-        if (index == 625):
+        if (index == 551):
             self.epsfcn = parameter
             return 1
-        if (index == 626):
+        if (index == 552):
             self.niter_opt = parameter
             return 1
-        if (index == 627):
+        if (index == 553):
             self.lreset_opt = parameter
             return 1
-        if (index == 628):
+        if (index == 554):
             self.lprof_opt = parameter
             return 1
-        if (index == 629):
+        if (index == 555):
             self.lbmn = parameter
             return 1
-        if (index == 630):
+        if (index == 556):
             self.lfix_ntor = parameter
             return 1
-        if (index == 631):
+        if (index == 557):
             self.lsurf_mask = parameter
             return 1
-        if (index == 632):
+        if (index == 558):
             self.target_aspectratio = parameter
             return 1
-        if (index == 633):
+        if (index == 559):
             self.target_beta = parameter
             return 1
-        if (index == 634):
+        if (index == 560):
             self.target_maxcurrent = parameter
             return 1
-        if (index == 635):
+        if (index == 561):
             self.target_rmax = parameter
             return 1
-        if (index == 636):
+        if (index == 562):
             self.target_rmin = parameter
             return 1
-        if (index >= 637 and index <= 647):
-            if ((index - 637) >= len(self.target_iota)):
+        if (index >= 563 and index <= 573):
+            if ((index - 563) >= len(self.target_iota)):
                 self.target_iota.append(parameter)
             else:
-                self.target_iota[index - 637] = parameter
+                self.target_iota[index - 563] = parameter
             return 1
-        if (index >= 648 and index <= 658):
-            if ((index - 648) >= len(self.target_well)):
+        if (index >= 574 and index <= 584):
+            if ((index - 574) >= len(self.target_well)):
                 self.target_well.append(parameter)
             else:
-                self.target_well[index - 648] = parameter
+                self.target_well[index - 574] = parameter
             return 1
-        if (index == 659):
+        if (index == 585):
             self.sigma_aspect = parameter
             return 1
-        if (index == 660):
+        if (index == 586):
             self.sigma_curv = parameter
             return 1
-        if (index == 661):
+        if (index == 587):
             self.sigma_beta = parameter
             return 1
-        if (index == 662):
+        if (index == 588):
             self.sigma_kink = parameter
             return 1
-        if (index == 663):
+        if (index == 589):
             self.sigma_maxcurrent = parameter
             return 1
-        if (index == 664):
+        if (index == 590):
             self.sigma_rmax = parameter
             return 1
-        if (index == 665):
+        if (index == 591):
             self.sigma_rmin = parameter
             return 1
-        if (index >= 666 and index <= 696):
-            if ((index - 666) >= len(self.sigma_iota)):
+        if (index >= 592 and index <= 622):
+            if ((index - 592) >= len(self.sigma_iota)):
                 self.sigma_iota.append(parameter)
             else:
-                self.sigma_iota[index - 666] = parameter
+                self.sigma_iota[index - 592] = parameter
             return 1
-        if (index >= 697 and index <= 727):
-            if ((index - 697) >= len(self.sigma_vp)):
+        if (index >= 623 and index <= 653):
+            if ((index - 623) >= len(self.sigma_vp)):
                 self.sigma_vp.append(parameter)
             else:
-                self.sigma_vp[index - 697] = parameter
+                self.sigma_vp[index - 623] = parameter
             return 1
-        if (index >= 728 and index <= 758):
-            if ((index - 728) >= len(self.sigma_bmin)):
+        if (index >= 654 and index <= 684):
+            if ((index - 654) >= len(self.sigma_bmin)):
                 self.sigma_bmin.append(parameter)
             else:
-                self.sigma_bmin[index - 728] = parameter
+                self.sigma_bmin[index - 654] = parameter
             return 1
-        if (index >= 759 and index <= 789):
-            if ((index - 759) >= len(self.sigma_bmax)):
+        if (index >= 685 and index <= 715):
+            if ((index - 685) >= len(self.sigma_bmax)):
                 self.sigma_bmax.append(parameter)
             else:
-                self.sigma_bmax[index - 759] = parameter
+                self.sigma_bmax[index - 685] = parameter
             return 1
-        if (index >= 790 and index <= 820):
-            if ((index - 790) >= len(self.sigma_ripple)):
+        if (index >= 716 and index <= 746):
+            if ((index - 716) >= len(self.sigma_ripple)):
                 self.sigma_ripple.append(parameter)
             else:
-                self.sigma_ripple[index - 790] = parameter
+                self.sigma_ripple[index - 716] = parameter
             return 1
-        if (index >= 821 and index <= 851):
-            if ((index - 821) >= len(self.sigma_jstar0)):
+        if (index >= 747 and index <= 777):
+            if ((index - 747) >= len(self.sigma_jstar0)):
                 self.sigma_jstar0.append(parameter)
             else:
-                self.sigma_jstar0[index - 821] = parameter
+                self.sigma_jstar0[index - 747] = parameter
             return 1
-        if (index >= 852 and index <= 882):
-            if ((index - 852) >= len(self.sigma_jstar1)):
+        if (index >= 778 and index <= 808):
+            if ((index - 778) >= len(self.sigma_jstar1)):
                 self.sigma_jstar1.append(parameter)
             else:
-                self.sigma_jstar1[index - 852] = parameter
+                self.sigma_jstar1[index - 778] = parameter
             return 1
-        if (index >= 883 and index <= 913):
-            if ((index - 883) >= len(self.sigma_jstar2)):
+        if (index >= 809 and index <= 839):
+            if ((index - 809) >= len(self.sigma_jstar2)):
                 self.sigma_jstar2.append(parameter)
             else:
-                self.sigma_jstar2[index - 883] = parameter
+                self.sigma_jstar2[index - 809] = parameter
             return 1
-        if (index >= 914 and index <= 944):
-            if ((index - 914) >= len(self.sigma_jstar3)):
+        if (index >= 840 and index <= 870):
+            if ((index - 840) >= len(self.sigma_jstar3)):
                 self.sigma_jstar3.append(parameter)
             else:
-                self.sigma_jstar3[index - 914] = parameter
+                self.sigma_jstar3[index - 840] = parameter
             return 1
-        if (index >= 945 and index <= 975):
-            if ((index - 945) >= len(self.sigma_balloon)):
+        if (index >= 871 and index <= 901):
+            if ((index - 871) >= len(self.sigma_balloon)):
                 self.sigma_balloon.append(parameter)
             else:
-                self.sigma_balloon[index - 945] = parameter
+                self.sigma_balloon[index - 871] = parameter
             return 1
-        if (index >= 976 and index <= 1006):
-            if ((index - 976) >= len(self.sigma_pgrad)):
+        if (index >= 902 and index <= 932):
+            if ((index - 902) >= len(self.sigma_pgrad)):
                 self.sigma_pgrad.append(parameter)
             else:
-                self.sigma_pgrad[index - 976] = parameter
+                self.sigma_pgrad[index - 902] = parameter
             return 1
-        if (index == 1007):
+        if (index == 933):
             self.sigma_pedge = parameter
             return 1
-        if (index == 1008):
+        if (index == 934):
             self.lballon_test = parameter
             return 1
-        if (index == 1009):
+        if (index == 935):
             self.bal_zeta0 = parameter
             return 1
-        if (index == 1010):
+        if (index == 936):
             self.bal_theta0 = parameter
             return 1
-        if (index == 1011):
+        if (index == 937):
             self.bal_xmax = parameter
             return 1
-        if (index == 1012):
+        if (index == 938):
             self.bal_np0 = parameter
             return 1
-        if (index == 1013):
+        if (index == 939):
             self.bal_kth = parameter
             return 1
-        if (index == 1014):
+        if (index == 940):
             self.bal_x0 = parameter
             return 1
-        if (index == 1015):
+        if (index == 941):
             self.nrh = parameter
             return 1
-        if (index == 1016):
+        if (index == 942):
             self.mbuse = parameter
             return 1
-        if (index == 1017):
+        if (index == 943):
             self.nbuse = parameter
             return 1
-        if (index == 1018):
+        if (index == 944):
             self.zeff1 = parameter
             return 1
-        if (index == 1019):
+        if (index == 945):
             self.damp = parameter
             return 1
-        if (index == 1020):
+        if (index == 946):
             self.isymm0 = parameter
             return 1
-        if (index == 1021):
+        if (index == 947):
             self.ate = parameter
             return 1
-        if (index == 1022):
+        if (index == 948):
             self.ati = parameter
             return 1
         u.logger.warning("Unassigned element with index: " + str(index))
@@ -1342,6 +1345,7 @@ class VMECData(object):
                             except Exception, e:
                                 traceback.print_tb(sys.exc_info()[2])
                                 u.logger.warning("Problem calculating max range: " + str(e))
+                                pass
         except Exception, e:
             u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). Problem reading input xml file: " + str(e))
             traceback.print_tb(sys.exc_info()[2])
@@ -1477,7 +1481,7 @@ class VMECData(object):
                 fInput.write(temptxt + "\n")
             if (self.piota.get_display()):
                 fInput.write("  PIOTA_TYPE = " + self.piota.get_value() + "\n")
-
+                            
             display = False
             for i in self.ai:
                 if (i.get_display()):
@@ -1495,7 +1499,7 @@ class VMECData(object):
                 fInput.write(temptxt + "\n")
             if (self.pcurr.get_display()):
                 fInput.write("  PCURR_TYPE = " + self.pcurr.get_value() + "\n")
-
+                            
             display = False
             for i in self.ac:
                 if (i.get_display()):
@@ -1573,6 +1577,7 @@ class VMECData(object):
             u.logger.warning("Error writting indata:" +
                 str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
             sys.exit(111)
+            pass
         return True
 
     """
@@ -1816,6 +1821,7 @@ class VMECData(object):
         except Exception, e:
             u.logger.warning("Error writting optimum " +
                     str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+            pass
         return True
 
     """
@@ -1849,6 +1855,7 @@ class VMECData(object):
         except Exception, e:
             u.logger.warning("Error writting booting " + str(e) +
             " line: " + str(sys.exc_traceback.tb_lineno))
+            pass
         return True
 
     """

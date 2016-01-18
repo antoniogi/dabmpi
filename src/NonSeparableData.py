@@ -36,7 +36,7 @@ from Parameter import Parameter
 from array import array
 
 
-class NonSeparableData(object):
+class NonSeparableData (object):
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
@@ -145,6 +145,7 @@ class NonSeparableData(object):
                         traceback.print_tb(sys.exc_info()[2])
                         u.logger.warning("Problem calculating max range: " +
                                          str(e))
+                        pass
             u.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")

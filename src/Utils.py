@@ -128,15 +128,15 @@ class Matrix(object):
         self.rows = rows
         logger.debug("Init matrix [" + str(cols) + "][" + str(rows) + "]")
         # initialize matrix and fill with zeroes
-        self.matrix = np.full((rows, cols), init, dtype=np.float64)
-        """
+        #self.matrix = numpy.full((rows,cols), init, dtype=np.dtype('d'))
+        
         for i in range(rows):
             logger.debug("Row " + str(i))
             ea_row = []
             for j in range(cols):
                 ea_row.append(init)
             self.matrix.append(ea_row)
-        """
+        
         logger.debug("Matrix initialised")
 
     def getNumRows(self):

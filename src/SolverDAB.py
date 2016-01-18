@@ -64,7 +64,7 @@ that created that solution and set the value for that solution in the bee
 """
 
 
-class BeeBase(object):
+class BeeBase (object):
     def __init__(self, ProblemType, infile):
         random.seed()
         self.__solutionType = 0
@@ -79,6 +79,7 @@ class BeeBase(object):
             self.__problem = ProblemFusion()
             self.__solutionType = u.solutionType.FUSION
             self.__bestLocalSolution = SolutionFusion(infile)
+            u.logger.info("Best local solution initialized " + str(self.__bestLocalSolution))
         elif (ProblemType == u.problemType.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
             self.__solutionType = u.solutionType.NONSEPARABLE
@@ -177,7 +178,7 @@ Employed bees
 """
 
 
-class Employed(BeeBase):
+class Employed (BeeBase):
     def __init__(self, problemType, infile, change, useMatrix):
         BeeBase.__init__(self, problemType, infile)
         #list of neighbours of the current best local solution. This list is
@@ -215,8 +216,7 @@ class Employed(BeeBase):
                         selectedPos = j
                         break
                 if (selectedPos == -1):
-                    u.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " +
-                                     str(val) + " -- " + str(sumRow))
+                    u.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " + str(val) + " -- " + str(sumRow))
                 value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
                 parameters[i].set_value(value)
             solutionCopy.setParameters(parameters)
@@ -301,7 +301,7 @@ Scout bees
 """
 
 
-class Scout(BeeBase):
+class Scout (BeeBase):
     def __init__(self, problemType, infile):
         BeeBase.__init__(self, problemType, infile)
         return
@@ -316,13 +316,38 @@ class Scout(BeeBase):
         u.logger.info('create new candidate scout')
         solution = self.createRandomSolution()
         return solution, -1
+        """
+        solution = self.getBestLocalSolution()
+        params = solution.getParameters()
+        u.logger.debug('number of parameters: ' + str(len(params)))
+        for i in range(len(params)):
+            ptype = params[i].get_type()
+            newVal = None
+            if (ptype == "double") or (ptype == "float"):
+                minVal = params[i].get_min_value()
+                maxVal = params[i].get_max_value()
+                if (params[i].get_gap()==0.0):
+                    newVal = random.uniform (minVal, maxVal)
+                else:
+                    newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
+            elif (ptype == "bool"):
+                val = random.randint (0,1)
+                newVal = (val==0)
+            else:
+                minVal = params[i].get_min_value()
+                maxVal = params[i].get_max_value()
+                newVal = random.randint (minVal, maxVal)
+            params[i].set_value(newVal)
+        solution.setParameters(params)
+        return solution, -1
+        """
 
 """
 Onlooker bees
 """
 
 
-class Onlooker(BeeBase):
+class Onlooker (BeeBase):
     def __init__(self, problemType, infile, modFactor, probChange):
         self.__modFactor = modFactor
         BeeBase.__init__(self, problemType, infile)
@@ -405,7 +430,7 @@ Solver DAB main class
 """
 
 
-class SolverDAB(SolverBase):
+class SolverDAB (SolverBase):
     def __init__(self, problemType, infile, configfile):
         try:
             u.logger.info("SolverDAB init")
@@ -467,7 +492,6 @@ class SolverDAB(SolverBase):
             self.__probOnlookerChange = 50
             self.__maxNumTopSolutions = 100
 
-            self.__bestGlobalSolution = None
             self.__pendingSolutions = None
             self.__finishedSolutions = None
             self.__topSolutions = None
@@ -706,7 +730,7 @@ class SolverDAB(SolverBase):
     def receiveSolutions(self):
         status = MPI.Status()
         sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
-
+                
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self.__requestSolution)):
@@ -760,7 +784,7 @@ class SolverDAB(SolverBase):
                         u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
-
+                    
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bestSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bestSolution.getValue()))):
                         filenametime = "0"
@@ -779,8 +803,7 @@ class SolverDAB(SolverBase):
                         if (self.__problemType == u.solutionType.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
-                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' +
-                                            filenametime)
+                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
                             try:
                                 shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
                             except:
@@ -803,7 +826,7 @@ class SolverDAB(SolverBase):
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
                     u.logger.info("MASTER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
-                    if (float(solVal[0]) > 0.0 and float(solVal[0]) < (u.infinity/100.0)):
+                    if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
                         if (isNewBest):
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):
@@ -893,7 +916,7 @@ class SolverDAB(SolverBase):
                 self.__problem.solve(newSolution)
                 solutionValue = float(newSolution.getValue())
 
-                if (solutionValue <= 0.0 or solutionValue > u.infinity/100.0):
+                if (solutionValue<=0.0 or solutionValue>u.infinity/100.0):
                     continue
                 self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestSolution.getValue())) or
@@ -912,7 +935,7 @@ class SolverDAB(SolverBase):
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                         self.__bestGlobalSolution = self.__bestSolution
-
+                    
                     buff = self.__bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
@@ -942,8 +965,8 @@ class SolverDAB(SolverBase):
                     self.__bees[bee].setSolution(newSolution)
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
-
-                    if (solutionValue <= 0.0 or solutionValue >= u.infinity/100.0):
+                    
+                    if (solutionValue<=0.0 or solutionValue >= u.infinity/100.0):
                         continue
 
                     if ((u.objective == u.objectiveType.MAXIMIZE and
@@ -965,7 +988,7 @@ class SolverDAB(SolverBase):
                         if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                             (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                             self.__bestGlobalSolution = self.__bestSolution
-
+                    
                         buff = self.__bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 
