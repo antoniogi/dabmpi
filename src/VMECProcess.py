@@ -466,7 +466,7 @@ class VMECProcess(object):
     """
 
     def calculate_fitness_bgradb(self, filepath):
-        fitness = -u.infinity
+        fitness = 0 #-u.infinity
         try:
             file_out = open(filepath, 'r')
             file_out.readline()
