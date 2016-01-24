@@ -172,7 +172,14 @@ class BeeBase (object):
     it will generate random numbers in the set 2.5, 3, 3.5, 4.0
     """
     def randrange_float(self, start, stop, step):
-        return random.randint(0, int((stop - start) / step)) * step + start
+        if (start>stop):
+            temp=stop
+            stop=start
+            start=stop
+        if (start==stop):
+            return start
+        #print "randrange_float ("+str(start) + "," + str(stop)+ "," + str(step) + ")"
+        return random.randint(0, int((abs(stop) - abs(start)) / step)) * step + start
 """
 Employed bees
 """

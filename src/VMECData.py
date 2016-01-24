@@ -1086,7 +1086,7 @@ class VMECData (object):
             return 1
         if (index >= 151 and index <= 550):
             pos = int(math.floor((index - 151) / 2))
-            if (index % 2 == 0):
+            if ((index - 151) % 2 == 0):
                 if (pos >= len(self.rbc)):
                     self.rbc.append(parameter)
                 else:
