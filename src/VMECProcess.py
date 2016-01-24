@@ -359,8 +359,8 @@ class VMECProcess(object):
             file_wout.readline()
             file_wout.readline()
 
-            m = np.zeros(nmax, dtype=numpy.int)
-            n = np.zeros(nmax, dtype=numpy.int)
+            m = np.zeros(nmax, dtype=np.int)
+            n = np.zeros(nmax, dtype=np.int)
 
             rmn = u.Matrix(ns, nmax)
             zmn = u.Matrix(ns, nmax)

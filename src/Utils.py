@@ -127,6 +127,7 @@ class Matrix(object):
         self.cols = cols
         self.rows = rows
         logger.debug("Init matrix [" + str(cols) + "][" + str(rows) + "]")
+        self.matrix = []
         # initialize matrix and fill with zeroes
         #self.matrix = numpy.full((rows,cols), init, dtype=np.dtype('d'))
         
