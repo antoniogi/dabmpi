@@ -413,11 +413,14 @@ class VMECProcess(object):
             file_out.write('Br, Bphi, Bz, dBr, dBphi, dBz , rho\n')
 
             delta = 0.000001
-            for i in range(0, ns, 10):
+            #for i in range(0, ns, 10):
+            for i in range(0, ns, 20):
                 u.logger.debug('Surface: ' + str(i) + '\n')
                 file_out.write('Surface: ' + str(i) + '\n')
-                for phi in range(0, 90):
-                    for epsilon in range(0, 90):
+                #for phi in range(0, 90):
+                #    for epsilon in range(0, 90):
+                for phi in range(0, 90, 2):
+                    for epsilon in range(0, 90, 2):
                         Z = 0.0
                         R = 0.0
                         BR = 0.0
@@ -466,7 +469,7 @@ class VMECProcess(object):
     """
 
     def calculate_fitness_bgradb(self, filepath):
-        fitness = 0 #-u.infinity
+        fitness = 0.0 #-u.infinity
         try:
             file_out = open(filepath, 'r')
             file_out.readline()

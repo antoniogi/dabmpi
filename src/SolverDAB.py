@@ -179,7 +179,7 @@ class BeeBase (object):
         if (start==stop):
             return start
         #print "randrange_float ("+str(start) + "," + str(stop)+ "," + str(step) + ")"
-        return random.randint(0, int((abs(stop) - abs(start)) / step)) * step + start
+        return random.randint(0, int(abs((stop - start) / step))) * step + start
 """
 Employed bees
 """
@@ -232,75 +232,81 @@ class Employed (BeeBase):
         return solutionCopy
 
     def createNewCandidate(self, probMatrix, totalSumGoodSolutions, topSolutions=None):
+        solution = None
+        try:
         #this is the one that has to use the probMatrix
-        u.logger.info('create new candidate employed')
+            u.logger.info('create new candidate employed')
 
-        if (not self.bestLocalInitialised()):
-            solution = self.createRandomSolution()
-            return solution, -1
-
-        solution = self.getBestLocalSolution()
-        if (self.__useMatrix):
-            if (random.randint(0, 10) == 0):
-                solution = self.getSolutionBasedOnMatrix(solution, probMatrix)
+            if (not self.bestLocalInitialised()):
+                solution = self.createRandomSolution()
                 return solution, -1
-        isNew = False
-        while (not isNew):
-            parameters = solution.getParameters()
-            for i in range(len(parameters)):
-                val = random.randint(0, self.__probEmployedChange)
-                if (val != 0):
-                    continue
-                ptype = parameters[i].get_type()
-                newVal = None
-                if (ptype == "double") or (ptype == "float"):
-                    #minVal = parameters[i].get_min_value()
-                    #maxVal = parameters[i].get_max_value()
-                    currentVal = parameters[i].get_value()
-                    minVal = currentVal - 10.0 * parameters[i].get_gap()
-                    maxVal = currentVal + 10.0 * parameters[i].get_gap()
-                    minVal = max(parameters[i].get_min_value(), minVal)
-                    maxVal = min(parameters[i].get_max_value(), maxVal)
-                    if (minVal == maxVal):
-                        newVal = minVal
-                    else:
-                        if (minVal > maxVal):
-                            minVal, maxVal = maxVal, minVal
-                        if (parameters[i].get_gap() == 0.0):
-                            newVal = random.uniform(minVal, maxVal)
-                        else:
-                            newVal = self.randrange_float(minVal, maxVal, parameters[i].get_gap())
-                elif (ptype == "bool"):
-                    val = random.randint(0, 1)
-                    newVal = (val == 0)
-                else:
-                    currentVal = parameters[i].get_value()
-                    if (random.randint(0, 10) == 0):
-                        minVal = currentVal - 10 * parameters[i].get_gap()
-                        maxVal = currentVal + 10 * parameters[i].get_gap()
-                    else:
-                        minVal = currentVal - 5 * parameters[i].get_gap()
-                        maxVal = currentVal + 5 * parameters[i].get_gap()
-                    #minVal = p.get_min_value()
-                    #maxVal = p.get_max_value()
-                    minVal = max(parameters[i].get_min_value(), minVal)
-                    maxVal = min(parameters[i].get_max_value(), maxVal)
-                    if (minVal == maxVal):
-                        newVal = minVal
-                    else:
-                        if (minVal > maxVal):
-                            minVal, maxVal = maxVal, minVal
-                        newVal = random.randint(minVal, maxVal)
 
-                currentVal = parameters[i].get_value()
-                if (newVal != currentVal):
-                    isNew = True
-                    parameters[i].set_value(newVal)
-            solution.setParameters(parameters)
-            parameters = solution.getParameters()
-                #Here: go through the parameters of the solution and change those
-                #parameters considering the min and max values of each parameter,
-                #the probMatrix, and the self.__modFactor value
+            solution = self.getBestLocalSolution()
+            if (self.__useMatrix):
+                if (random.randint(0, 10) == 0):
+                    solution = self.getSolutionBasedOnMatrix(solution, probMatrix)
+                    return solution, -1
+            isNew = False
+            while (not isNew):
+                parameters = solution.getParameters()
+                for i in range(len(parameters)):
+                    val = random.randint(0, self.__probEmployedChange)
+                    if (val != 0):
+                        continue
+                    ptype = parameters[i].get_type()
+                    newVal = None
+                    if (ptype == "double") or (ptype == "float"):
+                        #minVal = parameters[i].get_min_value()
+                        #maxVal = parameters[i].get_max_value()
+                        currentVal = parameters[i].get_value()
+                        minVal = currentVal - 10.0 * abs(parameters[i].get_gap())
+                        maxVal = currentVal + 10.0 * abs(parameters[i].get_gap())
+                        minVal = max(parameters[i].get_min_value(), minVal)
+                        maxVal = min(parameters[i].get_max_value(), maxVal)
+                        if (minVal == maxVal):
+                            newVal = minVal
+                        else:
+                            if (minVal > maxVal):
+                                minVal, maxVal = maxVal, minVal
+                            if (parameters[i].get_gap() == 0.0):
+                                newVal = random.uniform(minVal, maxVal)
+                            else:
+                                newVal = self.randrange_float(minVal, maxVal, parameters[i].get_gap())
+                    elif (ptype == "bool"):
+                        val = random.randint(0, 1)
+                        newVal = (val == 0)
+                    else:
+                        currentVal = parameters[i].get_value()
+                        if (random.randint(0, 10) == 0):
+                            minVal = currentVal - 10 * abs(parameters[i].get_gap())
+                            maxVal = currentVal + 10 * abs(parameters[i].get_gap())
+                        else:
+                            minVal = currentVal - 5 * abs(parameters[i].get_gap())
+                            maxVal = currentVal + 5 * abs(parameters[i].get_gap())
+                        #minVal = p.get_min_value()
+                        #maxVal = p.get_max_value()
+                        minVal = max(parameters[i].get_min_value(), minVal)
+                        maxVal = min(parameters[i].get_max_value(), maxVal)
+                        if (minVal == maxVal):
+                            newVal = minVal
+                        else:
+                            if (minVal > maxVal):
+                                minVal, maxVal = maxVal, minVal
+                            newVal = random.randint(minVal, maxVal)
+
+                    currentVal = parameters[i].get_value()
+                    if (newVal != currentVal):
+                        isNew = True
+                        parameters[i].set_value(newVal)
+                solution.setParameters(parameters)
+                parameters = solution.getParameters()
+                    #Here: go through the parameters of the solution and change those
+                    #parameters considering the min and max values of each parameter,
+                    #the probMatrix, and the self.__modFactor value
+        except Exception, e:
+            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            raise
+
         return solution, -1
 
 """
@@ -320,8 +326,14 @@ class Scout (BeeBase):
     parameter
     """
     def createNewCandidate(self, probMatrix, topSolutions=None):
-        u.logger.info('create new candidate scout')
-        solution = self.createRandomSolution()
+        solution = None
+        try:
+            u.logger.info('create new candidate scout')
+            solution = self.createRandomSolution()
+        except Exception, e:
+            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            raise
+
         return solution, -1
         """
         solution = self.getBestLocalSolution()
@@ -405,8 +417,8 @@ class Onlooker (BeeBase):
                         minVal = p.get_min_value()
                         maxVal = p.get_max_value()
                         currentVal = p.get_value()
-                        minNewVal = int(currentVal - 2 * p.get_gap())
-                        maxNewVal = int(currentVal + 2 * p.get_gap())
+                        minNewVal = int(currentVal - 2 * abs(p.get_gap()))
+                        maxNewVal = int(currentVal + 2 * abs(p.get_gap()))
                         if (minNewVal != currentVal):
                             minVal = max(minVal, minNewVal)
                         if (maxNewVal != currentVal):
