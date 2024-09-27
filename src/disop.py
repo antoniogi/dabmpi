@@ -38,7 +38,7 @@ where X is the number of processes to be used
 from SolverDAB import SolverDAB
 from SolverSA import SolverSA
 from SolverBase import SolverBase
-from Slave import Slave
+from Worker import Worker
 import Utils as util
 import logging
 import sys
@@ -65,7 +65,7 @@ def init(cfile):
     util.logger.setLevel(logging.DEBUG)
 
     #default model    
-    util.commModel = util.commModelType.MASTERSLAVE
+    util.commModel = util.commModelType.DRIVERWORKER
 
     # create file handler which logs even debug messages
 
@@ -93,8 +93,8 @@ def init(cfile):
     if (config.has_option("General", "commModel")):
         val = config.get("General", "commModel")
         if (val != None):
-            if (val == "MASTERSLAVE"):
-                util.commModel = util.commModelType.MASTERSLAVE
+            if (val == "DRIVERWORKER"):
+                util.commModel = util.commModelType.DRIVERWORKER
             else:
                 util.commModel = util.commModelType.ALL2ALL
     if (config.has_option("Algorithm", "objective")):
@@ -184,10 +184,10 @@ def main(argv):
         if (verboseLevel == 3):
             logging.disable(logging.DEBUG)
 
-        if (util.commModel == util.commModelType.MASTERSLAVE):
+        if (util.commModel == util.commModelType.DRIVERWORKER):
             if (rank == 0):
-                #create master task
-                util.logger.info("MASTER - BEGIN OF THE EXECUTION")
+                #create driver task
+                util.logger.info("DRIVER - BEGIN OF THE EXECUTION")
                 #create the solver
                 if (solverType == util.solverType.DAB):
                     solver = SolverDAB(probType, inputfile, configfile)
@@ -199,18 +199,18 @@ def main(argv):
                 solver.initialize()
                 #execute the solver
                 solver.solve()
-                util.logger.info("MASTER has finished solve")
+                util.logger.info("DRIVER has finished solve")
                 #clean everything
                 solver.finish()
-                util.logger.info("MASTER - END OF THE EXECUTION")
+                util.logger.info("DRIVER - END OF THE EXECUTION")
             else:
-                #create slave task
-                util.logger.info("SLAVE " + str(rank) +
+                #create worker task
+                util.logger.info("WORKER " + str(rank) +
                                  " - BEGIN OF THE EXECUTION")
-                slave = Slave(comm, probType)
-                slave.run(inputfile, configfile)
-                slave.finish()
-                util.logger.info("SLAVE " + str(rank) + " - END OF THE EXECUTION")
+                worker = Worker(comm, probType)
+                worker.run(inputfile, configfile)
+                worker.finish()
+                util.logger.info("WORKER " + str(rank) + " - END OF THE EXECUTION")
         else:
             util.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
             #create the solver

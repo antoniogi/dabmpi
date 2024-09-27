@@ -79,7 +79,7 @@ class VMECProcess(object):
             self.read_ini_config_file(cfile)
 
             #Create a symbolic link for the executable files on the
-            #folder where the slave is executed
+            #folder where the worker is executed
             if(int(self.__rank) == 0):
                 return
             if not os.path.exists(self.__rank):
@@ -603,7 +603,7 @@ class VMECProcess(object):
                                      "wout_post.txt")):
                 return False
             self.__bgradbval = self.calculate_fitness_bgradb("wout_post.txt")
-            u.logger.info("SLAVE(" + self.__rank + "). The BxgradB value is " +
+            u.logger.info("WORKER(" + self.__rank + "). The BxgradB value is " +
                           str(self.__bgradbval))
             if(os.path.exists("wout_post.txt")):
                 os.remove("wout_post.txt")
@@ -647,7 +647,7 @@ class VMECProcess(object):
                 i += 1
             file_cobra.close()
             if(self.__is_ballooning_stable):
-                u.logger.info("SLAVE(" + self.__rank +
+                u.logger.info("WORKER(" + self.__rank +
                               "). Configuration ballooning stable")
             return self.__is_ballooning_stable
         except Exception as e:
@@ -707,7 +707,7 @@ class VMECProcess(object):
                             "). Error while processing mercier. " + str(e))
             self.__is_mercier_stable = False
             return False
-        u.logger.info("SLAVE(" + self.__rank +
+        u.logger.info("WORKER(" + self.__rank +
                       "). Configuration mercier stable")
         self.__is_mercier_stable = True
         return True
@@ -733,7 +733,7 @@ class VMECProcess(object):
                 return False
             parts = map(string.strip, string.split(line, '='))
             self.__beta = float(parts[1])
-            u.logger.info("Slave " + self.__rank + ". Beta found " +
+            u.logger.info("Worker " + self.__rank + ". Beta found " +
                            str(self.__beta))
             if(self.__beta > self.__max_beta):
                 self.__beta = -u.infinity
@@ -787,7 +787,7 @@ class VMECProcess(object):
                             "). Error while processing threed1 file. " +
                             str(e))
             return False
-        u.logger.info("SLAVE(" + self.__rank + "). Configuration threed1 OK")
+        u.logger.info("WORKER(" + self.__rank + "). Configuration threed1 OK")
         return True
 
     """
@@ -818,7 +818,7 @@ class VMECProcess(object):
             filenameMercier = "mercier.tj" + self.__rank
             if(not os.path.exists(filenameMercier)):
                 return False
-            u.logger.info("SLAVE(" + self.__rank + "). Configuration VMEC OK")
+            u.logger.info("WORKER(" + self.__rank + "). Configuration VMEC OK")
             return True
         except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +

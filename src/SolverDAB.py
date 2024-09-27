@@ -636,7 +636,7 @@ class SolverDAB (SolverBase):
     def initialize(self):
         u.logger.info('DAB initializer')
         try:
-            if (u.commModel == u.commModelType.MASTERSLAVE):
+            if (u.commModel == u.commModelType.DRIVERWORKER):
                 #initialises the lists of requests
                 for i in range(u.size):
                     self.__requestsEnd.append(MPI.REQUEST_NULL)
@@ -687,7 +687,7 @@ class SolverDAB (SolverBase):
                 u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
-    This function checks if there are slaves waiting for solutions to be evaluated.
+    This function checks if there are workers waiting for solutions to be evaluated.
     """
 
     def checkWaitingForSolutions(self):
@@ -702,7 +702,7 @@ class SolverDAB (SolverBase):
             if (status.tag == u.tags.REQINPUT):
                 destination = status.source
                 try:
-                    u.logger.debug('MASTER. Slave ' + str(destination) + ' was waiting for a solution')
+                    u.logger.debug('DRIVER. Worker ' + str(destination) + ' was waiting for a solution')
                     #Sends the front of the pending Solutions queue
                     solTuple = self.__pendingSolutions.GetSolutionList()
                     if (self.__pendingSolutions.qSize() == 0):
@@ -725,25 +725,25 @@ class SolverDAB (SolverBase):
                                 "): " + str(e))
                         continue
                     #sends the parameters
-                    u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.RECVFROMMASTER)
+                    u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.RECVFROMDRIVER)
                     #sends the index of the bee that created the solution
-                    u.comm.Isend([beeIdx, MPI.INT], destination, u.tags.RECVFROMMASTER)
+                    u.comm.Isend([beeIdx, MPI.INT], destination, u.tags.RECVFROMDRIVER)
                     #adds a request for receiving the solution
                     req = u.comm.Irecv([self.__dump, MPI.INT], destination, u.tags.REQSENDINPUT)
                     self.__requestSolution[destination] = req
                     #adds a request for sending more input
                     req = u.comm.Irecv(self.__dump, source=destination, tag=u.tags.REQINPUT)
                     self.__requestsInput[destination] = req
-                    u.logger.info("MASTER. Solution sent to slave " + str(destination))
+                    u.logger.info("DRIVER. Solution sent to worker " + str(destination))
                 except Exception as e:
                     exc_type, exc_obj, exc_tb = sys.exc_info()
-                    u.logger.error("MASTER. WaitingForSolutions (" +
+                    u.logger.error("DRIVER. WaitingForSolutions (" +
                                     str(exc_tb.tb_lineno) + "). " + str(e))
 
             idx, flag = MPI.Request.Testany(self.__requestsInput, status)
 
     """
-    This function checks if there are slaves waiting to send solutions to the master
+    This function checks if there are workers waiting to send solutions to the driver
     """
 
     def receiveSolutions(self):
@@ -753,12 +753,12 @@ class SolverDAB (SolverBase):
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self.__requestSolution)):
-                u.logger.critical("MASTER. Invalid source: " + str(source))
+                u.logger.critical("DRIVER. Invalid source: " + str(source))
             self.__requestSolution[source] = MPI.REQUEST_NULL
-            u.logger.debug('MASTER. Receiving solution (slave ' + str(source) + ')')
+            u.logger.debug('DRIVER. Receiving solution (worker ' + str(source) + ')')
             isNewBest = False
             try:
-                u.logger.debug("MASTER. Buffer size: " + str(self.__numParams))
+                u.logger.debug("DRIVER. Buffer size: " + str(self.__numParams))
                 buff = array('f', [0]) * self.__numParams
                 solVal = array('f', [0]) * 1
                 beeIdx = array('i', [0]) * 1
@@ -767,7 +767,7 @@ class SolverDAB (SolverBase):
                 u.comm.Recv(solVal, origin, u.tags.COMMSOLUTION)
                 u.comm.Recv(beeIdx, origin, u.tags.COMMSOLUTION)
             except Exception as e:
-                u.logger.error("MASTER (comm). " + str(e) + " line: " +
+                u.logger.error("DRIVER (comm). " + str(e) + " line: " +
                            str(sys.exc_traceback.tb_lineno))
             try:
                 if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
@@ -810,7 +810,7 @@ class SolverDAB (SolverBase):
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                         except Exception as e:
-                            u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                         isNewBest = True
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(solVal[0]) +
@@ -828,7 +828,7 @@ class SolverDAB (SolverBase):
                             except:
                                 pass
             except Exception as e:
-                u.logger.error("MASTER (comm). " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                u.logger.error("DRIVER (comm). " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
             try:
                 solutionTemp = None
@@ -843,7 +843,7 @@ class SolverDAB (SolverBase):
                     solutionTemp.setParametersValues(buff)
 
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
-                    u.logger.info("MASTER. Solution (value " + str(solVal[0]) +
+                    u.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
                     if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
                         if (isNewBest):
@@ -863,7 +863,7 @@ class SolverDAB (SolverBase):
                                         val = self.__probMatrix.getitem(i, idx)
                                         self.__probMatrix.setitem(i, idx, val + 5.0)
                                 except Exception as e:
-                                    u.logger.warning("MASTER (fill matrix). " + str(e) +
+                                    u.logger.warning("DRIVER (fill matrix). " + str(e) +
                                        " line: " + str(sys.exc_traceback.tb_lineno))
                         #Update the best local solution in the bees
                         reset = False
@@ -881,10 +881,10 @@ class SolverDAB (SolverBase):
                             self.__bees[beeIdx[0]].setIter(self.__bees[beeIdx[0]].getIter() + 1)
                             u.logger.info("Bee " + str(beeIdx[0]) + ". Current iterations " + str(self.__bees[beeIdx[0]].getIter()))
             except Exception as e:
-                u.logger.error("MASTER (receiveSolutions). " + str(e) +
+                u.logger.error("DRIVER (receiveSolutions). " + str(e) +
                                    " line: " + str(sys.exc_traceback.tb_lineno))
 
-            u.logger.info('MASTER. Received solution (slave ' + str(source) + ')')
+            u.logger.info('DRIVER. Received solution (worker ' + str(source) + ')')
             sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
 
     """
@@ -894,21 +894,21 @@ class SolverDAB (SolverBase):
     def solve(self):
         u.logger.info('DAB solver started')
 
-        if (u.commModel == u.commModelType.MASTERSLAVE):
+        if (u.commModel == u.commModelType.DRIVERWORKER):
             while (not self.check_finish()):
                 try:
                     #check if it has to create solutions
                     self.checkPendingSolutionsQueue()
-                    #check if there are slave processes waiting for input
+                    #check if there are worker processes waiting for input
                     self.checkWaitingForSolutions()
                     #check if it has to receive solutions
                     self.receiveSolutions()
 
                     elapsedTime = time.time() - u.starttime
-                    u.logger.debug("MASTER. Elapsed time " + str(elapsedTime) +
+                    u.logger.debug("DRIVER. Elapsed time " + str(elapsedTime) +
                                     " - Remaining " + str(self.__runtime - elapsedTime))
                 except Exception as e:
-                    u.logger.error("MASTER (solve). " + str(e) + " line: " +
+                    u.logger.error("DRIVER (solve). " + str(e) + " line: " +
                                    str(sys.exc_traceback.tb_lineno))
         else:
             self.runDistributed()
@@ -944,7 +944,7 @@ class SolverDAB (SolverBase):
                     try:
                         filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                     except Exception as e:
-                        u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                        u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                     u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                    " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -997,7 +997,7 @@ class SolverDAB (SolverBase):
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                         except Exception as e:
-                            u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                        " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -1044,20 +1044,20 @@ class SolverDAB (SolverBase):
                     allNull = False
                     break
             if (allNull):
-                u.logger.info("MASTER. All slaves have finished")
+                u.logger.info("DRIVER. All workers have finished")
                 return True
             status = MPI.Status()
             idx, flag = MPI.Request.Testany(self.__requestsEnd, status)
             if (flag and idx >= 0):
                 source = status.source
                 self.__requestsEnd[source] = MPI.REQUEST_NULL
-                u.logger.info('MASTER. Received a termination request from slave' +
+                u.logger.info('DRIVER. Received a termination request from worker' +
                                str(source))
             return False
         except Exception as e:
-            u.logger.error('MASTER. Error checking finish.' + str(e))
+            u.logger.error('DRIVER. Error checking finish.' + str(e))
             return True
 
     def finish(self):
         self.__pendingSolutions.writeAllSolutions()
-        u.logger.info('DAB Master finish')
+        u.logger.info('DAB Driver finished')
