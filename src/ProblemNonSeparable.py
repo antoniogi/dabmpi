@@ -54,7 +54,7 @@ class ProblemNonSeparable(ProblemBase):
                               math.pow(parameters[i] + 1, 2))
             solution.setValue(val)
             u.logger.debug("Solve Problem NonSeparable")
-        except Exception, e:
+        except Exception as e:
             u.logger.error("ProblemNonSeparable (" +
                             str(sys.exc_traceback.tb_lineno) +
                             "). " + str(e))
