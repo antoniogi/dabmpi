@@ -63,16 +63,16 @@ solutionType = enum(FUSION=1, NONSEPARABLE=2)
 #solver type
 solverType = enum(NONE=0, DAB=1, SA=2)
 
-commModelType = enum(MASTERSLAVE=0, ALL2ALL=1)
+commModelType = enum(DRIVERWORKER=0, ALL2ALL=1)
 #tags for MPI
-tags = enum(RECVFROMMASTER=1, RECVFROMSLAVE=2, COMMSOLUTION=3,
+tags = enum(RECVFROMDRIVER=1, RECVFROMWORKER=2, COMMSOLUTION=3,
             REQSENDINPUT=4, REQINPUT=5, ENDSIM=6)
 
 objectiveType = enum(MINIMIZE=1, MAXIMIZE=2)
 
 objective = objectiveType.MINIMIZE
 
-commModel = commModelType.MASTERSLAVE
+commModel = commModelType.DRIVERWORKER
 
 #logger class
 logger = None

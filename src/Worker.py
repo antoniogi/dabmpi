@@ -29,11 +29,11 @@ HISTORY
 """
 
 """
-Objects of this class will represent a slave.
-Slaves wait for an input message, build a problem instance, and solve the
+Objects of this class will represent a worker.
+Workers wait for an input message, build a problem instance, and solve the
 problem.
-Once the problem has been solved, the slave sends the result back to the
-master and waits for a new input message.
+Once the problem has been solved, the worker sends the result back to the
+driver and waits for a new input message.
 """
 
 import Utils as u
@@ -48,7 +48,7 @@ import configparser
 import sys
 
 
-class Slave (object):
+class Worker (object):
     def __init__(self, comm, ProblemType):
         try:
             self.__comm = comm
@@ -64,12 +64,12 @@ class Slave (object):
                 self.__problem = ProblemNonSeparable()
             return
         except Exception as e:
-            print("Slave " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            print("Worker " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
-    This is the slave. It sends a request for data, then receives
+    This is the worker. It sends a request for data, then receives
     a solution and the bee index.
-    Solves the solution and sends the solution back to the master
+    Solves the solution and sends the solution back to the driver
     """
 
     def run(self, infile, cfile):
@@ -106,21 +106,21 @@ class Slave (object):
                 buff = array('f', [0]) * numParams
                 solValue = array('f', [0]) * 1
                 dump = array('i', [0]) * 1
-                u.logger.debug("SLAVE (" + str(self.__rank) +
+                u.logger.debug("WORKER (" + str(self.__rank) +
                                ") waiting for a solution")
                 #self.__comm.Isend(dump, dest=0, tag=u.tags.REQINPUT)
                 self.__comm.Send(dump, dest=0, tag=u.tags.REQINPUT)
 
                 agentIdx = array('i', [0]) * 1
                 #Receive the solution
-                req = self.__comm.Irecv(buff, 0, u.tags.RECVFROMMASTER)
+                req = self.__comm.Irecv(buff, 0, u.tags.RECVFROMDRIVER)
                 req.wait(status)
 
                 #Receive the bee id
-                req = self.__comm.Irecv(agentIdx, 0, u.tags.RECVFROMMASTER)
+                req = self.__comm.Irecv(agentIdx, 0, u.tags.RECVFROMDRIVER)
                 req.wait(status)
 
-                u.logger.info("SLAVE (" + str(self.__rank) +
+                u.logger.info("WORKER (" + str(self.__rank) +
                                ") has received a solution from bee " +
                                str(agentIdx[0]))
                 solution.setParametersValues(buff)
@@ -136,7 +136,7 @@ class Slave (object):
                                         u.tags.REQSENDINPUT)
                 req.Wait(status)
 
-                u.logger.debug("SLAVE (" + str(self.__rank) +
+                u.logger.debug("WORKER (" + str(self.__rank) +
                                "). Buffer size: " + str(len(buff)))
 
                 self.__comm.Send(buff, 0, u.tags.COMMSOLUTION)
@@ -145,23 +145,23 @@ class Slave (object):
 
                 elapsedTime = time() - startTime
                 solutionsEvaluated += 1
-                u.logger.debug("SLAVE (" + str(self.__rank) + ") elapsed " +
+                u.logger.debug("WORKER (" + str(self.__rank) + ") elapsed " +
                                 str(elapsedTime) + " - Runtime " +
                                 str(self.__runtime))
-            u.logger.info("SLAVE (" + str(self.__rank) +
+            u.logger.info("WORKER (" + str(self.__rank) +
                           ") configurations evaluated: " +
                            str(solutionsEvaluated))
         except Exception as e:
-            u.logger.error("SLAVE (" + str(self.__rank) + ")" +
+            u.logger.error("WORKER (" + str(self.__rank) + ")" +
                            str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
-    This method just checks if there is message from the master indicating the
+    This method just checks if there is message from the driver indicating the
     end of the simulation
     """
 
     def finish(self):
         end = array('i', [0]) * 1
         u.comm.Send([end, MPI.INT], 0, u.tags.ENDSIM)
-        u.logger.info("SLAVE (" + str(self.__rank) +
-                      "). Sent end request to master")
+        u.logger.info("WORKER (" + str(self.__rank) +
+                      "). Sent end request to driver")

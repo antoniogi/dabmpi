@@ -1862,7 +1862,7 @@ class VMECData (object):
             except:
                 pass
             fInput = open(filename, 'w')
-            u.logger.debug("Slave " + str(u.rank) + " creating file " + filename)
+            u.logger.debug("Worker " + str(u.rank) + " creating file " + filename)
 
             if (self.__show_indata):
                 self.__write_indata(fInput)
