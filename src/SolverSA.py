@@ -52,13 +52,13 @@ from ProblemNonSeparable import ProblemNonSeparable
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as u
-import ConfigParser
+import configparser
 import SolutionsQueue as solQueue
 
 
 class SolverSA (SolverBase):
     def readConfigFile(self, configfile):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(configfile)
         if (not config.has_section("SA")):
             u.logger.critical("SA section not specified in the ini file")
