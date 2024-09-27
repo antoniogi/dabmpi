@@ -34,21 +34,12 @@ import Utils as u
 import configparser
 import os
 import shutil
-import importlib
 import sys
 import time
 import glob
-import commands
+import subprocess
 
 import numpy as np
-
-subProcFound = False
-try:
-    importlib.util.find_spec('subprocess')
-    subProcFound = True
-    import subprocess
-except ImportError:
-    subProcFound = False
 
 
 class VMECProcess(object):
@@ -96,39 +87,46 @@ class VMECProcess(object):
             if not os.path.exists(self.__rank + "/finished"):
                 os.makedirs(self.__rank + "/finished")
             os.chdir(self.__execPath)
-            if(subProcFound):
-                try:
-                    if(self.__check_ballooning):
-                        if(not os.path.lexists("xcobravmec")):
-                            subprocess.call(["ln", "-s", "../../external/xcobravmec",
-                                              "xcobravmec"])
-                    if(not os.path.lexists("xgrid") and
-                       os.path.exists("../../external/xgrid")):
-                        subprocess.call(["ln", "-s", "../../external/xgrid",
-                                          "xgrid"])
-                    if(not os.path.lexists("xvmec2000")):
-                        subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
-                                          "xvmec2000"])
-                except Exception as e:
-                    u.logger.error("VMECProcess(" +
-                                   str(sys.exc_traceback.tb_lineno) +
-                                   "). " + str(e))
+            try:
+                if(self.__check_ballooning):
+                    if(not os.path.lexists("xcobravmec")):
+                        subprocess.call(["ln", "-s", "../../external/xcobravmec",
+                                          "xcobravmec"])
+                if(not os.path.lexists("xgrid") and
+                   os.path.exists("../../external/xgrid")):
+                    subprocess.call(["ln", "-s", "../../external/xgrid",
+                                      "xgrid"])
+                if(not os.path.lexists("xvmec2000")):
+                    subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
+                                      "xvmec2000"])
+            except Exception as e:
+                u.logger.error("VMECProcess(" +
+                               str(sys.exc_traceback.tb_lineno) +
+                               "). " + str(e))
 
             else:
                 try:
                     if(self.__check_ballooning):
                         if(not os.path.lexists("xcobravmec")):
-                            commands.getoutput("ln -s ../../external/xcobravmec xcobravmec")
+                            process = subprocess.Popen(["ln", "-s",
+                                                       "../../external/xcobravmec",
+                                                       "xcobravmec"])
                     if(not os.path.lexists("xgrid")):
-                        commands.getoutput("ln -s ../../external/xgrid xgrid")
+                        process = subprocess.Popen(["ln", "-s",
+                                                   "../../external/xgrid", "xgrid"])
                     if(not os.path.lexists("xvmec2000")):
-                        commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
+                        process = subprocess.Popen(["ln", "-s",
+                                                   "/home/fraguas/bin/xvmec2000nc",
+                                                   "xvmec2000"])
                 except Exception as e:
                     u.logger.warning("VMECProcess(" +
                                     str(sys.exc_traceback.tb_lineno) + "). " +
                                     str(e))
-                    commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
-                    commands.getoutput("ln -s ../../external/xgrid xgrid")
+                    process = subprocess.Popen(["ln", "-s",
+                                               "/home/fraguas/bin/xvmec2000nc",
+                                               "xvmec2000"])
+                    process = subprocess.Popen(["ln", "-s",
+                                               "../../external/xgrid", "xgrid"])
         except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                            ") " + str(e))
@@ -520,31 +518,34 @@ class VMECProcess(object):
             return True
         try:
             try:
-                commands.getoutput('rm -rf EXE')
+                os.remove("EXE")
             except:
                 pass
             try:
-                commands.getoutput('rm -rf INPUT')
+                os.remove("INPUT")
             except:
                 pass
             try:
-                commands.getoutput('rm -rf OUTPUT')
+                os.remove("OUTPUT")
             except:
                 pass
             try:
-                commands.getoutput('rm -rf s_*')
+                os.remove ("s_*")
             except:
                 pass
             os.environ["LD_LIBRARY_PATH"] = (os.environ["LD_LIBRARY_PATH"] +
                                              ":" + str(self.__netcdf))
-            commands.getoutput("cp -rf ../../external/DKES/* .")
-            commands.getoutput('cp -f wout* INPUT/wout_DAB_0.0.txt')
-            commands.getoutput('cp -f threed1* INPUT/threed1.DAB_0.0')
+            subprocess.call(["cp", "-rf", "../../external/DKES", "."])
+            subprocess.call(["cp", "-f", "wout*", "INPUT/wout_DAB_0.0.txt"])
+            subprocess.call(["cp", "-f", "threed1*", "INPUT/threed1.DAB_0.0"])
             outDKES = ""
             outPost = ""
 
-            outDKES = commands.getoutput("source EXE/dab.sh")
-            outPost = commands.getoutput("source EXE/recoge_res.sh")
+            process = subprocess.Popen(["./EXE/dab.sh"], stdout=subprocess.PIPE)
+            outDKES = process.communicate()[0]
+
+            process = subprocess.Popen(["./EXE/recoge_res.sh"], stdout=subprocess.PIPE)
+            outPost = process.communicate()[0]
 
             u.logger.info(outDKES)
             u.logger.info(outPost)
@@ -620,16 +621,13 @@ class VMECProcess(object):
     def run_ballooning(self):
         if(not self.__check_ballooning):
             return True
-        commands.getoutput('ln -s wout* WOUT.tj' + self.__rank)
+        files = glob.glob('./wout*')
+        for f in files:
+            os.symlink(f, 'WOUT.tj' + self.__rank)
         shutil.copy2('../in_cobra_empty', 'in_cobra_tj' + self.__rank)
-        if(subProcFound):
-            subprocess.call(["sed", "-i", "'s/___/wout_tj" + self.__rank +
-                             ".txt/g'", "in_cobra_tj" + self.__rank])
-            subprocess.call(["./xcobravmec", "in_cobra_tj" + self.__rank])
-        else:
-            commands.getoutput("sed -i 's/___/wout_tj" + self.__rank +
-                             ".txt/g' in_cobra_tj" + self.__rank)
-            commands.getoutput('./xcobravmec in_cobra_tj' + self.__rank)
+        subprocess.call(["sed", "-i", "'s/___/wout_tj" + self.__rank +
+                         ".txt/g'", "in_cobra_tj" + self.__rank])
+        subprocess.call(["./xcobravmec", "in_cobra_tj" + self.__rank])
         try:
             file_cobra = open('./cobra_grate.' + self.__rank, 'r')
             num_lines = len(file_cobra.readlines())
@@ -800,13 +798,10 @@ class VMECProcess(object):
         try:
             if(not os.path.exists("input.tj" + str(self.__rank))):
                 return False
-            if(subProcFound):
-                proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", "tj" + self.__rank],
-                                        stdout=subprocess.PIPE)
-                output = proc.stdout.read()
-                u.logger.debug(output)
-            else:
-                commands.getoutput("/home/fraguas/bin/xvmec2000nc tj" + self.__rank)
+            proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", "tj" + self.__rank],
+                                    stdout=subprocess.PIPE)
+            output = proc.stdout.read()
+            u.logger.debug(output)
             try:
                 if(os.path.exists("core")):
                     os.remove("core")
@@ -872,12 +867,8 @@ class VMECProcess(object):
                     if(not os.path.exists('coils.tj' + self.__rank)):
                         shutil.copy2("../external/coils", "coils.tj" +
                                      self.__rank)
-                    if(subProcFound):
-                        subprocess.call(["./xgrid", "< cmd_xgrid.tj" +
-                                        self.__rank])
-                    else:
-                        commands.getoutput("./xgrid < cmd_xgrid.tj" +
-                                            self.__rank)
+                    subprocess.call(["./xgrid", "< cmd_xgrid.tj" +
+                                    self.__rank])
                     return True
                 except:
                     u.logger.error("VMECProcess(" +
