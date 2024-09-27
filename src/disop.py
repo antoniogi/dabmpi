@@ -45,7 +45,7 @@ import sys
 import os.path
 import imp
 from array import array
-import ConfigParser
+import configparser
 
 try:
     imp.find_module('argparse')
@@ -95,7 +95,7 @@ def init(cfile):
     logging.addLevelName(util.extraLog, "BEST")
 
     util.cfile = cfile
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(cfile)
     if (config.has_option("General", "commModel")):
         val = config.get("General", "commModel")

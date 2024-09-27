@@ -49,7 +49,7 @@ from ProblemNonSeparable import ProblemNonSeparable
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as u
-import ConfigParser
+import configparser
 import SolutionsQueue as solQueue
 
 from array import array
@@ -540,7 +540,7 @@ class SolverDAB (SolverBase):
             if (u.rank == 0):
                 #parse arguments from the ini file
                 try:
-                    config = ConfigParser.ConfigParser()
+                    config = configparser.ConfigParser()
                     config.read(configfile)
                     if (not config.has_section("Bees")):
                         u.logger.critical("Bees section not specified in the ini file")

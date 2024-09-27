@@ -44,7 +44,7 @@ from ProblemNonSeparable import ProblemNonSeparable
 from mpi4py import MPI
 from array import array
 from time import time
-import ConfigParser
+import configparser
 import sys
 
 
@@ -75,7 +75,7 @@ class Slave (object):
     def run(self, infile, cfile):
         try:
             startTime = time()
-            config = ConfigParser.ConfigParser()
+            config = configparser.ConfigParser()
             config.read(cfile)
             if (config.has_option("Algorithm", "time")):
                 val = config.get("Algorithm", "time")

@@ -31,10 +31,10 @@ HISTORY
 import math
 import string
 import Utils as u
-import ConfigParser
+import configparser
 import os
 import shutil
-import imp
+import importlib
 import sys
 import time
 import glob
@@ -44,7 +44,7 @@ import numpy as np
 
 subProcFound = False
 try:
-    imp.find_module('subprocess')
+    importlib.util.find_spec('subprocess')
     subProcFound = True
     import subprocess
 except ImportError:
@@ -135,7 +135,7 @@ class VMECProcess(object):
         os.chdir(self.__currentPath)
 
     def read_ini_config_file(self, cfile):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read(cfile)
         if(not config.has_section("Fusion")):
             return
