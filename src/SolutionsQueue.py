@@ -67,7 +67,7 @@ class SolutionsQueue (object):
             self.__numParams = self.__solutionBase.getNumberofParams()
             if (os.path.exists(self.__filename)):
                 self.LoadQueue()
-        except Exception, e:
+        except Exception as e:
             util.logger.error("QUEUE (" + str(sys.exc_traceback.tb_lineno) +
                             "). " + str(e))
 
@@ -142,7 +142,7 @@ class SolutionsQueue (object):
                         self.__queue.append(solTuple)
                 if (self.qSize() > self.__maxSize):
                     self.__queue.pop()
-        except Exception, e:
+        except Exception as e:
             util.logger.error("QUEUE " + str(sys.exc_traceback.tb_lineno) +
                               " " + str(e))
         if (not self.__writeToFile):
@@ -151,7 +151,7 @@ class SolutionsQueue (object):
             f = open(self.__filename, 'a')
             f.write(sol + "#" + str(value) + '#' + str(agentIdx) + '\n')
             f.close()
-        except Exception, e:
+        except Exception as e:
             util.logger.error("QUEUE " + str(sys.exc_traceback.tb_lineno) +
                               " " + str(e))
 
@@ -210,7 +210,7 @@ class SolutionsQueue (object):
                 sol = sol.rstrip(',')
                 f.write(sol + "#" + str(solutionTuple[1]) + '#' +
                         str(solutionTuple[2]) + '\n')
-        except Exception, e:
+        except Exception as e:
             util.logger.error("QUEUE " + str(sys.exc_traceback.tb_lineno) +
                               " " + str(e))
         f.close()
@@ -314,7 +314,7 @@ class SolutionsQueue (object):
             for p in parameters:
                 util.logger.debug("Appending: " + str(p.split(':')[1]))
                 solution.append(float(p.split(':')[1]))
-        except Exception, e:
+        except Exception as e:
             util.logger.error("QUEUE. " + str(e) + ". line " +
                               str(sys.exc_traceback.tb_lineno))
         return val, agentIdx, solution

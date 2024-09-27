@@ -227,7 +227,7 @@ class Employed (BeeBase):
                 value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
                 parameters[i].set_value(value)
             solutionCopy.setParameters(parameters)
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) + "). " + str(e))
         return solutionCopy
 
@@ -303,7 +303,7 @@ class Employed (BeeBase):
                     #Here: go through the parameters of the solution and change those
                     #parameters considering the min and max values of each parameter,
                     #the probMatrix, and the self.__modFactor value
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
             raise
 
@@ -330,7 +330,7 @@ class Scout (BeeBase):
         try:
             u.logger.info('create new candidate scout')
             solution = self.createRandomSolution()
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
             raise
 
@@ -439,7 +439,7 @@ class Onlooker (BeeBase):
             u.logger.debug("Onlooker. Selected a solution from the list of finished solutions")
             u.logger.debug("Top solutions queue size " + str(topSolutions.qSize()))
             return solution, beeIdx
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
                                   "). " + str(e))
         return None, None
@@ -534,7 +534,7 @@ class SolverDAB (SolverBase):
                 if (self.__topSolutions.qSize() != 0):
                     self.__bestSolution, value, origin = self.__topSolutions.GetSolutionTuple(False)
                     self.__bestSolution.setValue(value)
-            except Exception, e:
+            except Exception as e:
                 u.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_traceback.tb_lineno))
 
             if (u.rank == 0):
@@ -591,7 +591,7 @@ class SolverDAB (SolverBase):
                                 u.objective = u.objectiveType.MAXIMIZE
                             else:
                                 u.objective = u.objectiveType.MINIMIZE
-                except Exception, e:
+                except Exception as e:
                     u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
                                    "). Problem reading DAB configuration from the ini file. " +
                                    str(e))
@@ -626,7 +626,7 @@ class SolverDAB (SolverBase):
                 """
                 self.__scout = Scout(problemType, infile)
                 u.logger.debug("Created 1 scout bee")
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
@@ -651,7 +651,7 @@ class SolverDAB (SolverBase):
                     self.__pendingSolutions.PutSolution(
                                     self.__scout.createNewCandidate(self.__probMatrix)[0], -1.0, -1)
             u.logger.debug('created initial set of solutions')
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
@@ -683,7 +683,7 @@ class SolverDAB (SolverBase):
                         self.__bees[bee].setSolution(solution)
                         u.logger.debug("Scout bee putting solution on pending queue")
                         self.__pendingSolutions.PutSolution(solution, -1.0, bee)
-            except Exception, e:
+            except Exception as e:
                 u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
@@ -720,7 +720,7 @@ class SolverDAB (SolverBase):
                         for i in range(len(buff)):
                             buff[i] = float(solTuple[2][i])
                             u.logger.debug("Val param (" + str(i) + "): " + str(buff[i]))
-                    except Exception, e:
+                    except Exception as e:
                         u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
                                 "): " + str(e))
                         continue
@@ -735,7 +735,7 @@ class SolverDAB (SolverBase):
                     req = u.comm.Irecv(self.__dump, source=destination, tag=u.tags.REQINPUT)
                     self.__requestsInput[destination] = req
                     u.logger.info("MASTER. Solution sent to slave " + str(destination))
-                except Exception, e:
+                except Exception as e:
                     exc_type, exc_obj, exc_tb = sys.exc_info()
                     u.logger.error("MASTER. WaitingForSolutions (" +
                                     str(exc_tb.tb_lineno) + "). " + str(e))
@@ -766,7 +766,7 @@ class SolverDAB (SolverBase):
                 u.comm.Recv(buff, origin, u.tags.COMMSOLUTION)
                 u.comm.Recv(solVal, origin, u.tags.COMMSOLUTION)
                 u.comm.Recv(beeIdx, origin, u.tags.COMMSOLUTION)
-            except Exception, e:
+            except Exception as e:
                 u.logger.error("MASTER (comm). " + str(e) + " line: " +
                            str(sys.exc_traceback.tb_lineno))
             try:
@@ -799,7 +799,7 @@ class SolverDAB (SolverBase):
                                 idx = int(idx)
                                 val = self.__probMatrix.getitem(i, idx)
                                 self.__probMatrix.setitem(i, idx, val + 0.5)
-                    except Exception, e:
+                    except Exception as e:
                         u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
@@ -809,7 +809,7 @@ class SolverDAB (SolverBase):
                         filenametime = "0"
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception, e:
+                        except Exception as e:
                             u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                         isNewBest = True
@@ -827,7 +827,7 @@ class SolverDAB (SolverBase):
                                 shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
                             except:
                                 pass
-            except Exception, e:
+            except Exception as e:
                 u.logger.error("MASTER (comm). " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
             try:
@@ -862,7 +862,7 @@ class SolverDAB (SolverBase):
                                         idx = int(idx)
                                         val = self.__probMatrix.getitem(i, idx)
                                         self.__probMatrix.setitem(i, idx, val + 5.0)
-                                except Exception, e:
+                                except Exception as e:
                                     u.logger.warning("MASTER (fill matrix). " + str(e) +
                                        " line: " + str(sys.exc_traceback.tb_lineno))
                         #Update the best local solution in the bees
@@ -880,7 +880,7 @@ class SolverDAB (SolverBase):
                         if not reset:
                             self.__bees[beeIdx[0]].setIter(self.__bees[beeIdx[0]].getIter() + 1)
                             u.logger.info("Bee " + str(beeIdx[0]) + ". Current iterations " + str(self.__bees[beeIdx[0]].getIter()))
-            except Exception, e:
+            except Exception as e:
                 u.logger.error("MASTER (receiveSolutions). " + str(e) +
                                    " line: " + str(sys.exc_traceback.tb_lineno))
 
@@ -907,7 +907,7 @@ class SolverDAB (SolverBase):
                     elapsedTime = time.time() - u.starttime
                     u.logger.debug("MASTER. Elapsed time " + str(elapsedTime) +
                                     " - Remaining " + str(self.__runtime - elapsedTime))
-                except Exception, e:
+                except Exception as e:
                     u.logger.error("MASTER (solve). " + str(e) + " line: " +
                                    str(sys.exc_traceback.tb_lineno))
         else:
@@ -943,7 +943,7 @@ class SolverDAB (SolverBase):
                     filenametime = "0"
                     try:
                         filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                    except Exception, e:
+                    except Exception as e:
                         u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                     u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
@@ -996,7 +996,7 @@ class SolverDAB (SolverBase):
                         filenametime = "0"
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception, e:
+                        except Exception as e:
                             u.logger.warning("MASTER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
 
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
@@ -1054,7 +1054,7 @@ class SolverDAB (SolverBase):
                 u.logger.info('MASTER. Received a termination request from slave' +
                                str(source))
             return False
-        except Exception, e:
+        except Exception as e:
             u.logger.error('MASTER. Error checking finish.' + str(e))
             return True
 

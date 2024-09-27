@@ -57,7 +57,7 @@ class Parameter(object):
                                (value == "TRUE"))
             else:
                 self.__value = int(round(value))
-        except Exception, e:
+        except Exception as e:
             u.logger.error("Parameter. Error when setting value of " +
                             "parameter: " + str(e))
 
@@ -67,7 +67,7 @@ class Parameter(object):
     def set_index(self, index):
         try:
             self.__index = int(index)
-        except Exception, e:
+        except Exception as e:
             u.logger.error("Parameter. Error when copying getting value of " +
                             "parameter: " + str(e))
 
@@ -105,7 +105,7 @@ class Parameter(object):
                 self.__min_value = False
             else:
                 self.__min_value = int(min_value)
-        except Exception, e:
+        except Exception as e:
             u.logger.error("Parameter. Error when copying min value of " +
                             "parameter: " + str(e))
 
@@ -122,7 +122,7 @@ class Parameter(object):
                 self.__max_value = True
             else:
                 self.__max_value = int(max_value)
-        except Exception, e:
+        except Exception as e:
             u.logger.error("Parameter. Error when copying max value of " +
                             "parameter: " + str(e))
 

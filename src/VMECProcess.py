@@ -109,7 +109,7 @@ class VMECProcess(object):
                     if(not os.path.lexists("xvmec2000")):
                         subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
                                           "xvmec2000"])
-                except Exception, e:
+                except Exception as e:
                     u.logger.error("VMECProcess(" +
                                    str(sys.exc_traceback.tb_lineno) +
                                    "). " + str(e))
@@ -123,13 +123,13 @@ class VMECProcess(object):
                         commands.getoutput("ln -s ../../external/xgrid xgrid")
                     if(not os.path.lexists("xvmec2000")):
                         commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
-                except Exception, e:
+                except Exception as e:
                     u.logger.warning("VMECProcess(" +
                                     str(sys.exc_traceback.tb_lineno) + "). " +
                                     str(e))
                     commands.getoutput("ln -s /home/fraguas/bin/xvmec2000nc xvmec2000")
                     commands.getoutput("ln -s ../../external/xgrid xgrid")
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                            ") " + str(e))
         os.chdir(self.__currentPath)
@@ -191,7 +191,7 @@ class VMECProcess(object):
                             str(self.__check_ballooning) + " - threed1 " +
                             str(self.__extra_threed1) + " - beta " +
                             str(self.__get_beta))
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                            "). " + str(e))
 
@@ -226,7 +226,7 @@ class VMECProcess(object):
                 os.remove("jxbout.tj" + self.__rank)
             if(os.path.exists("fort.9")):
                 os.remove("fort.9")
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + sys.exc_traceback.tb_lineno +
                            "). " + str(e))
 
@@ -301,7 +301,7 @@ class VMECProcess(object):
             u.logger.info("VALID configuration(" + self.__rank + "). Val: " +
                            str(val))
 
-        except Exception, e:
+        except Exception as e:
             os.chdir(self.__currentPath)
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when executing the configuration. " +
@@ -328,7 +328,7 @@ class VMECProcess(object):
                                     filenametime)
                 except:
                     pass
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when saving the configuration. " +
                             str(e))
@@ -457,7 +457,7 @@ class VMECProcess(object):
 
             file_out.close()
             return True
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                            "). Unexpected error reading wout. " + str(e))
             return False
@@ -498,7 +498,7 @@ class VMECProcess(object):
                     fitness = fitness + temp
                 lineRPhiZ = file_out.readline()
             file_out.close()
-        except Exception, e:
+        except Exception as e:
             fitness = -u.infinity
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                            "). Error when calculating the fitness " + str(e))
@@ -583,7 +583,7 @@ class VMECProcess(object):
                 pass
 
             return True
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when running DKES. " + str(e))
             return False
@@ -607,7 +607,7 @@ class VMECProcess(object):
             if(os.path.exists("wout_post.txt")):
                 os.remove("wout_post.txt")
             return True
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when transforming output to FLX format. "
                             + str(e))
@@ -652,7 +652,7 @@ class VMECProcess(object):
                 u.logger.info("SLAVE(" + self.__rank +
                               "). Configuration ballooning stable")
             return self.__is_ballooning_stable
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when processing ballooning. " + str(e))
             return False
@@ -704,7 +704,7 @@ class VMECProcess(object):
                 i += 1
                 line = f.readline()
             f.close()
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error while processing mercier. " + str(e))
             self.__is_mercier_stable = False
@@ -744,7 +744,7 @@ class VMECProcess(object):
                 self.__beta = -u.infinity
                 return False
             return True
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error while processing beta. " + str(e))
             return True
@@ -784,7 +784,7 @@ class VMECProcess(object):
             if(fsqr > 1.0e-10) or (fsqz > 1.0e-10) or (fsql > 1.0e-10):
                 #Incorrect values for fsqr, fsqz o fsql
                 return False
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error while processing threed1 file. " +
                             str(e))
@@ -825,7 +825,7 @@ class VMECProcess(object):
                 return False
             u.logger.info("SLAVE(" + self.__rank + "). Configuration VMEC OK")
             return True
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
                             "). Error when running VMEC. " + str(e))
             return False

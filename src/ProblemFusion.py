@@ -49,7 +49,7 @@ class ProblemFusion (ProblemBase):
         try:
             ProblemBase.__init__(self)
             self.__vmec = VMECProcess(u.cfile)
-        except Exception, e:
+        except Exception as e:
             print("ProblemFusion " + str(sys.exc_traceback.tb_lineno) +
                    " " + str(e))
         return
@@ -62,7 +62,7 @@ class ProblemFusion (ProblemBase):
         try:
             if (not self.__vmec.create_input_file(solution)):
                 return False
-        except Exception, e:
+        except Exception as e:
             u.logger.error("ProblemFusion, when creating input file: " +
                             str(e))
             return False

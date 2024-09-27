@@ -141,7 +141,7 @@ class NonSeparableData (object):
                         values = 1 + int(round((c.get_max_value() -
                                 c.get_min_value()) / c.get_gap()))
                         self.__maxRange = max(values, self.__maxRange)
-                    except Exception, e:
+                    except Exception as e:
                         traceback.print_tb(sys.exc_info()[2])
                         u.logger.warning("Problem calculating max range: " +
                                          str(e))
@@ -149,7 +149,7 @@ class NonSeparableData (object):
             u.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")
-        except Exception, e:
+        except Exception as e:
             u.logger.error("NonSeparableData (" +
                             str(sys.exc_traceback.tb_lineno) +
                             "). Problem reading input xml file: " + str(e))

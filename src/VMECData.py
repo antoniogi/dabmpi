@@ -948,7 +948,7 @@ class VMECData (object):
             if (self.ati.to_be_modified()):
                 parameters.append(self.ati)
 
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). " + str(e))
             
         if (int(self.__numParams) != len(parameters)):
@@ -1342,11 +1342,11 @@ class VMECData (object):
                                     values = 1 + int(round((c.get_max_value() - c.get_min_value())
                                             / c.get_gap()))
                                     self.__maxRange = max(values, self.__maxRange)
-                            except Exception, e:
+                            except Exception as e:
                                 traceback.print_tb(sys.exc_info()[2])
                                 u.logger.warning("Problem calculating max range: " + str(e))
                                 pass
-        except Exception, e:
+        except Exception as e:
             u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). Problem reading input xml file: " + str(e))
             traceback.print_tb(sys.exc_info()[2])
             sys.exit(111)
@@ -1573,7 +1573,7 @@ class VMECData (object):
                     temptxt = temptxt + str("%.4E" % float(j.get_value()))
                     fInput.write(temptxt + "\n")
             fInput.write('/\n')
-        except Exception, e:
+        except Exception as e:
             u.logger.warning("Error writting indata:" +
                 str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
             sys.exit(111)
@@ -1818,7 +1818,7 @@ class VMECData (object):
             if (self.bal_x0.get_display()):
                 fInput.write("  BAL_X0 = " +
                         str("%E" % float(self.bal_x0.get_value())) + "\n")
-        except Exception, e:
+        except Exception as e:
             u.logger.warning("Error writting optimum " +
                     str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
             pass
@@ -1852,7 +1852,7 @@ class VMECData (object):
             if (self.ati.get_display()):
                 fInput.write("  ATI=" + str(self.ati.get_value()) + "\n")
             fInput.write("/\n \n")
-        except Exception, e:
+        except Exception as e:
             u.logger.warning("Error writting booting " + str(e) +
             " line: " + str(sys.exc_traceback.tb_lineno))
             pass
@@ -1879,7 +1879,7 @@ class VMECData (object):
             if (self.__show_bootin):
                 self.__write_bootin(fInput)
             fInput.close()
-        except Exception, e:
+        except Exception as e:
             u.logger.warning("When creating input file (" + str(u.rank) + "): " + str(e))
             return False
         return True

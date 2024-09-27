@@ -178,8 +178,8 @@ def main(argv):
                              "hp:s:i:c:v:",
                              ["help", "problem", "solver", "ifile",
                               "cfile", "verbose"])
-            except getopt.GetoptError, err:
-                print str(err)
+            except getopt.GetoptError as err:
+                print(err)
             for o, val in opts:
                 if o in("-v", "--verbose"):
                     verboseLevel = int(val)
@@ -267,13 +267,13 @@ def main(argv):
             
         dump = array('i', [0]) * 1
         util.comm.Bcast(dump)
-    except Exception, e:
+    except Exception as e:
         print("disop " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
 if __name__ == "__main__":
     try:
         main(sys.argv[1:])
-    except Exception, e:
+    except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
