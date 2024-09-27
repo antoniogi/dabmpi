@@ -36,15 +36,8 @@ from xml.dom import minidom
 import Utils as u
 from ParameterVMEC import ParameterVMEC
 from array import array
-import imp
 
-subProcFound = False
-try:
-    imp.find_module('subprocess')
-    subProcFound = True
-    import subprocess
-except ImportError:
-    subProcFound = False
+import subprocess
 
 
 class VMECData (object):
@@ -1865,8 +1858,7 @@ class VMECData (object):
     def create_input_file(self, filename):
         try:
             try:
-                if (subProcFound):
-                    subprocess.call(['touch', filename])
+                subprocess.call(['touch', filename])
             except:
                 pass
             fInput = open(filename, 'w')
