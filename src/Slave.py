@@ -63,7 +63,7 @@ class Slave (object):
             elif (self.__problemType == u.problemType.NONSEPARABLE):
                 self.__problem = ProblemNonSeparable()
             return
-        except Exception, e:
+        except Exception as e:
             print("Slave " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
     """
@@ -151,7 +151,7 @@ class Slave (object):
             u.logger.info("SLAVE (" + str(self.__rank) +
                           ") configurations evaluated: " +
                            str(solutionsEvaluated))
-        except Exception, e:
+        except Exception as e:
             u.logger.error("SLAVE (" + str(self.__rank) + ")" +
                            str(sys.exc_traceback.tb_lineno) + " " + str(e))
 
