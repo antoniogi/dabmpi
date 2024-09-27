@@ -43,17 +43,10 @@ import Utils as util
 import logging
 import sys
 import os.path
-import imp
 from array import array
 import configparser
 
-try:
-    imp.find_module('argparse')
-    argparseFound = True
-    import argparse
-except ImportError:
-    import getopt
-    argparseFound = False
+import argparse
 
 import textwrap
 from mpi4py import MPI
@@ -125,80 +118,51 @@ def main(argv):
         verboseLevel = 4
 
         #process the arguments if the argparse module has been found
-        if (argparseFound):
-            parser = argparse.ArgumentParser(prog='disop.py',
-                 formatter_class=argparse.RawDescriptionHelpFormatter,
-                 description='Distributed Solver for Global Optimization.',
-                 epilog=textwrap.dedent(__author__))
+        parser = argparse.ArgumentParser(prog='disop.py',
+             formatter_class=argparse.RawDescriptionHelpFormatter,
+             description='Distributed Solver for Global Optimization.',
+             epilog=textwrap.dedent(__author__))
 
-            parser.add_argument('-p', '--problem', required=True, type=str,
-                                default='FUSION',
-                                choices=['FUSION', 'NONSEPARABLE'],
-                                help='Problem type')
-            parser.add_argument('-v', '--verbose', required=False, type=int,
-                                default=3, choices=[1, 2, 3, 4],
-                                help='Verbosity')
-            parser.add_argument('-s', '--solver', required=True, type=str,
-                                default='DAB',
-                                choices=['DAB', 'SA'],
-                                help='Solver type')
-            parser.add_argument('-i', '--ifile', required=True,
-                                help='input parameters file (an XML file)',
-                                type=lambda x: is_valid_file(parser, x))
-            parser.add_argument('-c', '--cfile', required=True,
-                                help='configuration INI file',
-                                type=lambda x: is_valid_file(parser, x))
-            parser.add_argument('--version', action='version',
-                                 version='%(prog)s ' + __version__)
+        parser.add_argument('-p', '--problem', required=True, type=str,
+                            default='FUSION',
+                            choices=['FUSION', 'NONSEPARABLE'],
+                            help='Problem type')
+        parser.add_argument('-v', '--verbose', required=False, type=int,
+                            default=3, choices=[1, 2, 3, 4],
+                            help='Verbosity')
+        parser.add_argument('-s', '--solver', required=True, type=str,
+                            default='DAB',
+                            choices=['DAB', 'SA'],
+                            help='Solver type')
+        parser.add_argument('-i', '--ifile', required=True,
+                            help='input parameters file (an XML file)',
+                            type=lambda x: is_valid_file(parser, x))
+        parser.add_argument('-c', '--cfile', required=True,
+                            help='configuration INI file',
+                            type=lambda x: is_valid_file(parser, x))
+        parser.add_argument('--version', action='version',
+                             version='%(prog)s ' + __version__)
 
-            args = parser.parse_args()
+        args = parser.parse_args()
 
-            #extract the problem type
-            if (args.problem == 'FUSION'):
-                probType = util.problemType.FUSION
-            if (args.problem == 'NONSEPARABLE'):
-                probType = util.problemType.NONSEPARABLE
+        #extract the problem type
+        if (args.problem == 'FUSION'):
+            probType = util.problemType.FUSION
+        if (args.problem == 'NONSEPARABLE'):
+            probType = util.problemType.NONSEPARABLE
 
-            #extract the solver type
-            if (args.solver == 'DAB'):
-                solverType = util.solverType.DAB
-            if (args.solver == 'SA'):
-                solverType = util.solverType.SA
+        #extract the solver type
+        if (args.solver == 'DAB'):
+            solverType = util.solverType.DAB
+        if (args.solver == 'SA'):
+            solverType = util.solverType.SA
 
-            verboseLevel = args.verbose
+        verboseLevel = args.verbose
 
-            #input and config file
-            inputfile = args.ifile
-            configfile = args.cfile
+        #input and config file
+        inputfile = args.ifile
+        configfile = args.cfile
 
-        else:
-            #process the arguments if argparse not found
-            try:
-                opts, args = getopt.getopt(sys.argv[1:],
-                             "hp:s:i:c:v:",
-                             ["help", "problem", "solver", "ifile",
-                              "cfile", "verbose"])
-            except getopt.GetoptError as err:
-                print(err)
-            for o, val in opts:
-                if o in("-v", "--verbose"):
-                    verboseLevel = int(val)
-                elif o in ("-p", "--problem"):
-                    if (val == "FUSION"):
-                        probType = util.problemType.FUSION
-                    else:
-                        probType = util.problemType.NONSEPARABLE
-                elif o in ("-s", "--solver"):
-                    if (val == "DAB"):
-                        solverType = util.solverType.DAB
-                    if (val == "SA"):
-                        solverType = util.solverType.SA
-                elif o in ("-i", "--ifile"):
-                    inputfile = val
-                elif o in ("-c", "--cfile"):
-                    configfile = val
-                else:
-                    assert False, "unhandled option"
 
         #init he configuration
         init(configfile)
