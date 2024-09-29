@@ -17,8 +17,11 @@
 #   limitations under the License.                                          #
 #############################################################################
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
+from Parameter import Parameter
+import Utils as u
+
+__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 __version__ = ' REVISION:   1.0  -  15-01-2014'
 
@@ -27,10 +30,6 @@ HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
 """
-
-from Parameter import Parameter
-import Utils as u
-
 
 class ParameterVMEC(Parameter):
     """
@@ -49,23 +48,23 @@ class ParameterVMEC(Parameter):
 
     def set_x_index(self, index):
         try:
-            if (index is not None):
+            if index is not None:
                 self.__x_index = int(index)
-        except:
+        except ValueError:
             pass
 
     def set_y_index(self, index):
         try:
-            if (index is not None):
+            if index is not None:
                 self.__y_index = int(index)
-        except:
+        except ValueError:
             pass
 
     def set_display(self, display):
-        self.__display = (str(display) == "True")
+        self.__display = str(display) == "True"
 
     def set_fixed(self, fixed):
-        self.__fixed = (str(fixed) == "True")
+        self.__fixed = str(fixed) == "True"
 
     def get_display(self):
         return self.__display
@@ -74,10 +73,9 @@ class ParameterVMEC(Parameter):
         return self.__fixed
 
     def to_be_modified(self):
-        if (self.__fixed == False) and (self.__display == True):
+        if self.__display and not self.__fixed:
             return True
-        else:
-            return False
+        return False
 
     def get_x_index(self):
         return self.__x_index
@@ -86,19 +84,15 @@ class ParameterVMEC(Parameter):
         return self.__y_index
 
     def print_value(self):
-        if (self.__type == "bool"):
-            if (self.__value):
-                print (str(self.__name) + ' = TRUE')
+        if self.__type == "bool":
+            if self.__value:
                 u.logger.info(str(self.__name) + ' = TRUE')
             else:
-                print (str(self.__name) + ' = FALSE')
                 u.logger.info(str(self.__name) + ' = FALSE')
         else:
-            print (str(self.__name) + ' = ' + str(self.__value))
             u.logger.info(str(self.__name) + ' = ' + str(self.__value))
 
     def get_value_and_index(self):
-        if (str(self.__type) == "float") or (str(self.__type) == "double"):
+        if str(self.__type) in ["float", "double"]:
             return str("%.6E" % float(self.__value))
-        else:
-            return str(self.__value)
+        return str(self.__value)

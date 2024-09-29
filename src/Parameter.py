@@ -17,9 +17,9 @@
 #   limitations under the License.                                          #
 #############################################################################
 
+import Utils as u
+
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
-
-
 __version__ = ' REVISION:   1.0  -  15-01-2014'
 
 """
@@ -28,14 +28,9 @@ HISTORY
     Version 1.0 (15-01-2014):   Fist stable version.
 """
 
-import Utils as u
-
-
-class Parameter(object):
-    """
-    This class represents a parameter of the problem that will be used
-    during the optimization (a chromosome in Genetic Algorithms).
-    """
+#This class represents a parameter of the problem that will be used
+#during the optimization (a chromosome in Genetic Algorithms).
+class Parameter():
 
     def __init__(self):
         self.__value = None
@@ -48,13 +43,12 @@ class Parameter(object):
 
     def set_value(self, value):
         try:
-            if (self.__type == "string"):
+            if self.__type == "string":
                 self.__value = value
-            elif (self.__type == "double") or (self.__type == "float"):
+            elif self.__type in ('double', 'float'):
                 self.__value = float(value)
-            elif (self.__type == "bool"):
-                self.__value = ((value == "T") or (value == "True") or
-                               (value == "TRUE"))
+            elif self.__type == "bool":
+                self.__value = value in ('TRUE', 'True', 'true', 'T', 't', '1')
             else:
                 self.__value = int(round(value))
         except Exception as e:
@@ -62,7 +56,7 @@ class Parameter(object):
                             "parameter: " + str(e))
 
     def get_index(self):
-        return (self.__index)
+        return self.__index
 
     def set_index(self, index):
         try:
@@ -75,7 +69,7 @@ class Parameter(object):
         self.__name = str(name)
 
     def get_name(self):
-        return (self.__name)
+        return self.__name
 
     def set_type(self, type_):
         self.__type = type_
@@ -84,24 +78,23 @@ class Parameter(object):
         return self.__type
 
     def get_value(self):
-        if (self.__type == "double" or self.__type == "float"):
+        if self.__type in ('double', 'float'):
             return float(self.__value)
-        if (self.__type == "int"):
+        if self.__type == "int":
             return int(self.__value)
-        if (self.__type == "bool"):
-            if (self.__value == "T") or (self.__value == "True"):
+        if self.__type == "bool":
+            if self.__value in ('TRUE', 'True', 'true', 'T', 't', '1'):
                 return True
-            else:
-                return False
+            return False
         return self.__value
 
     def set_min_value(self, min_value):
         try:
-            if (self.__type == "string"):
+            if self.__type == "string":
                 self.__min_value = ""
-            elif (self.__type == "double"):
+            elif self.__type == "double":
                 self.__min_value = float(min_value)
-            elif (self.__type == "bool"):
+            elif self.__type == "bool":
                 self.__min_value = False
             else:
                 self.__min_value = int(min_value)
@@ -110,15 +103,15 @@ class Parameter(object):
                             "parameter: " + str(e))
 
     def get_min_value(self):
-        return (self.__min_value)
+        return self.__min_value
 
     def set_max_value(self, max_value):
         try:
-            if (self.__type == "string"):
+            if self.__type == "string":
                 self.__max_value = ""
-            elif (self.__type == "double"):
+            elif self.__type == "double":
                 self.__max_value = float(max_value)
-            elif (self.__type == "bool"):
+            elif self.__type == "bool":
                 self.__max_value = True
             else:
                 self.__max_value = int(max_value)
@@ -130,10 +123,10 @@ class Parameter(object):
         return self.__max_value
 
     def __getitem__(self, item):
-        return (self.__index)
+        return self.__index
 
     def set_gap(self, gap):
         self.__gap = float(gap)
 
     def get_gap(self):
-        return (self.__gap)
+        return self.__gap

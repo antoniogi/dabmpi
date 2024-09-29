@@ -41,10 +41,9 @@ import sys
 import random
 import shutil
 import time
-
+import configparser
 from mpi4py import MPI
 from array import array
-
 
 from SolverBase import SolverBase
 from ProblemFusion import ProblemFusion
@@ -52,7 +51,6 @@ from ProblemNonSeparable import ProblemNonSeparable
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as u
-import configparser
 import SolutionsQueue as solQueue
 
 
@@ -64,7 +62,7 @@ class SolverSA (SolverBase):
             u.logger.critical("SA section not specified in the ini file")
             sys.exit(-1)
 
-    def __init__(self, problemType, infile, configfile):
+    def __init__(self, problem_type, infile, configfile):
         u.logger.info("SolverSA init")
         self.readConfigFile(configfile)
         u.starttime = time.time()

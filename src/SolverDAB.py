@@ -75,12 +75,12 @@ class BeeBase (object):
         #was created
         self.__itersinceLastUpdate = 0
 
-        if (ProblemType == u.problemType.FUSION):
+        if (ProblemType == u.problem_type.FUSION):
             self.__problem = ProblemFusion()
             self.__solutionType = u.solutionType.FUSION
             self.__bestLocalSolution = SolutionFusion(infile)
             u.logger.info("Best local solution initialized " + str(self.__bestLocalSolution))
-        elif (ProblemType == u.problemType.NONSEPARABLE):
+        elif (ProblemType == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
             self.__solutionType = u.solutionType.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
@@ -186,8 +186,8 @@ Employed bees
 
 
 class Employed (BeeBase):
-    def __init__(self, problemType, infile, change, useMatrix):
-        BeeBase.__init__(self, problemType, infile)
+    def __init__(self, problem_type, infile, change, useMatrix):
+        BeeBase.__init__(self, problem_type, infile)
         #list of neighbours of the current best local solution. This list is
         #used to create new solutions
         self.__neighbours = []
@@ -315,8 +315,8 @@ Scout bees
 
 
 class Scout (BeeBase):
-    def __init__(self, problemType, infile):
-        BeeBase.__init__(self, problemType, infile)
+    def __init__(self, problem_type, infile):
+        BeeBase.__init__(self, problem_type, infile)
         return
 
     """
@@ -367,9 +367,9 @@ Onlooker bees
 
 
 class Onlooker (BeeBase):
-    def __init__(self, problemType, infile, modFactor, probChange):
+    def __init__(self, problem_type, infile, modFactor, probChange):
         self.__modFactor = modFactor
-        BeeBase.__init__(self, problemType, infile)
+        BeeBase.__init__(self, problem_type, infile)
         self.__probOnlookerChange = probChange
         return
 
@@ -450,7 +450,7 @@ Solver DAB main class
 
 
 class SolverDAB (SolverBase):
-    def __init__(self, problemType, infile, configfile):
+    def __init__(self, problem_type, infile, configfile):
         try:
             u.logger.info("SolverDAB init")
             u.starttime = time.time()
@@ -465,28 +465,28 @@ class SolverDAB (SolverBase):
             self.__requestsEnd = []
             self.__requestsInput = []
             self.__requestSolution = []
-            self.__problemType = problemType
+            self.__problem_type = problem_type
             self.__infile = infile
             for i in range(u.size):
                 self.__requestSolution.append(MPI.REQUEST_NULL)
 
             self.__dump = array('i', [0]) * 1
 
-            SolverBase.__init__(self, problemType, infile, configfile)
+            SolverBase.__init__(self, problem_type, infile, configfile)
             self.__bestSolution = None
             self.__globalBestSolution = None
 
-            if (self.__problemType == u.problemType.FUSION):
+            if (self.__problem_type == u.problem_type.FUSION):
                 self.__problem = ProblemFusion()
                 self.__bestSolution = SolutionFusion(self.__infile)
                 self.__globalBestSolution = SolutionFusion(self.__infile)
-            elif (self.__problemType == u.problemType.NONSEPARABLE):
+            elif (self.__problem_type == u.problem_type.NONSEPARABLE):
                 self.__problem = ProblemNonSeparable()
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
                 self.__globalBestSolution = SolutionNonSeparable(self.__infile)
             else:
                 u.logger.critical("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
-                                  "). Unknown problem type " + str(problemType))
+                                  "). Unknown problem type " + str(problem_type))
                 sys.exit(-1)
             self.__numParams = self.__bestSolution.getNumberofParams()
 
@@ -515,14 +515,14 @@ class SolverDAB (SolverBase):
             self.__finishedSolutions = None
             self.__topSolutions = None
 
-            if (problemType == u.problemType.FUSION):
+            if (problem_type == u.problem_type.FUSION):
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finished.queue", u.solutionType.FUSION, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
                                     "pending.queue", u.solutionType.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solutionType.FUSION, infile, False, True)
-            if (problemType == u.problemType.NONSEPARABLE):
+            if (problem_type == u.problem_type.NONSEPARABLE):
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finishedNonSep.queue", u.solutionType.NONSEPARABLE, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
@@ -605,12 +605,12 @@ class SolverDAB (SolverBase):
                 """
                 idxBees = 0
                 for i in range(self.__nEmployed):
-                    self.__bees.insert(idxBees, Employed(problemType, infile, self.__probEmployedChange, self.__useMatrix))
+                    self.__bees.insert(idxBees, Employed(problem_type, infile, self.__probEmployedChange, self.__useMatrix))
                     idxBees += 1
                 u.logger.debug("Created " + str(self.__nEmployed) + " employed bees")
 
                 for i in range(self.__nOnlooker):
-                    self.__bees.insert(idxBees, Onlooker(problemType, infile,
+                    self.__bees.insert(idxBees, Onlooker(problem_type, infile,
                                             self.__onlookerModFactor, self.__probOnlookerChange))
                     idxBees += 1
                 u.logger.debug("Created " + str(self.__nOnlooker) + " onlooker bees")
@@ -624,7 +624,7 @@ class SolverDAB (SolverBase):
                 Create only one scout. The scout creates a random solution, so
                 it is just called when needed
                 """
-                self.__scout = Scout(problemType, infile)
+                self.__scout = Scout(problem_type, infile)
                 u.logger.debug("Created 1 scout bee")
         except Exception as e:
             u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
@@ -775,13 +775,13 @@ class SolverDAB (SolverBase):
                     #priority list)
                     solutionTemp = None
                     try:
-                        if (self.__problemType == u.problemType.FUSION):
+                        if (self.__problem_type == u.problem_type.FUSION):
                             solutionTemp = SolutionFusion(self.__infile)
-                        elif (self.__problemType == u.problemType.NONSEPARABLE):
+                        elif (self.__problem_type == u.problem_type.NONSEPARABLE):
                             solutionTemp = SolutionNonSeparable(self.__infile)
 
                         if (solutionTemp is None):
-                            u.logger.error("Solution is None after creation (type " + str(self.__problemType) + ")")
+                            u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
                         else:
                             solutionTemp.setParametersValues(buff)
                         if (self.__useMatrix):
@@ -819,7 +819,7 @@ class SolverDAB (SolverBase):
                         self.__bestSolution.setValue(solVal[0])
 
                         self.__bestSolution.setParametersValues(buff)
-                        if (self.__problemType == u.solutionType.FUSION):
+                        if (self.__problem_type == u.solutionType.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
@@ -832,13 +832,13 @@ class SolverDAB (SolverBase):
 
             try:
                 solutionTemp = None
-                if (self.__problemType == u.problemType.FUSION):
+                if (self.__problem_type == u.problem_type.FUSION):
                     solutionTemp = SolutionFusion(self.__infile)
-                elif (self.__problemType == u.problemType.NONSEPARABLE):
+                elif (self.__problem_type == u.problem_type.NONSEPARABLE):
                     solutionTemp = SolutionNonSeparable(self.__infile)
 
                 if (solutionTemp is None):
-                    u.logger.error("Solution is None after creation (type " + str(self.__problemType) + ")")
+                    u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
                 else:
                     solutionTemp.setParametersValues(buff)
 
@@ -914,9 +914,9 @@ class SolverDAB (SolverBase):
             self.runDistributed()
 
     def runDistributed(self):
-        if (self.__problemType == u.problemType.FUSION):
+        if (self.__problem_type == u.problem_type.FUSION):
             self.__problem = ProblemFusion()
-        elif (self.__problemType == u.problemType.NONSEPARABLE):
+        elif (self.__problem_type == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
 
         numParams = self.__bestSolution.getNumberofParams()
@@ -966,7 +966,7 @@ class SolverDAB (SolverBase):
                         u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
                     """
 
-                    if (self.__problemType == u.solutionType.FUSION):
+                    if (self.__problem_type == u.solutionType.FUSION):
                         self.__bestSolution.prepare("input.best." + filenametime)
                         shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                         shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
@@ -1019,7 +1019,7 @@ class SolverDAB (SolverBase):
                             u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
                         """
 
-                        if (self.__problemType == u.solutionType.FUSION):
+                        if (self.__problem_type == u.solutionType.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)

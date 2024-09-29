@@ -33,7 +33,7 @@ class ProblemBase(object):
     def __init__(self):
         return
 
-    def solve(self):
+    def solve(self, solution):
         raise NotImplementedError("Abstract problem")
 
     def extractSolution(self):

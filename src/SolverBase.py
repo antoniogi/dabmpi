@@ -29,9 +29,9 @@ HISTORY
 """
 
 
-class SolverBase(object):
+class SolverBase():
 
-    def __init__(self, problemType, infile, configfile):
+    def __init__(self, problem_type, infile, configfile):
         return
 
     def initialize(self):

@@ -132,6 +132,12 @@ class VMECProcess(object):
                            ") " + str(e))
         os.chdir(self.__currentPath)
 
+    def get_beta(self):
+        return self.__beta
+
+    def get_bgradbval(self):
+        return self.__bgradbval
+
     def read_ini_config_file(self, cfile):
         config = configparser.ConfigParser()
         config.read(cfile)
