@@ -849,19 +849,17 @@ class VMECProcess(object):
 
     def run_x_grid(self):
         fullpath = self.__rank + "/" + self.__filename
-        fileinput = open(fullpath)
-        line = fileinput.readline()
-        line = fileinput.readline()
-        """
-        Check if we have to run xgrid
-        """
-        runxgrid = True
-        if(line.find('mgrid.') == -1):
-            #In this case, running xgrid is not necessary
-            fileinput.close()
-            return True
+        with open(fullpath, 'r') as fileinput:
+            line = fileinput.readline()
+            line = fileinput.readline()
+            """
+            Check if we have to run xgrid
+            """
+            runxgrid = True
+            if(line.find('mgrid.') == -1):
+                #In this case, running xgrid is not necessary
+                return True
 
-        fileinput.close()
         if(runxgrid):
             if(not os.path.exists('../external/mgrid.tj0')):
                 u.logger.error("File Mgrid.tj0 doesn't exist")
@@ -895,3 +893,4 @@ class VMECProcess(object):
                                    "the matrix file")
                     return False
             return False
+        return False

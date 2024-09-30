@@ -80,11 +80,13 @@ class BeeBase (object):
             self.__problem = ProblemFusion()
             self.__solution_type = u.solution_type.FUSION
             self.__bestLocalSolution = SolutionFusion(infile)
+            self.__bestGlobalSolution = SolutionFusion(infile)
             u.logger.info("Best local solution initialized " + str(self.__bestLocalSolution))
         elif (ProblemType == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
             self.__solution_type = u.solution_type.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
+            self.__bestGlobalSolution = SolutionNonSeparable(infile)
         if (u.objective == u.objectiveType.MAXIMIZE):
             self.__bestLocalSolution.setValue(-u.infinity)
             self.__bestGlobalSolution.setValue(-u.infinity)
