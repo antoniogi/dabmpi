@@ -60,7 +60,7 @@ class Worker ():
             elif self.__problem_type == u.problem_type.NONSEPARABLE:
                 self.__problem = ProblemNonSeparable()
         except Exception as e:
-            print("Worker " + str(sys.exception().exc.__traceback__.tb_lineno) + " " + str(e))
+            print("Worker " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
     #This is the worker. It sends a request for data, then receives
     #a solution and the bee index.
@@ -148,7 +148,7 @@ class Worker ():
                            str(solutions_evaluated))
         except Exception as e:
             u.logger.error("WORKER (" + str(self.__rank) + ")" +
-                           str(sys.exception().exc.__traceback__.tb_lineno) + " " + str(e))
+                           str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
     #This method just checks if there is message from the driver indicating the
     #end of the simulation

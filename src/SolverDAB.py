@@ -70,6 +70,7 @@ class BeeBase (object):
         self.__solution_type = 0
         self.__problem = None
         self.__bestLocalSolution = None
+        self.__bestGlobalSolution = None
         self.__bestLocalInitialised = False
         #Number of iterations since the local solution
         #was created

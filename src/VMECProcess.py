@@ -675,17 +675,17 @@ class VMECProcess(object):
     """
 
     def run_mercier(self):
-        if(not self.__check_mercier):
+        if not self.__check_mercier:
             return True
         try:
             filename = "mercier.tj" + self.__rank
-            if(not os.path.exists(filename)):
+            if not os.path.exists(filename):
                 u.logger.error("VMECProcess(" + self.__rank + "): File " +
                                 str(filename) + " doesn't exist")
                 return False
             f = open(filename, 'r')
             line = f.readline()
-            while(string.find(line, 'DMerc') == -1):
+            while line.find('DMerc') == -1:
                 line = f.readline()
 
             f.readline()
@@ -695,8 +695,8 @@ class VMECProcess(object):
             sign_change = False
             self.__is_mercier_stable = True
             while(line):
-                linestrip = string.strip(line)
-                new_line = string.replace(linestrip, '  ', ' ')
+                linestrip = line.strip()
+                new_line = linestrip.replace('  ', ' ')
                 parts = new_line.split()
 #                parts = map(string.strip, string.split(new_line, ' '))
                 Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
