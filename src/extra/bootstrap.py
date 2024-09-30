@@ -34,7 +34,7 @@ To run this file just type in python -i bootstrap.py finished.queue
 import sys
 import os
 import os.path
-import commands
+import subprocess
 import getopt
 import logging
 
@@ -49,7 +49,6 @@ def init():
     util.logger.setLevel(logging.DEBUG)
 
     # create file handler which logs even debug messages
-
     fh = logging.FileHandler('bootstrap.log')
     fh.setLevel(logging.DEBUG)
     # create console handler with a higher log level
@@ -87,15 +86,20 @@ def create_script_file():
     fout.write("python remote_bootstrap.py input.tj0")
     fout.close()
 
+import getopt
+import sys
+import os
+import subprocess
+
 def main(argv):
     try:
         inputfile = "../finished.queue"
         xmlFile = "../../data/param_config_pressure.xml"
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], "hi:x:v:", ["help", "ifile", "xfile", "verbose"])
-        except getopt.GetoptError, err:
-            print str(err)
+            opts, args = getopt.getopt(argv, "hi:x:v:", ["help", "ifile=", "xfile=", "verbose"])
+        except getopt.GetoptError as err:
+            print(str(err))
             return
         for o, val in opts:
             if o in ("-i", "--ifile"):
@@ -119,7 +123,7 @@ def main(argv):
         for line in f.readlines():
             solTuple = line.split('#')
             solValue = float(solTuple[1])
-            if (solValue < 0.0):
+            if solValue < 0.0:
                 continue
             util.logger.info("Processing solution " + str(i+1) + " with value " + str(solValue))
             create_bootstrap_folder(i)
@@ -130,19 +134,18 @@ def main(argv):
                 params.append(float(p.split(':')[1]))
             solutionBase.setParametersValues(params)
             solutionBase.getData().create_input_file("bootstrap/" + str(i) + "/input.tj0")
-            os.chdir(savedPath+"/bootstrap/"+str(i))
-            commands.getoutput("ln -s " + savedPath + "/remote_bootstrap.py remote_bootstrap.py")
-            commands.getoutput("ln -s " + savedPath + "/send_bootstrap send_bootstrap")
+            os.chdir(savedPath + "/bootstrap/" + str(i))
+            subprocess.getoutput("ln -s " + savedPath + "/remote_bootstrap.py remote_bootstrap.py")
+            subprocess.getoutput("ln -s " + savedPath + "/send_bootstrap send_bootstrap")
 
             util.logger.info("Submitting job")
-            commands.getoutput("qsub send_bootstrap")
+            subprocess.getoutput("qsub send_bootstrap")
             os.chdir(savedPath)
             i += 1
         f.close()
 
-
-    except Exception, e:
-        print("bootstrap " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+    except Exception as e:
+        print("bootstrap " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
 if __name__ == "__main__":
     main(sys.argv[1:])
