@@ -17,6 +17,21 @@
 #   limitations under the License.                                          #
 #############################################################################
 
+from mpi4py import MPI
+import sys
+import random
+import shutil
+import time
+from array import array
+from SolverBase import SolverBase
+from ProblemFusion import ProblemFusion
+from ProblemNonSeparable import ProblemNonSeparable
+from SolutionFusion import SolutionFusion
+from SolutionNonSeparable import SolutionNonSeparable
+import Utils as u
+import configparser
+import SolutionsQueue as solQueue
+
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 
@@ -36,23 +51,6 @@ Class that implements the DAB solver. It has to:
   there is something else to be done.
 """
 
-from mpi4py import MPI
-
-import sys
-import random
-import shutil
-import time
-
-from SolverBase import SolverBase
-from ProblemFusion import ProblemFusion
-from ProblemNonSeparable import ProblemNonSeparable
-from SolutionFusion import SolutionFusion
-from SolutionNonSeparable import SolutionNonSeparable
-import Utils as u
-import configparser
-import SolutionsQueue as solQueue
-
-from array import array
 
 """
 Base class for bees
@@ -64,7 +62,7 @@ that created that solution and set the value for that solution in the bee
 """
 
 
-class BeeBase (object):
+class BeeBase ():
     def __init__(self, ProblemType, infile):
         random.seed()
         self.__solution_type = 0
@@ -479,16 +477,16 @@ class SolverDAB (SolverBase):
 
             SolverBase.__init__(self, problem_type, infile, configfile)
             self.__bestSolution = None
-            self.__globalBestSolution = None
+            self.__bestGlobalSolution = None
 
             if (self.__problem_type == u.problem_type.FUSION):
                 self.__problem = ProblemFusion()
                 self.__bestSolution = SolutionFusion(self.__infile)
-                self.__globalBestSolution = SolutionFusion(self.__infile)
+                self.__bestGlobalSolution = SolutionFusion(self.__infile)
             elif (self.__problem_type == u.problem_type.NONSEPARABLE):
                 self.__problem = ProblemNonSeparable()
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
-                self.__globalBestSolution = SolutionNonSeparable(self.__infile)
+                self.__bestGlobalSolution = SolutionNonSeparable(self.__infile)
             else:
                 u.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). Unknown problem type " + str(problem_type))
