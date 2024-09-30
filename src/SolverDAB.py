@@ -67,7 +67,7 @@ that created that solution and set the value for that solution in the bee
 class BeeBase (object):
     def __init__(self, ProblemType, infile):
         random.seed()
-        self.__solutionType = 0
+        self.__solution_type = 0
         self.__problem = None
         self.__bestLocalSolution = None
         self.__bestLocalInitialised = False
@@ -77,17 +77,19 @@ class BeeBase (object):
 
         if (ProblemType == u.problem_type.FUSION):
             self.__problem = ProblemFusion()
-            self.__solutionType = u.solutionType.FUSION
+            self.__solution_type = u.solution_type.FUSION
             self.__bestLocalSolution = SolutionFusion(infile)
             u.logger.info("Best local solution initialized " + str(self.__bestLocalSolution))
         elif (ProblemType == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
-            self.__solutionType = u.solutionType.NONSEPARABLE
+            self.__solution_type = u.solution_type.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
         if (u.objective == u.objectiveType.MAXIMIZE):
             self.__bestLocalSolution.setValue(-u.infinity)
+            self.__bestGlobalSolution.setValue(-u.infinity)
         else:
             self.__bestLocalSolution.setValue(u.infinity)
+            self.__bestGlobalSolution.setValue(u.infinity)
         return
 
     def getIter(self):
@@ -228,7 +230,7 @@ class Employed (BeeBase):
                 parameters[i].set_value(value)
             solutionCopy.setParameters(parameters)
         except Exception as e:
-            u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) + "). " + str(e))
+            u.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
         return solutionCopy
 
     def createNewCandidate(self, probMatrix, totalSumGoodSolutions, topSolutions=None):
@@ -304,7 +306,7 @@ class Employed (BeeBase):
                     #parameters considering the min and max values of each parameter,
                     #the probMatrix, and the self.__modFactor value
         except Exception as e:
-            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            u.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
             raise
 
         return solution, -1
@@ -331,7 +333,7 @@ class Scout (BeeBase):
             u.logger.info('create new candidate scout')
             solution = self.createRandomSolution()
         except Exception as e:
-            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            u.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
             raise
 
         return solution, -1
@@ -440,7 +442,7 @@ class Onlooker (BeeBase):
             u.logger.debug("Top solutions queue size " + str(topSolutions.qSize()))
             return solution, beeIdx
         except Exception as e:
-            u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). " + str(e))
         return None, None
 
@@ -485,7 +487,7 @@ class SolverDAB (SolverBase):
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
                 self.__globalBestSolution = SolutionNonSeparable(self.__infile)
             else:
-                u.logger.critical("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
+                u.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). Unknown problem type " + str(problem_type))
                 sys.exit(-1)
             self.__numParams = self.__bestSolution.getNumberofParams()
@@ -517,25 +519,25 @@ class SolverDAB (SolverBase):
 
             if (problem_type == u.problem_type.FUSION):
                 self.__finishedSolutions = solQueue.SolutionsQueue(
-                                    "finished.queue", u.solutionType.FUSION, infile, True, True)
+                                    "finished.queue", u.solution_type.FUSION, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
-                                    "pending.queue", u.solutionType.FUSION, infile, False)
+                                    "pending.queue", u.solution_type.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
-                                    "top.queue", u.solutionType.FUSION, infile, False, True)
+                                    "top.queue", u.solution_type.FUSION, infile, False, True)
             if (problem_type == u.problem_type.NONSEPARABLE):
                 self.__finishedSolutions = solQueue.SolutionsQueue(
-                                    "finishedNonSep.queue", u.solutionType.NONSEPARABLE, infile, True, True)
+                                    "finishedNonSep.queue", u.solution_type.NONSEPARABLE, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
-                                    "pendingNonSep.queue", u.solutionType.NONSEPARABLE, infile, False)
+                                    "pendingNonSep.queue", u.solution_type.NONSEPARABLE, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
-                                    "top.queue", u.solutionType.NONSEPARABLE, infile, False, True)
+                                    "top.queue", u.solution_type.NONSEPARABLE, infile, False, True)
             #if top solutions is not empty, that means we have a best solution from the previous execution
             try:
                 if (self.__topSolutions.qSize() != 0):
                     self.__bestSolution, value, origin = self.__topSolutions.GetSolutionTuple(False)
                     self.__bestSolution.setValue(value)
             except Exception as e:
-                u.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_traceback.tb_lineno))
+                u.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_info()[2].tb_lineno))
 
             if (u.rank == 0):
                 #parse arguments from the ini file
@@ -592,7 +594,7 @@ class SolverDAB (SolverBase):
                             else:
                                 u.objective = u.objectiveType.MINIMIZE
                 except Exception as e:
-                    u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
+                    u.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                    "). Problem reading DAB configuration from the ini file. " +
                                    str(e))
                 if (self.__useMatrix):
@@ -627,7 +629,7 @@ class SolverDAB (SolverBase):
                 self.__scout = Scout(problem_type, infile)
                 u.logger.debug("Created 1 scout bee")
         except Exception as e:
-            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            u.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
     """
     Initializer method (if needed)
@@ -652,7 +654,7 @@ class SolverDAB (SolverBase):
                                     self.__scout.createNewCandidate(self.__probMatrix)[0], -1.0, -1)
             u.logger.debug('created initial set of solutions')
         except Exception as e:
-            u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+            u.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
     """
     This function checks if the size of the pending queue is correct. If smaller,
@@ -684,7 +686,7 @@ class SolverDAB (SolverBase):
                         u.logger.debug("Scout bee putting solution on pending queue")
                         self.__pendingSolutions.PutSolution(solution, -1.0, bee)
             except Exception as e:
-                u.logger.error("SolverDAB " + str(sys.exc_traceback.tb_lineno) + " " + str(e))
+                u.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
     """
     This function checks if there are workers waiting for solutions to be evaluated.
@@ -721,7 +723,7 @@ class SolverDAB (SolverBase):
                             buff[i] = float(solTuple[2][i])
                             u.logger.debug("Val param (" + str(i) + "): " + str(buff[i]))
                     except Exception as e:
-                        u.logger.error("SolverDAB (" + str(sys.exc_traceback.tb_lineno) +
+                        u.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                 "): " + str(e))
                         continue
                     #sends the parameters
@@ -768,7 +770,7 @@ class SolverDAB (SolverBase):
                 u.comm.Recv(beeIdx, origin, u.tags.COMMSOLUTION)
             except Exception as e:
                 u.logger.error("DRIVER (comm). " + str(e) + " line: " +
-                           str(sys.exc_traceback.tb_lineno))
+                           str(sys.exc_info()[2].tb_lineno))
             try:
                 if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
                     #Add the solution to the list of best solutions (the method will implement the
@@ -800,7 +802,7 @@ class SolverDAB (SolverBase):
                                 val = self.__probMatrix.getitem(i, idx)
                                 self.__probMatrix.setitem(i, idx, val + 0.5)
                     except Exception as e:
-                        u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                        u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                     
@@ -810,7 +812,7 @@ class SolverDAB (SolverBase):
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                         except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                         isNewBest = True
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(solVal[0]) +
@@ -819,7 +821,7 @@ class SolverDAB (SolverBase):
                         self.__bestSolution.setValue(solVal[0])
 
                         self.__bestSolution.setParametersValues(buff)
-                        if (self.__problem_type == u.solutionType.FUSION):
+                        if (self.__problem_type == u.solution_type.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
@@ -828,7 +830,7 @@ class SolverDAB (SolverBase):
                             except:
                                 pass
             except Exception as e:
-                u.logger.error("DRIVER (comm). " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                u.logger.error("DRIVER (comm). " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
             try:
                 solutionTemp = None
@@ -882,7 +884,7 @@ class SolverDAB (SolverBase):
                             u.logger.info("Bee " + str(beeIdx[0]) + ". Current iterations " + str(self.__bees[beeIdx[0]].getIter()))
             except Exception as e:
                 u.logger.error("DRIVER (receiveSolutions). " + str(e) +
-                                   " line: " + str(sys.exc_traceback.tb_lineno))
+                                   " line: " + str(sys.exc_info()[2].tb_lineno))
 
             u.logger.info('DRIVER. Received solution (worker ' + str(source) + ')')
             sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
@@ -909,7 +911,7 @@ class SolverDAB (SolverBase):
                                     " - Remaining " + str(self.__runtime - elapsedTime))
                 except Exception as e:
                     u.logger.error("DRIVER (solve). " + str(e) + " line: " +
-                                   str(sys.exc_traceback.tb_lineno))
+                                   str(sys.exc_info()[2].tb_lineno))
         else:
             self.runDistributed()
 
@@ -944,7 +946,7 @@ class SolverDAB (SolverBase):
                     try:
                         filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                     except Exception as e:
-                        u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                        u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                     u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                    " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -966,7 +968,7 @@ class SolverDAB (SolverBase):
                         u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
                     """
 
-                    if (self.__problem_type == u.solutionType.FUSION):
+                    if (self.__problem_type == u.solution_type.FUSION):
                         self.__bestSolution.prepare("input.best." + filenametime)
                         shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                         shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
@@ -997,7 +999,7 @@ class SolverDAB (SolverBase):
                         try:
                             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
                         except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_linenoJ))
 
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                        " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -1019,7 +1021,7 @@ class SolverDAB (SolverBase):
                             u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
                         """
 
-                        if (self.__problem_type == u.solutionType.FUSION):
+                        if (self.__problem_type == u.solution_type.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)

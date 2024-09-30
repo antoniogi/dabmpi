@@ -56,7 +56,7 @@ class ProblemNonSeparable(ProblemBase):
             u.logger.debug("Solve Problem NonSeparable")
         except Exception as e:
             u.logger.error("ProblemNonSeparable (" +
-                            str(sys.exc_traceback.tb_lineno) +
+                            str(sys.exc_info()[2].tb_lineno) +
                             "). " + str(e))
 
     def finish(self):

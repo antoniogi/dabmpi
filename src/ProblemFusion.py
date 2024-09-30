@@ -48,8 +48,8 @@ class ProblemFusion (ProblemBase):
             ProblemBase.__init__(self)
             self.__vmec = VMECProcess(u.cfile)
         except Exception as e:
-            u.logger.error("ProblemFusion " + sys.exception().exc.__traceback__.tb_lineno +
-                            " " + str(e))
+            u.logger.error("ProblemFusion (" + sys.exc_info()[2].tb_lineno +
+                            ") " + str(e))
 
     #Creates a input.tj input file for vmec
     def create_input_file(self, solution):

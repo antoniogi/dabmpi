@@ -17,8 +17,14 @@
 #   limitations under the License.                                          #
 #############################################################################
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
+import os
+import sys
+from array import array
+from xml.dom import minidom
+import Utils as u
+from Parameter import Parameter
 
+__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 __version__ = ' REVISION:   1.0  -  15-01-2014'
 
@@ -27,13 +33,6 @@ HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
 """
-import os
-import sys
-import traceback
-from xml.dom import minidom
-import Utils as u
-from Parameter import Parameter
-from array import array
 
 
 class NonSeparableData (object):
@@ -97,7 +96,7 @@ class NonSeparableData (object):
     """
     def assign_parameter(self, parameter):
         index = parameter.get_index()
-        if (index >= len(self.__params)):
+        if index >= len(self.__params):
             self.__params.append(parameter)
 
     def getMaxRange(self):
@@ -112,7 +111,7 @@ class NonSeparableData (object):
 
     def initialize(self, filepath):
         try:
-            if (not os.path.exists(filepath)):
+            if not os.path.exists(filepath):
                 filepath = "../" + filepath
             xmldoc = minidom.parse(filepath)
             pNode = xmldoc.childNodes[0]
@@ -120,20 +119,20 @@ class NonSeparableData (object):
                 if node.nodeType == node.ELEMENT_NODE:
                     c = Parameter()
                     for node_param in node.childNodes:
-                        if (node_param.nodeType == node_param.ELEMENT_NODE):
-                            if (node_param.localName == "type"):
+                        if node_param.nodeType == node_param.ELEMENT_NODE:
+                            if node_param.localName == "type":
                                 c.set_type(node_param.firstChild.data)
-                            if (node_param.localName == "value"):
+                            if node_param.localName == "value":
                                 c.set_value(node_param.firstChild.data)
-                            if (node_param.localName == "min_value"):
+                            if node_param.localName == "min_value":
                                 c.set_min_value(node_param.firstChild.data)
-                            if (node_param.localName == "max_value"):
+                            if node_param.localName == "max_value":
                                 c.set_max_value(node_param.firstChild.data)
-                            if (node_param.localName == "index"):
+                            if node_param.localName == "index":
                                 c.set_index(node_param.firstChild.data)
-                            if (node_param.localName == "name"):
+                            if node_param.localName == "name":
                                 c.set_name(node_param.firstChild.data)
-                            if (node_param.localName == "gap"):
+                            if node_param.localName == "gap":
                                 c.set_gap(node_param.firstChild.data)
                     try:
                         self.assign_parameter(c)
@@ -141,18 +140,16 @@ class NonSeparableData (object):
                         values = 1 + int(round((c.get_max_value() -
                                 c.get_min_value()) / c.get_gap()))
                         self.__maxRange = max(values, self.__maxRange)
-                    except Exception as e:
-                        traceback.print_tb(sys.exc_info()[2])
-                        u.logger.warning("Problem calculating max range: " +
-                                         str(e))
+                    except ValueError as e:
+                        u.logger.warning("Problem calculating max range: " + 
+                                         str(e) + " . Fileno: " + str(sys.exc_info()[2].tb_lineno))
                         pass
             u.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")
         except Exception as e:
             u.logger.error("NonSeparableData (" +
-                            str(sys.exc_traceback.tb_lineno) +
+                            str(sys.exc_info()[2].tb_lineno) +
                             "). Problem reading input xml file: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
             sys.exit(111)
         return

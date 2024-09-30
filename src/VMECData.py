@@ -942,7 +942,7 @@ class VMECData (object):
                 parameters.append(self.ati)
 
         except Exception as e:
-            u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). " + str(e))
+            u.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
             
         if (int(self.__numParams) != len(parameters)):
             u.logger.error("VMECData. Incorrect number of parameters (" + str(self.__numParams) + "--" + str(len(parameters)) + ")")
@@ -1340,7 +1340,7 @@ class VMECData (object):
                                 u.logger.warning("Problem calculating max range: " + str(e))
                                 pass
         except Exception as e:
-            u.logger.error("VMECData (" + str(sys.exc_traceback.tb_lineno) + "). Problem reading input xml file: " + str(e))
+            u.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). Problem reading input xml file: " + str(e))
             traceback.print_tb(sys.exc_info()[2])
             sys.exit(111)
         return
@@ -1568,7 +1568,7 @@ class VMECData (object):
             fInput.write('/\n')
         except Exception as e:
             u.logger.warning("Error writting indata:" +
-                str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
             sys.exit(111)
             pass
         return True
@@ -1813,7 +1813,7 @@ class VMECData (object):
                         str("%E" % float(self.bal_x0.get_value())) + "\n")
         except Exception as e:
             u.logger.warning("Error writting optimum " +
-                    str(e) + " line: " + str(sys.exc_traceback.tb_lineno))
+                    str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
             pass
         return True
 
@@ -1847,7 +1847,7 @@ class VMECData (object):
             fInput.write("/\n \n")
         except Exception as e:
             u.logger.warning("Error writting booting " + str(e) +
-            " line: " + str(sys.exc_traceback.tb_lineno))
+            " line: " + str(sys.exc_info()[2].tb_lineno))
             pass
         return True
 

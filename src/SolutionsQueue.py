@@ -43,17 +43,17 @@ The format of the elements in the queue is as follows:
     ,..., param_index:param_val - solutionVal
 """
 class SolutionsQueue (object):
-    def __init__(self, filename, solutionType, infile, writeToFile,
+    def __init__(self, filename, solution_type, infile, writeToFile,
                  isPriority=False):
         try:
             self.__queue = []
             self.__filename = filename
-            self.__solType = solutionType
+            self.__solType = solution_type
             self.__isPriority = isPriority
             self.__infile = infile
             self.__writeToFile = writeToFile
             self.__maxSize = util.infinity
-            if self.__solType == util.solutionType.FUSION:
+            if self.__solType == util.solution_type.FUSION:
                 self.__solutionBase = SolutionFusion(self.__infile)
                 util.logger.info("QUEUE: Initialised fusion queue (" +
                                   filename + ")" + self.__infile)
@@ -65,7 +65,7 @@ class SolutionsQueue (object):
             if os.path.exists(self.__filename):
                 self.LoadQueue()
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exception.__traceback__.tb_lineno) +
+            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
 
     def __del__(self):
@@ -139,7 +139,7 @@ class SolutionsQueue (object):
                 if self.qSize() > self.__maxSize:
                     self.__queue.pop()
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exception.__traceback__.tb_lineno) +
+            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                             "). " + str(e))
         if not self.__writeToFile:
             return
@@ -147,7 +147,7 @@ class SolutionsQueue (object):
             with open(self.__filename, 'a') as f:
                 f.write(sol + "#" + str(value) + '#' + str(agent_idx) + '\n')
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exception.__traceback__.tb_lineno) +
+            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                             "). " + str(e))
 
     """
@@ -205,7 +205,7 @@ class SolutionsQueue (object):
                     f.write(sol + "#" + str(solutionTuple[1]) + '#' +
                             str(solutionTuple[2]) + '\n')
             except Exception as e:
-                util.logger.error("QUEUE (" + str(sys.exception.__traceback__.tb_lineno) +
+                util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
 
     """
@@ -308,7 +308,7 @@ class SolutionsQueue (object):
                 util.logger.debug("Appending: " + str(p.split(':')[1]))
                 solution.append(float(p.split(':')[1]))
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exception.__traceback__.tb_lineno) +
+            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
         return val, agent_idx, solution
 

@@ -101,7 +101,7 @@ class VMECProcess(object):
                                       "xvmec2000"])
             except Exception as e:
                 u.logger.error("VMECProcess(" +
-                               str(sys.exc_traceback.tb_lineno) +
+                               str(sys.exc_info()[2].tb_lineno) +
                                "). " + str(e))
 
             else:
@@ -120,7 +120,7 @@ class VMECProcess(object):
                                                    "xvmec2000"])
                 except Exception as e:
                     u.logger.warning("VMECProcess(" +
-                                    str(sys.exc_traceback.tb_lineno) + "). " +
+                                    str(sys.exc_info()[2].tb_lineno) + "). " +
                                     str(e))
                     process = subprocess.Popen(["ln", "-s",
                                                "/home/fraguas/bin/xvmec2000nc",
@@ -128,7 +128,7 @@ class VMECProcess(object):
                     process = subprocess.Popen(["ln", "-s",
                                                "../../external/xgrid", "xgrid"])
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            ") " + str(e))
         os.chdir(self.__currentPath)
 
@@ -196,7 +196,7 @@ class VMECProcess(object):
                             str(self.__extra_threed1) + " - beta " +
                             str(self.__get_beta))
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). " + str(e))
 
     """
@@ -231,7 +231,7 @@ class VMECProcess(object):
             if(os.path.exists("fort.9")):
                 os.remove("fort.9")
         except Exception as e:
-            u.logger.error("VMECProcess(" + sys.exc_traceback.tb_lineno +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). " + str(e))
 
     """
@@ -307,7 +307,7 @@ class VMECProcess(object):
 
         except Exception as e:
             os.chdir(self.__currentPath)
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when executing the configuration. " +
                             str(e))
             return val
@@ -333,7 +333,7 @@ class VMECProcess(object):
                 except:
                     pass
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when saving the configuration. " +
                             str(e))
 
@@ -352,10 +352,11 @@ class VMECProcess(object):
             for i in range(0, 4):
                 file_wout.readline()
             line = file_wout.readline()
-            parts = map(string.strip, string.split(line))
+            parts = line.split()
+#            parts = map(string.strip, string.split(line))
 
-            ns = int(parts[1])
-            nmax = int(parts[4])
+            ns = int(parts[1].strip())
+            nmax = int(parts[4].strip())
 
             u.logger.debug("NS " + parts[1] + " NMAX " + parts[4])
 
@@ -378,34 +379,39 @@ class VMECProcess(object):
                 for j in range(0, nmax):
                     if(i == 0):
                         line = file_wout.readline()
-                        parts = map(string.strip, string.split(line))
-                        m[j] = int(parts[0])
-                        n[j] = int(parts[1])
+                        parts = line.split()
+                        m[j] = int(parts[0].strip())
+                        n[j] = int(parts[1].strip())
                         u.logger.debug("m " + parts[0] + " n " + parts[1])
 
                     line = file_wout.readline()
-                    parts = map(string.strip, string.split(line))
+                    parts = line.split()
+#                    parts = map(string.strip, string.split(line))
 
-                    rmn.setitem(j, i, float(parts[0]))
-                    zmn.setitem(j, i, float(parts[1]))
+                    rmn.setitem(j, i, float(parts[0].strip()))
+                    zmn.setitem(j, i, float(parts[1].strip()))
                 for j in range(0, nmax):
                     if(i == 0):
                         line = file_wout.readline()
-                        parts = map(string.strip, string.split(line))
+#                        parts = map(string.strip, string.split(line))
+                        parts = line.split()
                         u.logger.debug("m " + parts[0] + " n " + parts[1])
                     line = file_wout.readline()
-                    parts = map(string.strip, string.split(line))
+                    parts = line.split()
+#                    parts = map(string.strip, string.split(line))
                     bmn.setitem(j, i, float(parts[0]))
                     file_wout.readline()
                     file_wout.readline()
 
             for i in range(0, ns):
                 line = file_wout.readline()
-                parts = map(string.strip, string.split(line))
+#                parts = map(string.strip, string.split(line))
+                parts = line.split()
                 iotas.append(float(parts[0]))
                 file_wout.readline()
                 line = file_wout.readline()
-                parts = map(string.strip, string.split(line))
+                parts = line.split()
+#                parts = map(string.strip, string.split(line))
                 phi[i] = float(parts[1])
                 rho[i] = math.sqrt(abs(phi[i]))
                 file_wout.readline()
@@ -462,7 +468,7 @@ class VMECProcess(object):
             file_out.close()
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). Unexpected error reading wout. " + str(e))
             return False
     """
@@ -482,7 +488,8 @@ class VMECProcess(object):
                 if(lineRPhiZ.find("Surface") != -1):
                     lineRPhiZ = file_out.readline()
                     continue
-                parts = map(string.strip, string.split(lineRPhiZ, ','))
+                parts = lineRPhiZ.split(',').strip()
+#                parts = map(string.strip, string.split(lineRPhiZ, ','))
                 Br = float(parts[0])
                 Bphi = float(parts[1])
                 Bz = float(parts[2])
@@ -504,7 +511,7 @@ class VMECProcess(object):
             file_out.close()
         except Exception as e:
             fitness = -u.infinity
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). Error when calculating the fitness " + str(e))
             try:
                 file_out.close()
@@ -565,7 +572,8 @@ class VMECProcess(object):
                 sum = 0.0
                 for l in lines:
                     if (l.find('average')>0):
-                        parts = map(string.strip, string.split(l))
+                        parts = l.split()
+#                        parts = map(string.strip, string.split(l))
                         try:
                             d31 = abs(float(parts[4]))
                             rho = math.sqrt(float(parts[0]))
@@ -591,7 +599,7 @@ class VMECProcess(object):
 
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when running DKES. " + str(e))
             return False
 
@@ -615,7 +623,7 @@ class VMECProcess(object):
                 os.remove("wout_post.txt")
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when transforming output to FLX format. "
                             + str(e))
             return False
@@ -646,7 +654,8 @@ class VMECProcess(object):
             self.__is_ballooning_stable = True
             for line in file_cobra.readlines():
                 if(i >= first_line_to_analyze):
-                    parts = map(string.strip, string.split(line))
+                    parts = line.split()
+#                    parts = map(string.strip, string.split(line))
                     if(float(parts[2]) > 0):
                         self.__is_ballooning_stable = False
                         break
@@ -657,7 +666,7 @@ class VMECProcess(object):
                               "). Configuration ballooning stable")
             return self.__is_ballooning_stable
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when processing ballooning. " + str(e))
             return False
 
@@ -688,7 +697,8 @@ class VMECProcess(object):
             while(line):
                 linestrip = string.strip(line)
                 new_line = string.replace(linestrip, '  ', ' ')
-                parts = map(string.strip, string.split(new_line, ' '))
+                parts = new_line.split()
+#                parts = map(string.strip, string.split(new_line, ' '))
                 Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
 
                 if(float(Si) >= self.__min_mercier_radius):
@@ -709,7 +719,7 @@ class VMECProcess(object):
                 line = f.readline()
             f.close()
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing mercier. " + str(e))
             self.__is_mercier_stable = False
             return False
@@ -737,7 +747,8 @@ class VMECProcess(object):
             file_threed.close()
             if(not found):
                 return False
-            parts = map(string.strip, string.split(line, '='))
+            parts = line.split('=')
+#            parts = map(string.strip, string.split(line, '='))
             self.__beta = float(parts[1])
             u.logger.info("Worker " + self.__rank + ". Beta found " +
                            str(self.__beta))
@@ -749,7 +760,7 @@ class VMECProcess(object):
                 return False
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing beta. " + str(e))
             return True
 
@@ -780,7 +791,8 @@ class VMECProcess(object):
                 line = file_threed.readline()
             file_threed.close()
 
-            parts = map(string.strip, string.split(old_line))
+#            parts = map(string.strip, string.split(old_line))
+            parts = old_line.split()
 
             fsqr = float(parts[1])
             fsqz = float(parts[2])
@@ -789,7 +801,7 @@ class VMECProcess(object):
                 #Incorrect values for fsqr, fsqz o fsql
                 return False
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing threed1 file. " +
                             str(e))
             return False
@@ -827,7 +839,7 @@ class VMECProcess(object):
             u.logger.info("WORKER(" + self.__rank + "). Configuration VMEC OK")
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_traceback.tb_lineno) +
+            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when running VMEC. " + str(e))
             return False
 
@@ -878,7 +890,7 @@ class VMECProcess(object):
                     return True
                 except:
                     u.logger.error("VMECProcess(" +
-                                   str(sys.exc_traceback.tb_lineno) +
+                                   str(sys.exc_info()[2].tb_lineno) +
                                    "). Error during the generation of " +
                                    "the matrix file")
                     return False
