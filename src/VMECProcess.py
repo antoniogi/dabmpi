@@ -17,9 +17,19 @@
 #   limitations under the License.                                          #
 #############################################################################
 
+import math
+import string
+import configparser
+import os
+import shutil
+import sys
+import time
+import glob
+import subprocess
+import numpy as np
+import Utils as u
+
 __author__ = ' AUTHORS:     Antonio Gomez(antonio.gomez@csiro.au)'
-
-
 __version__ = ' REVISION:   1.1  - 09-01-2015'
 
 """
@@ -28,18 +38,6 @@ HISTORY
     Version 1.0(15-01-2014):   Fist stable version.
     Version 1.1(09-01-2015):   Using numpy and new function.
 """
-import math
-import string
-import Utils as u
-import configparser
-import os
-import shutil
-import sys
-import time
-import glob
-import subprocess
-
-import numpy as np
 
 
 class VMECProcess(object):
@@ -80,7 +78,7 @@ class VMECProcess(object):
 
             #Create a symbolic link for the executable files on the
             #folder where the worker is executed
-            if(int(self.__rank) == 0):
+            if int(self.__rank) == 0:
                 return
             if not os.path.exists(self.__rank):
                 os.makedirs(self.__rank)
@@ -88,15 +86,13 @@ class VMECProcess(object):
                 os.makedirs(self.__rank + "/finished")
             os.chdir(self.__execPath)
             try:
-                if(self.__check_ballooning):
-                    if(not os.path.lexists("xcobravmec")):
-                        subprocess.call(["ln", "-s", "../../external/xcobravmec",
-                                          "xcobravmec"])
-                if(not os.path.lexists("xgrid") and
-                   os.path.exists("../../external/xgrid")):
+                if self.__check_ballooning and not os.path.lexists("xcobravmec"):
+                    subprocess.call(["ln", "-s", "../../external/xcobravmec",
+                                      "xcobravmec"])
+                if not os.path.lexists("xgrid") and os.path.exists("../../external/xgrid"):
                     subprocess.call(["ln", "-s", "../../external/xgrid",
                                       "xgrid"])
-                if(not os.path.lexists("xvmec2000")):
+                if not os.path.lexists("xvmec2000"):
                     subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
                                       "xvmec2000"])
             except Exception as e:
@@ -106,15 +102,14 @@ class VMECProcess(object):
 
             else:
                 try:
-                    if(self.__check_ballooning):
-                        if(not os.path.lexists("xcobravmec")):
-                            process = subprocess.Popen(["ln", "-s",
-                                                       "../../external/xcobravmec",
-                                                       "xcobravmec"])
-                    if(not os.path.lexists("xgrid")):
+                    if self.__check_ballooning and not os.path.lexists("xcobravmec"):
+                        process = subprocess.Popen(["ln", "-s",
+                                                   "../../external/xcobravmec",
+                                                   "xcobravmec"])
+                    if not os.path.lexists("xgrid"):
                         process = subprocess.Popen(["ln", "-s",
                                                    "../../external/xgrid", "xgrid"])
-                    if(not os.path.lexists("xvmec2000")):
+                    if not os.path.lexists("xvmec2000"):
                         process = subprocess.Popen(["ln", "-s",
                                                    "/home/fraguas/bin/xvmec2000nc",
                                                    "xvmec2000"])
@@ -141,53 +136,53 @@ class VMECProcess(object):
     def read_ini_config_file(self, cfile):
         config = configparser.ConfigParser()
         config.read(cfile)
-        if(not config.has_section("Fusion")):
+        if not config.has_section("Fusion"):
             return
 
         try:
-            if(config.has_option("Fusion", "bgradb")):
+            if config.has_option("Fusion", "bgradb"):
                 val = config.getboolean("Fusion", "bgradb")
-                if(val != None):
+                if val is not None:
                     self.__bgradb = val
-            if(config.has_option("Fusion", "mercier")):
+            if config.has_option("Fusion", "mercier"):
                 val = config.getboolean("Fusion", "mercier")
-                if(val != None):
+                if val is not None:
                     self.__check_mercier = val
-            if(config.has_option("Fusion", "min_mercier_radius")):
+            if config.has_option("Fusion", "min_mercier_radius"):
                 val = config.get("Fusion", "min_mercier_radius")
-                if(val != None):
+                if val is not None:
                     self.__min_mercier_radius = float(val)
-            if(config.has_option("Fusion", "ballooning")):
+            if config.has_option("Fusion", "ballooning"):
                 val = config.getboolean("Fusion", "ballooning")
-                if(val != None):
+                if val is not None:
                     self.__check_ballooning = val
-            if(config.has_option("Fusion", "threed1")):
+            if config.has_option("Fusion", "threed1"):
                 val = config.getboolean("Fusion", "threed1")
-                if(val != None):
+                if val is not None:
                     self.__extra_threed1 = val
-            if(config.has_option("Fusion", "get_beta")):
+            if config.has_option("Fusion", "get_beta"):
                 val = config.getboolean("Fusion", "get_beta")
-                if(val != None):
+                if val is not None:
                     self.__get_beta = val
-            if(config.has_option("Fusion", "min_beta")):
+            if config.has_option("Fusion", "min_beta"):
                 val = config.get("Fusion", "min_beta")
-                if(val != None):
+                if val is not None:
                     self.__min_beta = float(val)
-            if(config.has_option("Fusion", "max_beta")):
+            if config.has_option("Fusion", "max_beta"):
                 val = config.get("Fusion", "max_beta")
-                if(val != None):
+                if val is not None:
                     self.__max_beta = float(val)
-            if(config.has_option("Fusion", "dkes")):
+            if config.has_option("Fusion", "dkes"):
                 val = config.getboolean("Fusion", "dkes")
-                if(val != None):
+                if val is not None:
                     self.__dkes = val
-            if(config.has_option("Fusion", "save_configurations")):
+            if config.has_option("Fusion", "save_configurations"):
                 val = config.getboolean("Fusion", "save_configurations")
-                if(val != None):
+                if val is not None:
                     self.__save_configs = val
-            if(config.has_option("General", "netcdf")):
+            if config.has_option("General", "netcdf"):
                 val = config.get("General", "netcdf")
-                if(val != None):
+                if val is not None:
                     self.__netcdf = val
             u.logger.debug("bgradb " + str(self.__bgradb) + " - mercier " +
                             str(self.__check_mercier) + " - min_radius " +
@@ -207,7 +202,7 @@ class VMECProcess(object):
     def create_input_file(self, solution):
         u.logger.debug("Creating input file")
         try:
-            if(os.path.exists("input.tj" + self.__rank)):
+            if os.path.exists("input.tj" + self.__rank):
                 os.remove("input.tj" + self.__rank)
         except:
             pass
@@ -216,19 +211,19 @@ class VMECProcess(object):
 
     def clean_folder(self):
         try:
-            if(os.path.exists("threed1.tj" + self.__rank)):
+            if os.path.exists("threed1.tj" + self.__rank):
                 os.remove("threed1.tj" + self.__rank)
-            if(os.path.exists("wout_tj" + self.__rank + ".txt")):
+            if os.path.exists("wout_tj" + self.__rank + ".txt"):
                 os.remove("wout_tj" + self.__rank + ".txt")
-            if(os.path.exists("wout.flx")):
+            if os.path.exists("wout.flx"):
                 os.remove("wout.flx")
-            if(os.path.exists("wout.txt")):
+            if os.path.exists("wout.txt"):
                 os.remove("wout.txt")
-            if(os.path.exists("mercier.tj" + self.__rank)):
+            if os.path.exists("mercier.tj" + self.__rank):
                 os.remove("mercier.tj" + self.__rank)
-            if(os.path.exists("jxbout.tj" + self.__rank)):
+            if os.path.exists("jxbout.tj" + self.__rank):
                 os.remove("jxbout.tj" + self.__rank)
-            if(os.path.exists("fort.9")):
+            if os.path.exists("fort.9"):
                 os.remove("fort.9")
         except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
@@ -246,59 +241,58 @@ class VMECProcess(object):
         os.chdir(self.__execPath)
         self.clean_folder()
 
-        if(u.objective == u.objectiveType.MINIMIZE):
+        if u.objective == u.objectiveType.MINIMIZE:
             val = u.infinity
         else:
             val = -u.infinity
         try:
-            if(not self.run_vmec()):
+            if not self.run_vmec():
                 os.chdir(self.__currentPath)
-                if (u.objective == u.objectiveType.MAXIMIZE):
+                if u.objective == u.objectiveType.MAXIMIZE:
                     return -u.infinity
                 return u.infinity
 
-            if(not self.run_mercier()):
+            if not self.run_mercier():
                 os.chdir(self.__currentPath)
-                if (u.objective == u.objectiveType.MAXIMIZE):
+                if u.objective == u.objectiveType.MAXIMIZE:
                     return -u.infinity
                 return u.infinity
 
-            if(not self.run_threed()):
+            if not self.run_threed():
                 os.chdir(self.__currentPath)
-                if (u.objective == u.objectiveType.MAXIMIZE):
+                if u.objective == u.objectiveType.MAXIMIZE:
                     return -u.infinity
                 return u.infinity
             else:
                 val = self.__beta
 
-            if(not self.run_ballooning()):
+            if not self.run_ballooning():
                 os.chdir(self.__currentPath)
-                if (u.objective == u.objectiveType.MAXIMIZE):
+                if u.objective == u.objectiveType.MAXIMIZE:
                     return -u.infinity
                 return u.infinity
 
-
-            if(self.__bgradb):
-                if(not self.run_b_grad_b()):
+            if self.__bgradb:
+                if not self.run_b_grad_b():
                     os.chdir(self.__currentPath)
-                    if (u.objective == u.objectiveType.MAXIMIZE):
+                    if u.objective == u.objectiveType.MAXIMIZE:
                         return -u.infinity
                     return u.infinity
                 else:
                     val = self.__bgradbval
 
-            if(self.__dkes):
-                if(not self.run_dkes()):
+            if self.__dkes:
+                if not self.run_dkes():
                     os.chdir(self.__currentPath)
-                    if (u.objective == u.objectiveType.MAXIMIZE):
+                    if u.objective == u.objectiveType.MAXIMIZE:
                         return -u.infinity
                     return u.infinity
                 else:
                     val = self.__bootstrap
 
-            if(not self.__is_mercier_stable):
+            if not self.__is_mercier_stable:
                 u.logger.info("Unstable mercier")
-                if (u.objective == u.objectiveType.MAXIMIZE):
+                if u.objective == u.objectiveType.MAXIMIZE:
                     return -u.infinity
                 return u.infinity
             self.save_configuration()
@@ -317,7 +311,7 @@ class VMECProcess(object):
 
     def save_configuration(self):
         try:
-            if(not self.__save_configs):
+            if not self.__save_configs:
                 return
             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
             for fileIn in glob.glob('input*'):
@@ -377,7 +371,7 @@ class VMECProcess(object):
 
             for i in range(0, ns):
                 for j in range(0, nmax):
-                    if(i == 0):
+                    if i==0:
                         line = file_wout.readline()
                         parts = line.split()
                         m[j] = int(parts[0].strip())
@@ -391,7 +385,7 @@ class VMECProcess(object):
                     rmn.setitem(j, i, float(parts[0].strip()))
                     zmn.setitem(j, i, float(parts[1].strip()))
                 for j in range(0, nmax):
-                    if(i == 0):
+                    if i==0:
                         line = file_wout.readline()
 #                        parts = map(string.strip, string.split(line))
                         parts = line.split()
@@ -484,8 +478,8 @@ class VMECProcess(object):
             file_out = open(filepath, 'r')
             file_out.readline()
             lineRPhiZ = file_out.readline()
-            while(len(lineRPhiZ) > 4):
-                if(lineRPhiZ.find("Surface") != -1):
+            while len(lineRPhiZ) > 4:
+                if lineRPhiZ.find("Surface") != -1:
                     lineRPhiZ = file_out.readline()
                     continue
                 parts = lineRPhiZ.split(',').strip()
@@ -497,9 +491,9 @@ class VMECProcess(object):
                 dBphi = float(parts[4])
                 dBz = float(parts[5])
                 rho = float(parts[6])
-                if(Br != 0.0) or (Bz != 0.0) or (Bphi != 0.0):
-                    divisor = (Br ** 3 + Bz ** 3 + Bphi ** 3)
-                    if(divisor == 0.0):
+                if Br != 0.0 or Bz != 0.0 or Bphi != 0.0:
+                    divisor = Br ** 3 + Bz ** 3 + Bphi ** 3
+                    if divisor == 0.0:
                         continue
                     tempBr = (Br * dBr) / divisor
                     tempBz = (Bz * dBz) / divisor
@@ -518,7 +512,7 @@ class VMECProcess(object):
             except:
                 pass
             pass
-        if(fitness < 1.0e+2):
+        if fitness < 1.0e+2:
             fitness = -u.infinity
         return fitness
 
@@ -527,7 +521,7 @@ class VMECProcess(object):
     """
 
     def run_dkes(self):
-        if(not self.__dkes):
+        if not self.__dkes:
             return True
         try:
             try:
@@ -563,7 +557,7 @@ class VMECProcess(object):
             u.logger.info(outDKES)
             u.logger.info(outPost)
 
-            if(not os.path.exists("OUTPUT/results.av")):
+            if not os.path.exists("OUTPUT/results.av"):
                 u.logger.info("(" + self.__rank +
                               ") results.av does not exist")
                 return False
@@ -571,7 +565,7 @@ class VMECProcess(object):
                 lines = [line.strip() for line in open("OUTPUT/results.av")]
                 sum = 0.0
                 for l in lines:
-                    if (l.find('average')>0):
+                    if l.find('average')>0:
                         parts = l.split()
 #                        parts = map(string.strip, string.split(l))
                         try:
@@ -608,18 +602,18 @@ class VMECProcess(object):
     """
 
     def run_b_grad_b(self):
-        if(not self.__bgradb):
+        if not self.__bgradb:
             return True
         try:
-            if(not os.path.exists("wout_tj" + self.__rank + ".txt")):
+            if not os.path.exists("wout_tj" + self.__rank + ".txt"):
                 return False
-            if(not self.process_wout("wout_tj" + self.__rank + ".txt",
-                                     "wout_post.txt")):
+            if not self.process_wout("wout_tj" + self.__rank + ".txt",
+                                     "wout_post.txt"):
                 return False
             self.__bgradbval = self.calculate_fitness_bgradb("wout_post.txt")
             u.logger.info("WORKER(" + self.__rank + "). The BxgradB value is " +
                           str(self.__bgradbval))
-            if(os.path.exists("wout_post.txt")):
+            if os.path.exists("wout_post.txt"):
                 os.remove("wout_post.txt")
             return True
         except Exception as e:
@@ -633,7 +627,7 @@ class VMECProcess(object):
     """
 
     def run_ballooning(self):
-        if(not self.__check_ballooning):
+        if not self.__check_ballooning:
             return True
         files = glob.glob('./wout*')
         for f in files:
@@ -647,21 +641,21 @@ class VMECProcess(object):
             num_lines = len(file_cobra.readlines())
             first_line_to_analyze = num_lines + int(num_lines / 10)
             file_cobra.close()
-            if(first_line_to_analyze == 0):
+            if first_line_to_analyze == 0:
                 return False
             file_cobra = open('./cobra_grate.' + self.__rank, 'r')
             i = 0
             self.__is_ballooning_stable = True
             for line in file_cobra.readlines():
-                if(i >= first_line_to_analyze):
+                if i >= first_line_to_analyze:
                     parts = line.split()
 #                    parts = map(string.strip, string.split(line))
-                    if(float(parts[2]) > 0):
+                    if float(parts[2]) > 0:
                         self.__is_ballooning_stable = False
                         break
                 i += 1
             file_cobra.close()
-            if(self.__is_ballooning_stable):
+            if self.__is_ballooning_stable:
                 u.logger.info("WORKER(" + self.__rank +
                               "). Configuration ballooning stable")
             return self.__is_ballooning_stable
@@ -694,18 +688,18 @@ class VMECProcess(object):
             window_size = 0
             sign_change = False
             self.__is_mercier_stable = True
-            while(line):
+            while line:
                 linestrip = line.strip()
                 new_line = linestrip.replace('  ', ' ')
                 parts = new_line.split()
 #                parts = map(string.strip, string.split(new_line, ' '))
                 Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
 
-                if(float(Si) >= self.__min_mercier_radius):
-                    if(float(DMerci) > 0):
+                if float(Si) >= self.__min_mercier_radius:
+                    if float(DMerci) > 0:
                         window_size = window_size + 1
-                        if(sign_change):
-                            if(window_size >= 5):
+                        if sign_change:
+                            if window_size >= 5:
                                 f.close()
                                 #There is a sing change in mercier
                                 self.__is_mercier_stable = False
@@ -736,26 +730,26 @@ class VMECProcess(object):
     def extract_beta(self):
         try:
             self.__beta = -u.infinity
-            if(not self.__get_beta):
+            if not self.__get_beta:
                 return True
             file_threed = open('./threed1.tj' + self.__rank, 'r')
             found = False
             for line in file_threed.readlines():
-                if(line.find('beta total') != -1):
+                if line.find('beta total') != -1:
                     found = True
                     break
             file_threed.close()
-            if(not found):
+            if not found:
                 return False
             parts = line.split('=')
 #            parts = map(string.strip, string.split(line, '='))
             self.__beta = float(parts[1])
             u.logger.info("Worker " + self.__rank + ". Beta found " +
                            str(self.__beta))
-            if(self.__beta > self.__max_beta):
+            if self.__beta > self.__max_beta:
                 self.__beta = -u.infinity
                 return False
-            if(self.__beta <= self.__min_beta):
+            if self.__beta <= self.__min_beta:
                 self.__beta = -u.infinity
                 return False
             return True
@@ -766,27 +760,27 @@ class VMECProcess(object):
 
     def run_threed(self):
         try:
-            if(self.__get_beta):
+            if self.__get_beta:
                 self.extract_beta()
-            if(not self.__extra_threed1):
+            if not self.__extra_threed1:
                 return True
 
             file_threed = open('./threed1.tj' + self.__rank, 'r')
             cnt = 1
             for line in file_threed.readlines():
                 line = line.replace(" ", "")
-                if(line.find('FSQRFSQZFSQL') != -1):
+                if line.find('FSQRFSQZFSQL') != -1:
                     cnt += 1
             file_threed.close()
             i = 0
             file_threed = open('threed1.tj' + self.__rank, 'r')
-            while(i < cnt):
+            while i < cnt:
                 line = file_threed.readline().replace(" ", "")
-                if(line.find('FSQRFSQZFSQL') != -1):
+                if line.find('FSQRFSQZFSQL') != -1:
                     i += 1
             line = file_threed.readline()
             line = file_threed.readline()
-            while(len(line) > 10):
+            while len(line) > 10:
                 old_line = line
                 line = file_threed.readline()
             file_threed.close()
@@ -814,18 +808,18 @@ class VMECProcess(object):
 
     def run_vmec(self):
         try:
-            if(not os.path.exists("input.tj" + str(self.__rank))):
+            if not os.path.exists("input.tj" + str(self.__rank)):
                 return False
             proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", "tj" + self.__rank],
                                     stdout=subprocess.PIPE)
             output = proc.stdout.read()
             u.logger.debug(output)
             try:
-                if(os.path.exists("core")):
+                if os.path.exists("core"):
                     os.remove("core")
             except:
                 pass
-            if(not os.path.exists('wout_tj' + self.__rank + '.txt')):
+            if not os.path.exists('wout_tj' + self.__rank + '.txt'):
                 u.logger.debug("VMECProcess(" + self.__rank +
                                "): Invalid configuration")
                 return False
@@ -834,7 +828,7 @@ class VMECProcess(object):
                 # Invalid configuration
                 return False
             filenameMercier = "mercier.tj" + self.__rank
-            if(not os.path.exists(filenameMercier)):
+            if not os.path.exists(filenameMercier):
                 return False
             u.logger.info("WORKER(" + self.__rank + "). Configuration VMEC OK")
             return True
@@ -856,17 +850,17 @@ class VMECProcess(object):
             Check if we have to run xgrid
             """
             runxgrid = True
-            if(line.find('mgrid.') == -1):
+            if line.find('mgrid.') == -1:
                 #In this case, running xgrid is not necessary
                 return True
 
-        if(runxgrid):
-            if(not os.path.exists('../external/mgrid.tj0')):
+        if runxgrid:
+            if not os.path.exists('../external/mgrid.tj0'):
                 u.logger.error("File Mgrid.tj0 doesn't exist")
                 return False
 
             shutil.copy2("../external/mgrid.tj0", "mgrid.tj" + self.__rank)
-            if(not os.path.exists('mgrid.tj' + self.__rank)):
+            if not os.path.exists('mgrid.tj' + self.__rank):
                 try:
                     fcmd_xgrid = open('cmd_xgrid.tj' + self.__rank, 'w')
                     fcmd_xgrid.write('tj' + self.__rank + '\n')
@@ -877,10 +871,10 @@ class VMECProcess(object):
                     fcmd_xgrid.write('0.42\n')
                     fcmd_xgrid.write('64')
                     fcmd_xgrid.close()
-                    if(not os.path.exists("../external/coils")):
+                    if not os.path.exists("../external/coils"):
                         u.logger.error("File coils doesn't exist")
                         return False
-                    if(not os.path.exists('coils.tj' + self.__rank)):
+                    if not os.path.exists('coils.tj' + self.__rank):
                         shutil.copy2("../external/coils", "coils.tj" +
                                      self.__rank)
                     subprocess.call(["./xgrid", "< cmd_xgrid.tj" +
