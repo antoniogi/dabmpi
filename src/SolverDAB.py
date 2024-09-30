@@ -74,18 +74,18 @@ class BeeBase ():
         #was created
         self.__itersinceLastUpdate = 0
 
-        if (ProblemType == u.problem_type.FUSION):
+        if ProblemType == u.problem_type.FUSION:
             self.__problem = ProblemFusion()
             self.__solution_type = u.solution_type.FUSION
             self.__bestLocalSolution = SolutionFusion(infile)
             self.__bestGlobalSolution = SolutionFusion(infile)
             u.logger.info("Best local solution initialized " + str(self.__bestLocalSolution))
-        elif (ProblemType == u.problem_type.NONSEPARABLE):
+        elif ProblemType == u.problem_type.NONSEPARABLE:
             self.__problem = ProblemNonSeparable()
             self.__solution_type = u.solution_type.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
             self.__bestGlobalSolution = SolutionNonSeparable(infile)
-        if (u.objective == u.objectiveType.MAXIMIZE):
+        if u.objective == u.objectiveType.MAXIMIZE:
             self.__bestLocalSolution.setValue(-u.infinity)
             self.__bestGlobalSolution.setValue(-u.infinity)
         else:
@@ -124,28 +124,28 @@ class BeeBase ():
         for i in range(len(params)):
             ptype = params[i].get_type()
             newVal = None
-            if (ptype == "double") or (ptype == "float"):
+            if ptype in ['double', 'float']:
                 minVal = params[i].get_min_value()
                 maxVal = params[i].get_max_value()
-                if (minVal == maxVal):
+                if minVal == maxVal:
                     newVal = minVal
                 else:
-                    if (minVal > maxVal):
+                    if minVal > maxVal:
                         minVal, maxVal = maxVal, minVal
-                    if (params[i].get_gap() == 0.0):
+                    if params[i].get_gap() == 0.0:
                         newVal = random.uniform(minVal, maxVal)
                     else:
                         newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
-            elif (ptype == "bool"):
+            elif ptype == "bool":
                 val = random.randint(0, 1)
-                newVal = (val == 0)
+                newVal = val == 0
             else:
                 minVal = params[i].get_min_value()
                 maxVal = params[i].get_max_value()
-                if (minVal == maxVal):
+                if minVal == maxVal:
                     newVal = minVal
                 else:
-                    if (minVal > maxVal):
+                    if minVal > maxVal:
                         minVal, maxVal = maxVal, minVal
                     newVal = random.randint(minVal, maxVal)
             params[i].set_value(newVal)
@@ -175,11 +175,9 @@ class BeeBase ():
     it will generate random numbers in the set 2.5, 3, 3.5, 4.0
     """
     def randrange_float(self, start, stop, step):
-        if (start>stop):
-            temp=stop
-            stop=start
-            start=stop
-        if (start==stop):
+        if start>stop:
+            start, stop = stop, start
+        if start==stop:
             return start
         #print "randrange_float ("+str(start) + "," + str(stop)+ "," + str(step) + ")"
         return random.randint(0, int(abs((stop - start) / step))) * step + start
@@ -199,12 +197,11 @@ class Employed (BeeBase):
         return
 
     def getSolutionBasedOnMatrix(self, solution, probMatrix):
-        if (not self.__useMatrix):
+        if not self.__useMatrix:
             return solution
         values = probMatrix.__repr__()
-        fileMat = open("matrix.txt", 'w')
-        fileMat.write(values)
-        fileMat.close()
+        with open("matrix.txt", 'w') as fileMat:
+            fileMat.write(values)
         solutionCopy = solution
         try:
             parameters = solutionCopy.getParameters()
@@ -213,7 +210,7 @@ class Employed (BeeBase):
                 sumRow = 0.0
                 for j in range(numCols):
                     sumRow += probMatrix.getitem(i, j)
-                if (sumRow == numCols):
+                if sumRow == numCols:
                     continue
                 #randomly select a position in the row. The larger the value, the
                 #higher the possibility for selecting a given row
@@ -222,10 +219,10 @@ class Employed (BeeBase):
                 selectedPos = -1
                 for j in range(numCols):
                     tempSum += probMatrix.getitem(i, j)
-                    if (tempSum >= val):
+                    if tempSum >= val:
                         selectedPos = j
                         break
-                if (selectedPos == -1):
+                if selectedPos == -1:
                     u.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " + str(val) + " -- " + str(sumRow))
                 value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
                 parameters[i].set_value(value)
@@ -240,65 +237,61 @@ class Employed (BeeBase):
         #this is the one that has to use the probMatrix
             u.logger.info('create new candidate employed')
 
-            if (not self.bestLocalInitialised()):
+            if not self.bestLocalInitialised():
                 solution = self.createRandomSolution()
                 return solution, -1
 
             solution = self.getBestLocalSolution()
-            if (self.__useMatrix):
-                if (random.randint(0, 10) == 0):
+            if self.__useMatrix:
+                if random.randint(0, 10) == 0:
                     solution = self.getSolutionBasedOnMatrix(solution, probMatrix)
                     return solution, -1
             isNew = False
-            while (not isNew):
+            while not isNew:
                 parameters = solution.getParameters()
                 for i in range(len(parameters)):
                     val = random.randint(0, self.__probEmployedChange)
-                    if (val != 0):
+                    if val != 0:
                         continue
                     ptype = parameters[i].get_type()
                     newVal = None
-                    if (ptype == "double") or (ptype == "float"):
-                        #minVal = parameters[i].get_min_value()
-                        #maxVal = parameters[i].get_max_value()
+                    if ptype in ['double', 'float']:
                         currentVal = parameters[i].get_value()
                         minVal = currentVal - 10.0 * abs(parameters[i].get_gap())
                         maxVal = currentVal + 10.0 * abs(parameters[i].get_gap())
                         minVal = max(parameters[i].get_min_value(), minVal)
                         maxVal = min(parameters[i].get_max_value(), maxVal)
-                        if (minVal == maxVal):
+                        if minVal == maxVal:
                             newVal = minVal
                         else:
-                            if (minVal > maxVal):
+                            if minVal > maxVal:
                                 minVal, maxVal = maxVal, minVal
-                            if (parameters[i].get_gap() == 0.0):
+                            if parameters[i].get_gap() == 0.0:
                                 newVal = random.uniform(minVal, maxVal)
                             else:
                                 newVal = self.randrange_float(minVal, maxVal, parameters[i].get_gap())
-                    elif (ptype == "bool"):
+                    elif ptype == "bool":
                         val = random.randint(0, 1)
-                        newVal = (val == 0)
+                        newVal = val == 0
                     else:
                         currentVal = parameters[i].get_value()
-                        if (random.randint(0, 10) == 0):
+                        if random.randint(0, 10) == 0:
                             minVal = currentVal - 10 * abs(parameters[i].get_gap())
                             maxVal = currentVal + 10 * abs(parameters[i].get_gap())
                         else:
                             minVal = currentVal - 5 * abs(parameters[i].get_gap())
                             maxVal = currentVal + 5 * abs(parameters[i].get_gap())
-                        #minVal = p.get_min_value()
-                        #maxVal = p.get_max_value()
                         minVal = max(parameters[i].get_min_value(), minVal)
                         maxVal = min(parameters[i].get_max_value(), maxVal)
-                        if (minVal == maxVal):
+                        if minVal == maxVal:
                             newVal = minVal
                         else:
-                            if (minVal > maxVal):
+                            if minVal > maxVal:
                                 minVal, maxVal = maxVal, minVal
                             newVal = random.randint(minVal, maxVal)
 
                     currentVal = parameters[i].get_value()
-                    if (newVal != currentVal):
+                    if newVal != currentVal:
                         isNew = True
                         parameters[i].set_value(newVal)
                 solution.setParameters(parameters)
@@ -338,37 +331,10 @@ class Scout (BeeBase):
             raise
 
         return solution, -1
-        """
-        solution = self.getBestLocalSolution()
-        params = solution.getParameters()
-        u.logger.debug('number of parameters: ' + str(len(params)))
-        for i in range(len(params)):
-            ptype = params[i].get_type()
-            newVal = None
-            if (ptype == "double") or (ptype == "float"):
-                minVal = params[i].get_min_value()
-                maxVal = params[i].get_max_value()
-                if (params[i].get_gap()==0.0):
-                    newVal = random.uniform (minVal, maxVal)
-                else:
-                    newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
-            elif (ptype == "bool"):
-                val = random.randint (0,1)
-                newVal = (val==0)
-            else:
-                minVal = params[i].get_min_value()
-                maxVal = params[i].get_max_value()
-                newVal = random.randint (minVal, maxVal)
-            params[i].set_value(newVal)
-        solution.setParameters(params)
-        return solution, -1
-        """
 
 """
 Onlooker bees
 """
-
-
 class Onlooker (BeeBase):
     def __init__(self, problem_type, infile, modFactor, probChange):
         self.__modFactor = modFactor
@@ -382,21 +348,21 @@ class Onlooker (BeeBase):
         solutionTuple = topSolutions.GetTupleOnPriorityByValue(val)
         solution = solutionTuple[0]
 
-        if (solution is None):
+        if solution is None:
             u.logger.debug("Onlooker. Couldn't select a solution from the list of finished solutions")
             return None, -1
         beeIdx = solutionTuple[2]
         isNew = False
         try:
-            while(not isNew):
+            while not isNew:
                 for p in solution.getParameters():
                     val = random.randint(0, self.__probOnlookerChange)
-                    if (val != 0):
+                    if val != 0:
                         continue
                     isNew = True
                     ptype = p.get_type()
                     newVal = None
-                    if (ptype == "double") or (ptype == "float"):
+                    if ptype in ['double', 'float']:
                         minVal = p.get_min_value()
                         maxVal = p.get_max_value()
                         currentVal = p.get_value()
@@ -404,34 +370,34 @@ class Onlooker (BeeBase):
                         maxNewVal = currentVal + self.__modFactor * currentVal
                         minVal = max(minVal, minNewVal)
                         maxVal = min(maxVal, maxNewVal)
-                        if (minVal > maxVal):
+                        if minVal > maxVal:
                             minVal, maxVal = maxVal, minVal
-                        if (minVal == maxVal):
+                        if minVal == maxVal:
                             newVal = minVal
                         else:
-                            if (not p.get_gap()):
+                            if not p.get_gap():
                                 newVal = random.uniform(minVal, maxVal)
                             else:
                                 newVal = self.randrange_float(minVal, maxVal, p.get_gap())
-                    elif (ptype == "bool"):
+                    elif ptype == "bool":
                         val = random.randint(0, 1)
-                        newVal = (val == 0)
+                        newVal = val == 0
                     else:
                         minVal = p.get_min_value()
                         maxVal = p.get_max_value()
                         currentVal = p.get_value()
                         minNewVal = int(currentVal - 2 * abs(p.get_gap()))
                         maxNewVal = int(currentVal + 2 * abs(p.get_gap()))
-                        if (minNewVal != currentVal):
+                        if minNewVal != currentVal:
                             minVal = max(minVal, minNewVal)
-                        if (maxNewVal != currentVal):
+                        if maxNewVal != currentVal:
                             maxVal = min(maxVal, maxNewVal)
-                        if (minVal == maxVal):
+                        if minVal == maxVal:
                             minVal = maxVal - 1
-                        if (minVal > maxVal):
+                        if minVal > maxVal:
                             minVal, maxVal = maxVal, minVal
                         newVal = random.randint(minVal, maxVal)
-                        while (newVal == currentVal):
+                        while newVal == currentVal:
                             newVal = random.randint(minVal, maxVal)
                     p.set_value(newVal)
                     #Here: go through the parameters of the solution and change those
@@ -479,11 +445,11 @@ class SolverDAB (SolverBase):
             self.__bestSolution = None
             self.__bestGlobalSolution = None
 
-            if (self.__problem_type == u.problem_type.FUSION):
+            if self.__problem_type == u.problem_type.FUSION:
                 self.__problem = ProblemFusion()
                 self.__bestSolution = SolutionFusion(self.__infile)
                 self.__bestGlobalSolution = SolutionFusion(self.__infile)
-            elif (self.__problem_type == u.problem_type.NONSEPARABLE):
+            elif self.__problem_type == u.problem_type.NONSEPARABLE:
                 self.__problem = ProblemNonSeparable()
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
                 self.__bestGlobalSolution = SolutionNonSeparable(self.__infile)
@@ -518,14 +484,14 @@ class SolverDAB (SolverBase):
             self.__finishedSolutions = None
             self.__topSolutions = None
 
-            if (problem_type == u.problem_type.FUSION):
+            if problem_type == u.problem_type.FUSION:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finished.queue", u.solution_type.FUSION, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
                                     "pending.queue", u.solution_type.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.FUSION, infile, False, True)
-            if (problem_type == u.problem_type.NONSEPARABLE):
+            if problem_type == u.problem_type.NONSEPARABLE:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finishedNonSep.queue", u.solution_type.NONSEPARABLE, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
@@ -534,63 +500,63 @@ class SolverDAB (SolverBase):
                                     "top.queue", u.solution_type.NONSEPARABLE, infile, False, True)
             #if top solutions is not empty, that means we have a best solution from the previous execution
             try:
-                if (self.__topSolutions.qSize() != 0):
+                if self.__topSolutions.qSize() != 0:
                     self.__bestSolution, value, origin = self.__topSolutions.GetSolutionTuple(False)
                     self.__bestSolution.setValue(value)
             except Exception as e:
                 u.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_info()[2].tb_lineno))
 
-            if (u.rank == 0):
+            if u.rank == 0:
                 #parse arguments from the ini file
                 try:
                     config = configparser.ConfigParser()
                     config.read(configfile)
-                    if (not config.has_section("Bees")):
+                    if not config.has_section("Bees"):
                         u.logger.critical("Bees section not specified in the ini file")
                         sys.exit(-1)
-                    if (config.has_option("Bees", "nemployed")):
+                    if config.has_option("Bees", "nemployed"):
                         val = config.get("Bees", "nemployed")
-                        if (val != None):
+                        if val is not None:
                             self.__nEmployed = int(val)
-                    if (config.has_option("Bees", "nonlooker")):
+                    if config.has_option("Bees", "nonlooker"):
                         val = config.get("Bees", "nonlooker")
-                        if (val != None):
+                        if val is not None:
                             self.__nOnlooker = int(val)
-                    if (config.has_option("Bees", "onlookerModFactor")):
+                    if config.has_option("Bees", "onlookerModFactor"):
                         val = config.get("Bees", "onlookerModFactor")
-                        if (val != None):
+                        if val is not None:
                             self.__onlookerModFactor = float(val)
-                    if (config.has_option("Bees", "iterationsAbandoned")):
+                    if config.has_option("Bees", "iterationsAbandoned"):
                         val = config.get("Bees", "iterationsAbandoned")
-                        if (val != None):
+                        if val is not None:
                             self.__iterAbandoned = int(val)
-                    if (config.has_option("Bees", "probEmployedChange")):
+                    if config.has_option("Bees", "probEmployedChange"):
                         val = config.get("Bees", "probEmployedChange")
-                        if (val != None):
+                        if val is not None:
                             self.__probEmployedChange = int(val)
-                    if (config.has_option("Bees", "probOnlookerChange")):
+                    if config.has_option("Bees", "probOnlookerChange"):
                         val = config.get("Bees", "probOnlookerChange")
-                        if (val != None):
+                        if val is not None:
                             self.__probOnlookerChange = float(val)
-                    if (config.has_option("Bees", "useProbMatrix")):
+                    if config.has_option("Bees", "useProbMatrix"):
                         val = config.getboolean("Bees", "useProbMatrix")
-                        if (val != None):
+                        if val is not None:
                             self.__useMatrix = val
 
                     val = config.get("Algorithm", "time")
-                    if (val != None):
+                    if val is not None:
                         self.__runtime = int(val)
                     val = config.get("Algorithm", "pendingSize")
-                    if (val != None):
+                    if val is not None:
                         self.__pendingSize = int(val)
-                    if (config.has_option("Algorithm", "eliteQueue")):
+                    if config.has_option("Algorithm", "eliteQueue"):
                         val = config.get("Algorithm", "eliteQueue")
-                        if (val != None):
+                        if val is not None:
                             self.__maxNumTopSolutions = int(val)
-                    if (config.has_option("Algorithm", "objective")):
+                    if config.has_option("Algorithm", "objective"):
                         val = config.get("Algorithm", "objective")
-                        if (val != None):
-                            if (val == "max"):
+                        if val is not None:
+                            if val == "max":
                                 u.objective = u.objectiveType.MAXIMIZE
                             else:
                                 u.objective = u.objectiveType.MINIMIZE
@@ -598,7 +564,7 @@ class SolverDAB (SolverBase):
                     u.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                    "). Problem reading DAB configuration from the ini file. " +
                                    str(e))
-                if (self.__useMatrix):
+                if self.__useMatrix:
                     self.__probMatrix = u.Matrix(self.__bestSolution.getMaxNumberofValues() + 1,
                          self.__bestSolution.getNumberofParams(), 1.0)
 
@@ -619,7 +585,7 @@ class SolverDAB (SolverBase):
                 u.logger.debug("Created " + str(self.__nOnlooker) + " onlooker bees")
 
                 try:
-                    if (origin != -1):
+                    if origin != -1:
                         self.__bees[i].setSolution(self.__bestSolution)
                 except:
                     pass
@@ -639,13 +605,13 @@ class SolverDAB (SolverBase):
     def initialize(self):
         u.logger.info('DAB initializer')
         try:
-            if (u.commModel == u.commModelType.DRIVERWORKER):
+            if u.commModel == u.commModelType.DRIVERWORKER:
                 #initialises the lists of requests
                 for i in range(u.size):
                     self.__requestsEnd.append(MPI.REQUEST_NULL)
                     self.__requestsInput.append(MPI.REQUEST_NULL)
                 for i in range(u.size):
-                    if (i == u.rank):
+                    if i == u.rank:
                         continue
                     self.__requestsEnd[i] = u.comm.Irecv(self.__dump, source=i, tag=u.tags.ENDSIM)
                     self.__requestsInput[i] = u.comm.Irecv(self.__dump, source=i, tag=u.tags.REQINPUT)
@@ -669,9 +635,9 @@ class SolverDAB (SolverBase):
                     u.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
                     newSolution, beeIdx = self.__bees[bee].createNewCandidate(
                             self.__probMatrix, self.__totalSumGoodSolutions, self.__topSolutions)
-                    if (bee < self.__nEmployed):
+                    if bee < self.__nEmployed:
                         beeIdx = bee
-                    if (newSolution is None):
+                    if newSolution is None:
                         newSolution = self.__scout.createNewCandidate(self.__probMatrix)[0]
                         self.__pendingSolutions.PutSolution(newSolution, -1.0, -1)
                     else:
@@ -679,7 +645,7 @@ class SolverDAB (SolverBase):
 
                 #Check if there are abandoned solutions
                 for bee in range(self.__nEmployed):
-                    if (self.__bees[bee].getIter() > self.__iterAbandoned):
+                    if self.__bees[bee].getIter() > self.__iterAbandoned:
                         u.logger.info("Bee " + str(bee) + ". Abandoning food source")
                         solution = self.__scout.createNewCandidate(self.__probMatrix)[0]
                         self.__bees[bee].setIter(0)
@@ -702,15 +668,15 @@ class SolverDAB (SolverBase):
             iters += 1
 
         while (flag and idx >= 0):
-            if (status.tag == u.tags.REQINPUT):
+            if status.tag == u.tags.REQINPUT:
                 destination = status.source
                 try:
                     u.logger.debug('DRIVER. Worker ' + str(destination) + ' was waiting for a solution')
                     #Sends the front of the pending Solutions queue
                     solTuple = self.__pendingSolutions.GetSolutionList()
-                    if (self.__pendingSolutions.qSize() == 0):
+                    if self.__pendingSolutions.qSize() == 0:
                         self.checkPendingSolutionsQueue()
-                    while (len(solTuple) < 3):
+                    while len(solTuple) < 3:
                         solTuple = self.__pendingSolutions.GetSolutionList()
                         if (self.__pendingSolutions.qSize() < 1):
                             self.__pendingSolutions.PutSolution(self.__scout.createNewCandidate(self.__probMatrix)[0], -1.0, -1)
@@ -739,9 +705,8 @@ class SolverDAB (SolverBase):
                     self.__requestsInput[destination] = req
                     u.logger.info("DRIVER. Solution sent to worker " + str(destination))
                 except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
                     u.logger.error("DRIVER. WaitingForSolutions (" +
-                                    str(exc_tb.tb_lineno) + "). " + str(e))
+                                    str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
 
             idx, flag = MPI.Request.Testany(self.__requestsInput, status)
 
@@ -778,16 +743,16 @@ class SolverDAB (SolverBase):
                     #priority list)
                     solutionTemp = None
                     try:
-                        if (self.__problem_type == u.problem_type.FUSION):
+                        if self.__problem_type == u.problem_type.FUSION:
                             solutionTemp = SolutionFusion(self.__infile)
-                        elif (self.__problem_type == u.problem_type.NONSEPARABLE):
+                        elif self.__problem_type == u.problem_type.NONSEPARABLE:
                             solutionTemp = SolutionNonSeparable(self.__infile)
 
-                        if (solutionTemp is None):
+                        if solutionTemp is None:
                             u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
                         else:
                             solutionTemp.setParametersValues(buff)
-                        if (self.__useMatrix):
+                        if self.__useMatrix:
                             for i in range(self.__probMatrix.getNumRows()):
                                 for j in range(self.__probMatrix.getNumCols()):
                                     val = self.__probMatrix.getitem(i, j)
@@ -822,7 +787,7 @@ class SolverDAB (SolverBase):
                         self.__bestSolution.setValue(solVal[0])
 
                         self.__bestSolution.setParametersValues(buff)
-                        if (self.__problem_type == u.solution_type.FUSION):
+                        if self.__problem_type == u.solution_type.FUSION:
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
@@ -835,12 +800,12 @@ class SolverDAB (SolverBase):
 
             try:
                 solutionTemp = None
-                if (self.__problem_type == u.problem_type.FUSION):
+                if self.__problem_type == u.problem_type.FUSION:
                     solutionTemp = SolutionFusion(self.__infile)
-                elif (self.__problem_type == u.problem_type.NONSEPARABLE):
+                elif self.__problem_type == u.problem_type.NONSEPARABLE:
                     solutionTemp = SolutionNonSeparable(self.__infile)
 
-                if (solutionTemp is None):
+                if solutionTemp is None:
                     u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
                 else:
                     solutionTemp.setParametersValues(buff)
@@ -849,7 +814,7 @@ class SolverDAB (SolverBase):
                     u.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
                     if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
-                        if (isNewBest):
+                        if isNewBest:
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):
                                 try:
@@ -1013,14 +978,6 @@ class SolverDAB (SolverBase):
                     
                         buff = self.__bestSolution.getParametersValues()
                         solValue[0] = solutionValue
-
-                        """
-                        for destination in range(u.size):
-                            if (destination == u.rank):
-                                continue
-                            u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                            u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                        """
 
                         if (self.__problem_type == u.solution_type.FUSION):
                             self.__bestSolution.prepare("input.best." + filenametime)
