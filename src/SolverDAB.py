@@ -297,7 +297,7 @@ class Employed (BeeBase):
                         else:
                             if minVal > maxVal:
                                 minVal, maxVal = maxVal, minVal
-                            newVal = random.randint(minVal, maxVal)
+                            newVal = random.randint(int(minVal), int(maxVal))
 
                     currentVal = parameters[i].get_value()
                     if newVal != currentVal:
@@ -405,9 +405,9 @@ class Onlooker (BeeBase):
                             minVal = maxVal - 1
                         if minVal > maxVal:
                             minVal, maxVal = maxVal, minVal
-                        newVal = random.randint(minVal, maxVal)
+                        newVal = random.randint(int(minVal), int(maxVal))
                         while newVal == currentVal:
-                            newVal = random.randint(minVal, maxVal)
+                            newVal = random.randint(int(minVal), int(maxVal))
                     p.set_value(newVal)
                     #Here: go through the parameters of the solution and change those
                     #parameters considering the min and max values of each parameter,
@@ -758,6 +758,7 @@ class SolverDAB (SolverBase):
                 u.logger.error("DRIVER (comm). " + str(e) + " line: " +
                            str(sys.exc_info()[2].tb_lineno))
             try:
+                u.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
                 if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
                     #Add the solution to the list of best solutions (the method will implement the
                     #priority list)

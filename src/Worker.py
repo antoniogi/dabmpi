@@ -122,7 +122,7 @@ class Worker ():
                 req.wait(status)
 
                 u.logger.info("WORKER (" + str(self.__rank) +
-                               ") has received a solution from bee " +
+                               ") has received a solution to evaluate from bee " +
                                str(agent_idx[0]))
                 solution.setParametersValues(buff)
 
@@ -139,6 +139,9 @@ class Worker ():
 
                 u.logger.debug("WORKER (" + str(self.__rank) +
                                "). Buffer size: " + str(len(buff)))
+                u.logger.debug("WORKER (" + str(self.__rank) +
+                               "- " + str(agent_idx) + ") found solution with value " 
+                               + str(solution_value[0]))
 
                 self.__comm.Send(buff, 0, u.tags.COMMSOLUTION)
                 self.__comm.Send(solution_value, 0, u.tags.COMMSOLUTION)
