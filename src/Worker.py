@@ -24,8 +24,10 @@ import configparser
 import sys
 from mpi4py import MPI
 import Utils as u
+from SolutionCristina import SolutionCristina
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
+from ProblemCristina import ProblemCristina
 from ProblemFusion import ProblemFusion
 from ProblemNonSeparable import ProblemNonSeparable
 
@@ -59,6 +61,8 @@ class Worker ():
                 self.__problem = ProblemFusion()
             elif self.__problem_type == u.problem_type.NONSEPARABLE:
                 self.__problem = ProblemNonSeparable()
+            elif self.__problem_type == u.problem_type.CRISTINA:
+                self.__problem = ProblemCristina()
         except Exception as e:
             print("Worker " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
@@ -93,6 +97,8 @@ class Worker ():
                     solution = SolutionFusion(infile)
                 elif self.__problem_type == u.problem_type.NONSEPARABLE:
                     solution = SolutionNonSeparable(infile)
+                elif self.__problem_type == u.problem_type.CRISTINA:
+                    solution = SolutionCristina(infile)
                 else:
                     u.logger.error("WORKER (" + str(self.__rank) +
                                    ") Problem type not supported")

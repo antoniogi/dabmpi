@@ -21,6 +21,7 @@ import sys
 import os
 
 from SolutionFusion import SolutionFusion
+from SolutionCristina import SolutionCristina
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as util
 from Parameter import Parameter
@@ -56,6 +57,10 @@ class SolutionsQueue (object):
             if self.__solType == util.solution_type.FUSION:
                 self.__solutionBase = SolutionFusion(self.__infile)
                 util.logger.info("QUEUE: Initialised fusion queue (" +
+                                  filename + ")" + self.__infile)
+            if self.__solType == util.solution_type.CRISTINA:
+                self.__solutionBase = SolutionCristina(self.__infile)
+                util.logger.info("QUEUE: Initialised Cristina queue (" +
                                   filename + ")" + self.__infile)
             else:
                 self.__solutionBase = SolutionNonSeparable(self.__infile)

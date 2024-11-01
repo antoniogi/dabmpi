@@ -24,8 +24,10 @@ import shutil
 import time
 from array import array
 from SolverBase import SolverBase
+from ProblemCristina import ProblemCristina
 from ProblemFusion import ProblemFusion
 from ProblemNonSeparable import ProblemNonSeparable
+from SolutionCristina import SolutionCristina
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as u
@@ -85,6 +87,12 @@ class BeeBase ():
             self.__solution_type = u.solution_type.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
             self.__bestGlobalSolution = SolutionNonSeparable(infile)
+        elif ProblemType == u.problem_type.CRISTINA:
+            self.__problem = ProblemCristina()
+            self.__solution_type = u.solution_type.CRISTINA
+            self.__bestLocalSolution = SolutionCristina(infile)
+            self.__bestGlobalSolution = SolutionCristina(infile)
+
         if u.objective == u.objectiveType.MAXIMIZE:
             self.__bestLocalSolution.setValue(-u.infinity)
             self.__bestGlobalSolution.setValue(-u.infinity)
@@ -453,6 +461,10 @@ class SolverDAB (SolverBase):
                 self.__problem = ProblemNonSeparable()
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
                 self.__bestGlobalSolution = SolutionNonSeparable(self.__infile)
+            elif self.__problem_type == u.problem_type.CRISTINA:
+                self.__problem = ProblemCristina()
+                self.__bestSolution = SolutionCristina(self.__infile)
+                self.__bestGlobalSolution = SolutionCristina(self.__infile)
             else:
                 u.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). Unknown problem type " + str(problem_type))
@@ -491,6 +503,13 @@ class SolverDAB (SolverBase):
                                     "pending.queue", u.solution_type.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.FUSION, infile, False, True)
+            if problem_type == u.problem_type.CRISTINA:
+                self.__finishedSolutions = solQueue.SolutionsQueue(
+                                    "finishedNonSep.queue", u.solution_type.CRISTINA, infile, True, True)
+                self.__pendingSolutions = solQueue.SolutionsQueue(
+                                    "pendingNonSep.queue", u.solution_type.CRISTINA, infile, False)
+                self.__topSolutions = solQueue.SolutionsQueue(
+                                    "top.queue", u.solution_type.CRISTINA, infile, False, True)
             if problem_type == u.problem_type.NONSEPARABLE:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finishedNonSep.queue", u.solution_type.NONSEPARABLE, infile, True, True)
@@ -747,6 +766,8 @@ class SolverDAB (SolverBase):
                             solutionTemp = SolutionFusion(self.__infile)
                         elif self.__problem_type == u.problem_type.NONSEPARABLE:
                             solutionTemp = SolutionNonSeparable(self.__infile)
+                        elif self.__problem_type == u.problem_type.CRISTINA:
+                            solutionTemp = SolutionCristina(self.__infile)
 
                         if solutionTemp is None:
                             u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
@@ -886,6 +907,8 @@ class SolverDAB (SolverBase):
             self.__problem = ProblemFusion()
         elif (self.__problem_type == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
+        elif (self.__problem_type == u.problem_type.CRISTINA):
+            self.__problem = ProblemCristina()
 
         numParams = self.__bestSolution.getNumberofParams()
         buff = array('f', [0]) * numParams

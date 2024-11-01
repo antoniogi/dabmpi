@@ -55,10 +55,10 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 #problem type
-problem_type = enum(NONE=0, FUSION=1, NONSEPARABLE=2)
+problem_type = enum(NONE=0, FUSION=1, NONSEPARABLE=2, CRISTINA=3)
 
 #solution type
-solution_type = enum(FUSION=1, NONSEPARABLE=2)
+solution_type = enum(FUSION=1, NONSEPARABLE=2, CRISTINA=3)
 
 #solver type
 solver_type = enum(NONE=0, DAB=1, SA=2)
