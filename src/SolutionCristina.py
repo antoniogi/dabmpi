@@ -30,13 +30,15 @@ HISTORY
 
 from SolutionBase import SolutionBase
 import Utils as u
+from CristinaData import CristinaData
 
 
 class SolutionCristina (SolutionBase):
     def __init__(self, infile):
         SolutionBase.__init__(self, infile)
         #TODO: Implemement how data is initialized
-        self.__data = None
+        self.__data = CristinaData()
+        self.__data.initialize(infile)
         return
 
     def initialize(self, data):
@@ -57,3 +59,12 @@ class SolutionCristina (SolutionBase):
 
     def getParametersValues(self):
         return self.__data.getValsOfParameters()
+
+    def setParametersValues(self, buff):
+        self.__data.setValsOfParameters(buff)
+
+    def setParameters(self, params):
+        self.__data.setParameters(params)
+
+    def getData(self):
+        return self.__data

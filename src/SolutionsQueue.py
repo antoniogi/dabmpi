@@ -120,12 +120,12 @@ class SolutionsQueue (object):
                 for i in range(len(self.__queue)):
                     origins.add(self.__queue[i][2])
                     if util.objective == util.objectiveType.MAXIMIZE:
-                        if (self.__queue[i][1] > value and
-                            self.__queue[i][1] >= 0.0):
+                        if (float(self.__queue[i][1]) > value and
+                            float(self.__queue[i][1]) >= 0.0):
                             continue
                     if util.objective == util.objectiveType.MINIMIZE:
-                        if (self.__queue[i][1] < value and
-                            self.__queue[i][1] >= 0.0):
+                        if (float(self.__queue[i][1]) < value and
+                            float(self.__queue[i][1]) >= 0.0):
                             continue
                     if (i > self.__maxSize / 10 and len(origins) <= 1 and
                         agent_idx in origins):
@@ -169,7 +169,7 @@ class SolutionsQueue (object):
                     value = float(sol_tuple[1])
                     inserted = False
                     for i in range(len(self.__queue)):
-                        if self.__queue[i][1] < value:
+                        if float(self.__queue[i][1]) < value:
                             continue
                         self.__queue.insert(i - 1, sol_tuple)
                         inserted = True
@@ -338,7 +338,7 @@ class SolutionsQueue (object):
         total_val = self.GetTotalSolutionsValues()
         for i in range(self.qSize()):
             if util.objective == util.objectiveType.MINIMIZE:
-                temp_sum += float(1.0 / self.__queue[i][1])
+                temp_sum += float(1.0 / float(self.__queue[i][1]))
             else:
                 temp_sum += float(self.__queue[i][1])
             util.logger.debug("TempSum: " + str(temp_sum) + "/" +

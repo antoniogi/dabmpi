@@ -825,6 +825,8 @@ class SolverDAB (SolverBase):
                     solutionTemp = SolutionFusion(self.__infile)
                 elif self.__problem_type == u.problem_type.NONSEPARABLE:
                     solutionTemp = SolutionNonSeparable(self.__infile)
+                elif self.__problem_type == u.problem_type.CRISTINA:
+                    solutionTemp = SolutionCristina(self.__infile)
 
                 if solutionTemp is None:
                     u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
