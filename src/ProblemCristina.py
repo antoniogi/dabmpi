@@ -35,7 +35,9 @@ class ProblemCristina(object):
         return
 
     def solve(self, solution):
-        return random.random()
+        val = random.randint(0, 1000000)
+        print("ProblemCristina. Solution found with value: " + str(val))
+        return val
 
     def extractSolution(self):
         raise NotImplementedError("Extract solution abstract problem")

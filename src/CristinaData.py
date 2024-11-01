@@ -59,6 +59,10 @@ class CristinaData (object):
     def getNumParams(self):
         return self.__numParams
 
+    def printData(self):
+        for i in range(self.__numParams):
+            u.logger.info("CristinaData. Param(" + str(i) +") - Value: " + str(self.__params[i].get_value()))
+
     """
     Returns a list of doubles with the values of the modificable parameters
     """

@@ -53,6 +53,10 @@ class SolutionBase (object):
     def getMaxNumberofValues(self):
         return 0
 
+    def print(self):
+        u.logger.debug("Print function not implemented")
+        return
+
     def isValid(self):
         return self.__isValid
 

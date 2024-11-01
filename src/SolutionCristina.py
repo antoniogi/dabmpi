@@ -46,7 +46,8 @@ class SolutionCristina (SolutionBase):
         return
 
     def prepare(self, filename):
-        self.__data.create_input_file(filename)
+        return
+#        self.__data.create_input_file(filename)
 
     def getNumberofParams(self):
         return self.__data.getNumParams()
@@ -68,3 +69,6 @@ class SolutionCristina (SolutionBase):
 
     def getData(self):
         return self.__data
+
+    def print(self):
+        self.__data.printData()

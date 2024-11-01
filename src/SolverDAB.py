@@ -158,6 +158,7 @@ class BeeBase ():
                     newVal = random.randint(minVal, maxVal)
             params[i].set_value(newVal)
         solution.setParameters(params)
+        solution.print()
         return solution
 
     """
