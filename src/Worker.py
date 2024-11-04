@@ -81,10 +81,14 @@ class Worker ():
             if config.has_option("Algorithm", "objective"):
                 val = config.get("Algorithm", "objective")
                 if val is not None:
-                    if val == "max":
+                    if str(val).lower == "max":
                         u.objective = u.objectiveType.MAXIMIZE
+                        u.logger.debug("WORKER (" + str(self.__rank) +
+                                        ") Objective set to MAXIMIZE")
                     else:
                         u.objective = u.objectiveType.MINIMIZE
+                        u.logger.debug("WORKER (" + str(self.__rank) +
+                                        ") Objective set to MINIMIZE")
             elapsed_time = time() - start_time
             solutions_evaluated = 0
             #Send the finish message 10 minutes before the end time to allow
