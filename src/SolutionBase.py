@@ -33,11 +33,12 @@ import Utils as util
 class SolutionBase (object):
     def __init__(self, infile):
         #initial value of the solution is the min value represented by a float
-        if (util.objective == util.objectiveType.MINIMIZE):
+        if util.objective == util.objectiveType.MINIMIZE:
             self.__value = util.infinity
-        else:
+        elif util.objective == util.objectiveType.MAXIMIZE:
             self.__value = -util.infinity
-        self.__value = util.infinity #### REMOVE!!
+        else:
+            raise ValueError("Objective type not defined")
         self.__isValid = True
         return
 

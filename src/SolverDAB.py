@@ -22,6 +22,7 @@ import sys
 import random
 import shutil
 import time
+import datetime
 from array import array
 from SolverBase import SolverBase
 from ProblemCristina import ProblemCristina
@@ -188,12 +189,10 @@ class BeeBase ():
             start, stop = stop, start
         if start==stop:
             return start
-        #print "randrange_float ("+str(start) + "," + str(stop)+ "," + str(step) + ")"
         return random.randint(0, int(abs((stop - start) / step))) * step + start
 """
 Employed bees
 """
-
 
 class Employed (BeeBase):
     def __init__(self, problem_type, infile, change, useMatrix):
@@ -737,7 +736,7 @@ class SolverDAB (SolverBase):
     def receiveSolutions(self):
         status = MPI.Status()
         sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
-                
+
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self.__requestSolution)):
@@ -794,14 +793,9 @@ class SolverDAB (SolverBase):
                         u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
-                    
+
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bestSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bestSolution.getValue()))):
-                        filenametime = "0"
-                        try:
-                            filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                         isNewBest = True
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(solVal[0]) +
@@ -811,6 +805,11 @@ class SolverDAB (SolverBase):
 
                         self.__bestSolution.setParametersValues(buff)
                         if self.__problem_type == u.solution_type.FUSION:
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
@@ -923,23 +922,18 @@ class SolverDAB (SolverBase):
                 u.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
                 newSolution, beeIdx = self.__bees[bee].createNewCandidate(
                         self.__probMatrix, self.__totalSumGoodSolutions, self.__topSolutions)
-                if (bee < self.__nEmployed):
+                if bee < self.__nEmployed:
                     beeIdx = bee
-                if (newSolution is None):
+                if newSolution is None:
                     newSolution = self.__scout.createNewCandidate(self.__probMatrix)[0]
                 self.__problem.solve(newSolution)
                 solutionValue = float(newSolution.getValue())
 
-                if (solutionValue<=0.0 or solutionValue>u.infinity/100.0):
+                if solutionValue<=0.0 or solutionValue>u.infinity/100.0:
                     continue
                 self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestSolution.getValue())) or
                     (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestSolution.getValue()))):
-                    filenametime = "0"
-                    try:
-                        filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                    except Exception as e:
-                        u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                     u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                    " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -949,19 +943,16 @@ class SolverDAB (SolverBase):
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                         self.__bestGlobalSolution = self.__bestSolution
-                    
+
                     buff = self.__bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
-                    """
-                    for destination in range(u.size):
-                        if (destination == u.rank):
-                            continue
-                        u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                        u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                    """
-
                     if (self.__problem_type == u.solution_type.FUSION):
+                        filenametime = "0"
+                        try:
+                            filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                        except:
+                            pass
                         self.__bestSolution.prepare("input.best." + filenametime)
                         shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                         shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
@@ -979,7 +970,7 @@ class SolverDAB (SolverBase):
                     self.__bees[bee].setSolution(newSolution)
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
-                    
+
                     if (solutionValue<=0.0 or solutionValue >= u.infinity/100.0):
                         continue
 
@@ -988,11 +979,6 @@ class SolverDAB (SolverBase):
                         (u.objective == u.objectiveType.MINIMIZE and
                         float(solutionValue) < float(self.__bestSolution.getValue()))):
 
-                        filenametime = "0"
-                        try:
-                            filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_linenoJ))
 
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                        " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -1002,11 +988,16 @@ class SolverDAB (SolverBase):
                         if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                             (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                             self.__bestGlobalSolution = self.__bestSolution
-                    
+
                         buff = self.__bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 
                         if (self.__problem_type == u.solution_type.FUSION):
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
