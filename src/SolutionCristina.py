@@ -26,6 +26,7 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 HISTORY
     Version 0.1 (17-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.1 (15-11-2024):   Minor change
 """
 
 from SolutionBase import SolutionBase
