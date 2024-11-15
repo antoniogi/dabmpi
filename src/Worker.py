@@ -24,8 +24,10 @@ import configparser
 import sys
 from mpi4py import MPI
 import Utils as u
+from SolutionCristina import SolutionCristina
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
+from ProblemCristina import ProblemCristina
 from ProblemFusion import ProblemFusion
 from ProblemNonSeparable import ProblemNonSeparable
 
@@ -59,6 +61,8 @@ class Worker ():
                 self.__problem = ProblemFusion()
             elif self.__problem_type == u.problem_type.NONSEPARABLE:
                 self.__problem = ProblemNonSeparable()
+            elif self.__problem_type == u.problem_type.CRISTINA:
+                self.__problem = ProblemCristina()
         except Exception as e:
             print("Worker " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
@@ -77,10 +81,14 @@ class Worker ():
             if config.has_option("Algorithm", "objective"):
                 val = config.get("Algorithm", "objective")
                 if val is not None:
-                    if val == "max":
+                    if str(val).lower == "max":
                         u.objective = u.objectiveType.MAXIMIZE
+                        u.logger.debug("WORKER (" + str(self.__rank) +
+                                        ") Objective set to MAXIMIZE")
                     else:
                         u.objective = u.objectiveType.MINIMIZE
+                        u.logger.debug("WORKER (" + str(self.__rank) +
+                                        ") Objective set to MINIMIZE")
             elapsed_time = time() - start_time
             solutions_evaluated = 0
             #Send the finish message 10 minutes before the end time to allow
@@ -93,6 +101,8 @@ class Worker ():
                     solution = SolutionFusion(infile)
                 elif self.__problem_type == u.problem_type.NONSEPARABLE:
                     solution = SolutionNonSeparable(infile)
+                elif self.__problem_type == u.problem_type.CRISTINA:
+                    solution = SolutionCristina(infile)
                 else:
                     u.logger.error("WORKER (" + str(self.__rank) +
                                    ") Problem type not supported")
@@ -116,7 +126,7 @@ class Worker ():
                 req.wait(status)
 
                 u.logger.info("WORKER (" + str(self.__rank) +
-                               ") has received a solution from bee " +
+                               ") has received a solution to evaluate from bee " +
                                str(agent_idx[0]))
                 solution.setParametersValues(buff)
 
@@ -133,6 +143,9 @@ class Worker ():
 
                 u.logger.debug("WORKER (" + str(self.__rank) +
                                "). Buffer size: " + str(len(buff)))
+                u.logger.debug("WORKER (" + str(self.__rank) +
+                               "- " + str(agent_idx) + ") found solution with value " 
+                               + str(solution_value[0]))
 
                 self.__comm.Send(buff, 0, u.tags.COMMSOLUTION)
                 self.__comm.Send(solution_value, 0, u.tags.COMMSOLUTION)

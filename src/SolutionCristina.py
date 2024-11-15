@@ -26,55 +26,50 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 HISTORY
     Version 0.1 (17-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.1 (15-11-2024):   Minor change
 """
-import Utils as util
+
+from SolutionBase import SolutionBase
+import Utils as u
+from CristinaData import CristinaData
 
 
-class SolutionBase (object):
+class SolutionCristina (SolutionBase):
     def __init__(self, infile):
-        #initial value of the solution is the min value represented by a float
-        if util.objective == util.objectiveType.MINIMIZE:
-            self.__value = util.infinity
-        elif util.objective == util.objectiveType.MAXIMIZE:
-            self.__value = -util.infinity
-        else:
-            raise ValueError("Objective type not defined")
-        self.__isValid = True
+        SolutionBase.__init__(self, infile)
+        #TODO: Implemement how data is initialized
+        self.__data = CristinaData()
+        self.__data.initialize(infile)
         return
-
-    def getValue(self):
-        return self.__value
-
-    def setValue(self, value):
-        self.__value = value
-
-    def getNumberofParams(self):
-        return 0
-
-    def getMaxNumberofValues(self):
-        return 0
-
-    def print(self):
-        u.logger.debug("Print function not implemented")
-        return
-
-    def isValid(self):
-        return self.__isValid
-
-    def getParametersValues(self):
-        raise NotImplementedError("getParametersValues abstract solution")
-
-    def setParametersValues(self, buff):
-        raise NotImplementedError("setParametersValues abstract solution")
-
-    def getParameters(self):
-        raise NotImplementedError("getParameters abstract solution")
-
-    def setParameters(self, params):
-        raise NotImplementedError("setParameters abstract solution")
 
     def initialize(self, data):
-        raise NotImplementedError("initialize abstract solution")
+        self.__data = data
+        return
 
     def prepare(self, filename):
-        raise NotImplementedError("prepare abstract solution")
+        return
+#        self.__data.create_input_file(filename)
+
+    def getNumberofParams(self):
+        return self.__data.getNumParams()
+
+    def getMaxNumberofValues(self):
+        return self.__data.getMaxRange()
+
+    def getParameters(self):
+        return self.__data.getParameters()
+
+    def getParametersValues(self):
+        return self.__data.getValsOfParameters()
+
+    def setParametersValues(self, buff):
+        self.__data.setValsOfParameters(buff)
+
+    def setParameters(self, params):
+        self.__data.setParameters(params)
+
+    def getData(self):
+        return self.__data
+
+    def print(self):
+        self.__data.printData()

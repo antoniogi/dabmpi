@@ -22,10 +22,13 @@ import sys
 import random
 import shutil
 import time
+import datetime
 from array import array
 from SolverBase import SolverBase
+from ProblemCristina import ProblemCristina
 from ProblemFusion import ProblemFusion
 from ProblemNonSeparable import ProblemNonSeparable
+from SolutionCristina import SolutionCristina
 from SolutionFusion import SolutionFusion
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as u
@@ -85,6 +88,12 @@ class BeeBase ():
             self.__solution_type = u.solution_type.NONSEPARABLE
             self.__bestLocalSolution = SolutionNonSeparable(infile)
             self.__bestGlobalSolution = SolutionNonSeparable(infile)
+        elif ProblemType == u.problem_type.CRISTINA:
+            self.__problem = ProblemCristina()
+            self.__solution_type = u.solution_type.CRISTINA
+            self.__bestLocalSolution = SolutionCristina(infile)
+            self.__bestGlobalSolution = SolutionCristina(infile)
+
         if u.objective == u.objectiveType.MAXIMIZE:
             self.__bestLocalSolution.setValue(-u.infinity)
             self.__bestGlobalSolution.setValue(-u.infinity)
@@ -150,6 +159,7 @@ class BeeBase ():
                     newVal = random.randint(minVal, maxVal)
             params[i].set_value(newVal)
         solution.setParameters(params)
+        solution.print()
         return solution
 
     """
@@ -179,12 +189,10 @@ class BeeBase ():
             start, stop = stop, start
         if start==stop:
             return start
-        #print "randrange_float ("+str(start) + "," + str(stop)+ "," + str(step) + ")"
         return random.randint(0, int(abs((stop - start) / step))) * step + start
 """
 Employed bees
 """
-
 
 class Employed (BeeBase):
     def __init__(self, problem_type, infile, change, useMatrix):
@@ -288,7 +296,7 @@ class Employed (BeeBase):
                         else:
                             if minVal > maxVal:
                                 minVal, maxVal = maxVal, minVal
-                            newVal = random.randint(minVal, maxVal)
+                            newVal = random.randint(int(minVal), int(maxVal))
 
                     currentVal = parameters[i].get_value()
                     if newVal != currentVal:
@@ -396,9 +404,9 @@ class Onlooker (BeeBase):
                             minVal = maxVal - 1
                         if minVal > maxVal:
                             minVal, maxVal = maxVal, minVal
-                        newVal = random.randint(minVal, maxVal)
+                        newVal = random.randint(int(minVal), int(maxVal))
                         while newVal == currentVal:
-                            newVal = random.randint(minVal, maxVal)
+                            newVal = random.randint(int(minVal), int(maxVal))
                     p.set_value(newVal)
                     #Here: go through the parameters of the solution and change those
                     #parameters considering the min and max values of each parameter,
@@ -453,6 +461,10 @@ class SolverDAB (SolverBase):
                 self.__problem = ProblemNonSeparable()
                 self.__bestSolution = SolutionNonSeparable(self.__infile)
                 self.__bestGlobalSolution = SolutionNonSeparable(self.__infile)
+            elif self.__problem_type == u.problem_type.CRISTINA:
+                self.__problem = ProblemCristina()
+                self.__bestSolution = SolutionCristina(self.__infile)
+                self.__bestGlobalSolution = SolutionCristina(self.__infile)
             else:
                 u.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). Unknown problem type " + str(problem_type))
@@ -491,6 +503,13 @@ class SolverDAB (SolverBase):
                                     "pending.queue", u.solution_type.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.FUSION, infile, False, True)
+            if problem_type == u.problem_type.CRISTINA:
+                self.__finishedSolutions = solQueue.SolutionsQueue(
+                                    "finishedNonSep.queue", u.solution_type.CRISTINA, infile, True, True)
+                self.__pendingSolutions = solQueue.SolutionsQueue(
+                                    "pendingNonSep.queue", u.solution_type.CRISTINA, infile, False)
+                self.__topSolutions = solQueue.SolutionsQueue(
+                                    "top.queue", u.solution_type.CRISTINA, infile, False, True)
             if problem_type == u.problem_type.NONSEPARABLE:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finishedNonSep.queue", u.solution_type.NONSEPARABLE, infile, True, True)
@@ -717,7 +736,7 @@ class SolverDAB (SolverBase):
     def receiveSolutions(self):
         status = MPI.Status()
         sourceIdx, flag = MPI.Request.Testany(self.__requestSolution, status)
-                
+
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self.__requestSolution)):
@@ -738,7 +757,8 @@ class SolverDAB (SolverBase):
                 u.logger.error("DRIVER (comm). " + str(e) + " line: " +
                            str(sys.exc_info()[2].tb_lineno))
             try:
-                if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
+                u.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
+                if (float(solVal[0]) >= 0.0 and float(solVal[0]) < u.infinity / 100):
                     #Add the solution to the list of best solutions (the method will implement the
                     #priority list)
                     solutionTemp = None
@@ -747,6 +767,8 @@ class SolverDAB (SolverBase):
                             solutionTemp = SolutionFusion(self.__infile)
                         elif self.__problem_type == u.problem_type.NONSEPARABLE:
                             solutionTemp = SolutionNonSeparable(self.__infile)
+                        elif self.__problem_type == u.problem_type.CRISTINA:
+                            solutionTemp = SolutionCristina(self.__infile)
 
                         if solutionTemp is None:
                             u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
@@ -771,14 +793,9 @@ class SolverDAB (SolverBase):
                         u.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
                     self.__topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self.__nEmployed)
                     self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
-                    
+
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self.__bestSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self.__bestSolution.getValue()))):
-                        filenametime = "0"
-                        try:
-                            filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                         isNewBest = True
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(solVal[0]) +
@@ -788,6 +805,11 @@ class SolverDAB (SolverBase):
 
                         self.__bestSolution.setParametersValues(buff)
                         if self.__problem_type == u.solution_type.FUSION:
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
@@ -804,6 +826,8 @@ class SolverDAB (SolverBase):
                     solutionTemp = SolutionFusion(self.__infile)
                 elif self.__problem_type == u.problem_type.NONSEPARABLE:
                     solutionTemp = SolutionNonSeparable(self.__infile)
+                elif self.__problem_type == u.problem_type.CRISTINA:
+                    solutionTemp = SolutionCristina(self.__infile)
 
                 if solutionTemp is None:
                     u.logger.error("Solution is None after creation (type " + str(self.__problem_type) + ")")
@@ -813,7 +837,7 @@ class SolverDAB (SolverBase):
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
                     u.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
-                    if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
+                    if (float(solVal[0]) >= 0.0 and float(solVal[0])<(u.infinity/100.0)):
                         if isNewBest:
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):
@@ -886,6 +910,8 @@ class SolverDAB (SolverBase):
             self.__problem = ProblemFusion()
         elif (self.__problem_type == u.problem_type.NONSEPARABLE):
             self.__problem = ProblemNonSeparable()
+        elif (self.__problem_type == u.problem_type.CRISTINA):
+            self.__problem = ProblemCristina()
 
         numParams = self.__bestSolution.getNumberofParams()
         buff = array('f', [0]) * numParams
@@ -896,23 +922,18 @@ class SolverDAB (SolverBase):
                 u.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
                 newSolution, beeIdx = self.__bees[bee].createNewCandidate(
                         self.__probMatrix, self.__totalSumGoodSolutions, self.__topSolutions)
-                if (bee < self.__nEmployed):
+                if bee < self.__nEmployed:
                     beeIdx = bee
-                if (newSolution is None):
+                if newSolution is None:
                     newSolution = self.__scout.createNewCandidate(self.__probMatrix)[0]
                 self.__problem.solve(newSolution)
                 solutionValue = float(newSolution.getValue())
 
-                if (solutionValue<=0.0 or solutionValue>u.infinity/100.0):
+                if solutionValue<=0.0 or solutionValue>u.infinity/100.0:
                     continue
                 self.__totalSumGoodSolutions = self.__topSolutions.GetTotalSolutionsValues()
                 if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestSolution.getValue())) or
                     (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestSolution.getValue()))):
-                    filenametime = "0"
-                    try:
-                        filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                    except Exception as e:
-                        u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
 
                     u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                    " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -922,19 +943,16 @@ class SolverDAB (SolverBase):
                     if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                         (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                         self.__bestGlobalSolution = self.__bestSolution
-                    
+
                     buff = self.__bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
-                    """
-                    for destination in range(u.size):
-                        if (destination == u.rank):
-                            continue
-                        u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                        u.comm.Isend([buff, MPI.FLOAT], destination, u.tags.COMMSOLUTION)
-                    """
-
                     if (self.__problem_type == u.solution_type.FUSION):
+                        filenametime = "0"
+                        try:
+                            filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                        except:
+                            pass
                         self.__bestSolution.prepare("input.best." + filenametime)
                         shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                         shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
@@ -952,7 +970,7 @@ class SolverDAB (SolverBase):
                     self.__bees[bee].setSolution(newSolution)
                     self.__problem.solve(newSolution)
                     solutionValue = float(newSolution.getValue())
-                    
+
                     if (solutionValue<=0.0 or solutionValue >= u.infinity/100.0):
                         continue
 
@@ -961,11 +979,6 @@ class SolverDAB (SolverBase):
                         (u.objective == u.objectiveType.MINIMIZE and
                         float(solutionValue) < float(self.__bestSolution.getValue()))):
 
-                        filenametime = "0"
-                        try:
-                            filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-                        except Exception as e:
-                            u.logger.warning("DRIVER. " + str(e) + " line: " + str(sys.exc_info()[2].tb_linenoJ))
 
                         u.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
                                        " -- old " + str(self.__bestSolution.getValue()) + ". Bee " + str(beeIdx))
@@ -975,11 +988,16 @@ class SolverDAB (SolverBase):
                         if ((u.objective == u.objectiveType.MAXIMIZE and float(solutionValue) > float(self.__bestGlobalSolution.getValue())) or
                             (u.objective == u.objectiveType.MINIMIZE and float(solutionValue) < float(self.__bestGlobalSolution.getValue()))):
                             self.__bestGlobalSolution = self.__bestSolution
-                    
+
                         buff = self.__bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 
                         if (self.__problem_type == u.solution_type.FUSION):
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
                             self.__bestSolution.prepare("input.best." + filenametime)
                             shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
                             shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)

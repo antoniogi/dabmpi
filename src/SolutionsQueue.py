@@ -21,6 +21,7 @@ import sys
 import os
 
 from SolutionFusion import SolutionFusion
+from SolutionCristina import SolutionCristina
 from SolutionNonSeparable import SolutionNonSeparable
 import Utils as util
 from Parameter import Parameter
@@ -56,6 +57,10 @@ class SolutionsQueue (object):
             if self.__solType == util.solution_type.FUSION:
                 self.__solutionBase = SolutionFusion(self.__infile)
                 util.logger.info("QUEUE: Initialised fusion queue (" +
+                                  filename + ")" + self.__infile)
+            if self.__solType == util.solution_type.CRISTINA:
+                self.__solutionBase = SolutionCristina(self.__infile)
+                util.logger.info("QUEUE: Initialised Cristina queue (" +
                                   filename + ")" + self.__infile)
             else:
                 self.__solutionBase = SolutionNonSeparable(self.__infile)
@@ -115,12 +120,12 @@ class SolutionsQueue (object):
                 for i in range(len(self.__queue)):
                     origins.add(self.__queue[i][2])
                     if util.objective == util.objectiveType.MAXIMIZE:
-                        if (self.__queue[i][1] > value and
-                            self.__queue[i][1] >= 0.0):
+                        if (float(self.__queue[i][1]) > value and
+                            float(self.__queue[i][1]) >= 0.0):
                             continue
                     if util.objective == util.objectiveType.MINIMIZE:
-                        if (self.__queue[i][1] < value and
-                            self.__queue[i][1] >= 0.0):
+                        if (float(self.__queue[i][1]) < value and
+                            float(self.__queue[i][1]) >= 0.0):
                             continue
                     if (i > self.__maxSize / 10 and len(origins) <= 1 and
                         agent_idx in origins):
@@ -164,7 +169,7 @@ class SolutionsQueue (object):
                     value = float(sol_tuple[1])
                     inserted = False
                     for i in range(len(self.__queue)):
-                        if self.__queue[i][1] < value:
+                        if float(self.__queue[i][1]) < value:
                             continue
                         self.__queue.insert(i - 1, sol_tuple)
                         inserted = True
@@ -320,7 +325,10 @@ class SolutionsQueue (object):
         total_sum = 0.0
         for i in range(self.qSize()):
             sol_tuple = self.__queue[i]
-            total_sum += 1.0 / float(sol_tuple[1])
+            if float(sol_tuple[1])==0.0:
+                total_sum += util.infinity/100
+            else:
+                total_sum += 1.0 / float(sol_tuple[1])
         return total_sum
 
     """
@@ -333,7 +341,10 @@ class SolutionsQueue (object):
         total_val = self.GetTotalSolutionsValues()
         for i in range(self.qSize()):
             if util.objective == util.objectiveType.MINIMIZE:
-                temp_sum += float(1.0 / self.__queue[i][1])
+                if float(self.__queue[i][1])==0.0:
+                    temp_sum += util.infinity
+                else:
+                    temp_sum += float(1.0 / float(self.__queue[i][1]))
             else:
                 temp_sum += float(self.__queue[i][1])
             util.logger.debug("TempSum: " + str(temp_sum) + "/" +

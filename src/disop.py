@@ -101,7 +101,7 @@ def main():
     try:
         inputfile = "../data/param_config.xml"
         configfile = "../data/DABConfigFile"
-        problem_type = util.problem_type.FUSION
+        problem_type = util.problem_type.CRISTINA
         solver_type = util.solver_type.DAB
 
         #process the arguments if the argparse module has been found
@@ -112,7 +112,7 @@ def main():
 
         parser.add_argument('-p', '--problem', required=True, type=str,
                             default='FUSION',
-                            choices=['FUSION', 'NONSEPARABLE'],
+                            choices=['FUSION', 'NONSEPARABLE', 'CRISTINA'],
                             help='Problem type')
         parser.add_argument('-v', '--verbose', required=False, type=int,
                             default=3, choices=[1, 2, 3],
@@ -135,6 +135,8 @@ def main():
         #extract the problem type
         if args.problem == 'FUSION':
             problem_type = util.problem_type.FUSION
+        if args.problem == 'CRISTINA':
+            problem_type = util.problem_type.CRISTINA
         if args.problem == 'NONSEPARABLE':
             problem_type = util.problem_type.NONSEPARABLE
 

@@ -1,0 +1,20 @@
+[Bees]
+#Number of employed bees
+nemployed: 2
+#Number of onlooker bees
+nonlooker: 1
+#Modification factor used by the onlooker bees
+onlookerModFactor: 0.0001
+#Number of iterations before a solution is abandoned
+iterationsAbandoned: 5
+#probability for an employed to change a parameter (defined as 1/value)
+probEmployedChange: 4
+
+[Algorithm]
+#Execution time
+time: 50000
+#Size of the queue that stores the solutions that haven't been set yet
+pendingSize: 50
+objective: min
+
+[General]
