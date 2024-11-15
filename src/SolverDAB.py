@@ -758,7 +758,7 @@ class SolverDAB (SolverBase):
                            str(sys.exc_info()[2].tb_lineno))
             try:
                 u.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
-                if (float(solVal[0]) > 0.0 and float(solVal[0]) < u.infinity / 100):
+                if (float(solVal[0]) >= 0.0 and float(solVal[0]) < u.infinity / 100):
                     #Add the solution to the list of best solutions (the method will implement the
                     #priority list)
                     solutionTemp = None
@@ -837,7 +837,7 @@ class SolverDAB (SolverBase):
                     self.__finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
                     u.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
-                    if (float(solVal[0]) > 0.0 and float(solVal[0])<(u.infinity/100.0)):
+                    if (float(solVal[0]) >= 0.0 and float(solVal[0])<(u.infinity/100.0)):
                         if isNewBest:
                             parameters = solutionTemp.getParameters()
                             if (self.__useMatrix):

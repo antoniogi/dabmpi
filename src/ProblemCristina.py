@@ -37,7 +37,8 @@ class ProblemCristina(object):
     def solve(self, solution):
         val = random.randint(0, 1000000)
         solution.setValue(val)
-#        print("ProblemCristina. Solution found with value: " + str(val))
+#        if val==0:
+#            print("ProblemCristina. Solution found with value: " + str(val))
         return val
 
     def extractSolution(self):

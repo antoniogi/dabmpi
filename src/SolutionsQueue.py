@@ -325,7 +325,10 @@ class SolutionsQueue (object):
         total_sum = 0.0
         for i in range(self.qSize()):
             sol_tuple = self.__queue[i]
-            total_sum += 1.0 / float(sol_tuple[1])
+            if float(sol_tuple[1])==0.0:
+                total_sum += util.infinity/100
+            else:
+                total_sum += 1.0 / float(sol_tuple[1])
         return total_sum
 
     """
@@ -338,7 +341,10 @@ class SolutionsQueue (object):
         total_val = self.GetTotalSolutionsValues()
         for i in range(self.qSize()):
             if util.objective == util.objectiveType.MINIMIZE:
-                temp_sum += float(1.0 / float(self.__queue[i][1]))
+                if float(self.__queue[i][1])==0.0:
+                    temp_sum += util.infinity
+                else:
+                    temp_sum += float(1.0 / float(self.__queue[i][1]))
             else:
                 temp_sum += float(self.__queue[i][1])
             util.logger.debug("TempSum: " + str(temp_sum) + "/" +
