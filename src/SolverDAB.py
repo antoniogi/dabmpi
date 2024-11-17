@@ -503,20 +503,22 @@ class SolverDAB (SolverBase):
                                     "pending.queue", u.solution_type.FUSION, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.FUSION, infile, False, True)
-            if problem_type == u.problem_type.CRISTINA:
+            elif problem_type == u.problem_type.CRISTINA:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
-                                    "finishedNonSep.queue", u.solution_type.CRISTINA, infile, True, True)
+                                    "finishedCristinaSep.queue", u.solution_type.CRISTINA, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
-                                    "pendingNonSep.queue", u.solution_type.CRISTINA, infile, False)
+                                    "pendingCristina.queue", u.solution_type.CRISTINA, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.CRISTINA, infile, False, True)
-            if problem_type == u.problem_type.NONSEPARABLE:
+            elif problem_type == u.problem_type.NONSEPARABLE:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
                                     "finishedNonSep.queue", u.solution_type.NONSEPARABLE, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
                                     "pendingNonSep.queue", u.solution_type.NONSEPARABLE, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.NONSEPARABLE, infile, False, True)
+            else:
+                raise Exception("Unknown problem type")
             #if top solutions is not empty, that means we have a best solution from the previous execution
             try:
                 if self.__topSolutions.qSize() != 0:
