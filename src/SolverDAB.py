@@ -119,6 +119,18 @@ class BeeBase ():
         raise NotImplementedError("Abstract bee (calling create\
                                    new candidate)")
 
+    def checkisNew(self, solution):
+        for s in self.__pendingSolutions().getAllSolutions():
+            if s== solution:
+                isNew = False
+                return False
+        for s in self.__finishedSolutions().getAllSolutions():
+            if s == solution:
+                isNew = False
+                return False
+        return True
+
+
     """
     Creates a new random solution
     Extracts the parameters that can be modified, and generates a new
@@ -304,6 +316,14 @@ class Employed (BeeBase):
                         parameters[i].set_value(newVal)
                 solution.setParameters(parameters)
                 parameters = solution.getParameters()
+                for s in self.__pendingSolutions().getAllSolutions():
+                    if s== solution:
+                        isNew = False
+                        continue
+                for s in self.__finishedSolutions().getAllSolutions():
+                    if s == solution:
+                        isNew = False
+                        continue
                     #Here: go through the parameters of the solution and change those
                     #parameters considering the min and max values of each parameter,
                     #the probMatrix, and the self.__modFactor value
@@ -505,7 +525,7 @@ class SolverDAB (SolverBase):
                                     "top.queue", u.solution_type.FUSION, infile, False, True)
             elif problem_type == u.problem_type.CRISTINA:
                 self.__finishedSolutions = solQueue.SolutionsQueue(
-                                    "finishedCristinaSep.queue", u.solution_type.CRISTINA, infile, True, True)
+                                    "finishedCristina.queue", u.solution_type.CRISTINA, infile, True, True)
                 self.__pendingSolutions = solQueue.SolutionsQueue(
                                     "pendingCristina.queue", u.solution_type.CRISTINA, infile, False)
                 self.__topSolutions = solQueue.SolutionsQueue(
@@ -518,7 +538,7 @@ class SolverDAB (SolverBase):
                 self.__topSolutions = solQueue.SolutionsQueue(
                                     "top.queue", u.solution_type.NONSEPARABLE, infile, False, True)
             else:
-                raise Exception("Unknown problem type")
+                raise Exception(f"Unknown problem type: {problem_type}")
             #if top solutions is not empty, that means we have a best solution from the previous execution
             try:
                 if self.__topSolutions.qSize() != 0:

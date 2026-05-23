@@ -19,62 +19,137 @@
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
-
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   2.0  -  23-05-2026'
 
 """
 HISTORY
     Version 0.1 (17-04-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.0 (15-01-2014):   First stable version.
+    Version 2.0 (23-05-2026):   Refactoring and modernization
 """
+
+from abc import ABC, abstractmethod
 import Utils as util
 
 
-class SolutionBase (object):
+class SolutionBase(ABC):
+    """Abstract base class for optimization solutions.
+    
+    Defines the interface that all solution types must implement.
+    Initializes the solution value based on the optimization objective:
+    - MINIMIZE: starts at +infinity (any real value improves it)
+    - MAXIMIZE: starts at -infinity (any real value improves it)
+    """
+
     def __init__(self, infile):
-        #initial value of the solution is the min value represented by a float
+        """Initialize solution with appropriate initial value.
+        
+        Args:
+            infile: Input configuration file path
+            
+        Raises:
+            ValueError: If objective type is not defined
+        """
+        # Set initial value based on optimization objective
         if util.objective == util.objectiveType.MINIMIZE:
-            self.__value = util.infinity
+            self.__value = util.infinity  # Start at +infinity for minimization
         elif util.objective == util.objectiveType.MAXIMIZE:
-            self.__value = -util.infinity
+            self.__value = -util.infinity  # Start at -infinity for maximization
         else:
             raise ValueError("Objective type not defined")
         self.__isValid = True
-        return
 
-    def getValue(self):
+    def getValue(self) -> float:
+        """Return the current solution value."""
         return self.__value
 
-    def setValue(self, value):
+    def setValue(self, value: float) -> None:
+        """Set the solution value.
+        
+        Args:
+            value: New solution value
+        """
         self.__value = value
 
-    def getNumberofParams(self):
-        return 0
+    @abstractmethod
+    def getNumberofParams(self) -> int:
+        """Return the number of parameters in this solution."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement getNumberofParams()")
 
-    def getMaxNumberofValues(self):
-        return 0
+    @abstractmethod
+    def getMaxNumberofValues(self) -> int:
+        """Return the maximum number of parameter values."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement getMaxNumberofValues()")
 
-    def print(self):
-        u.logger.debug("Print function not implemented")
-        return
+    @abstractmethod
+    def print(self) -> None:
+        """Print solution information.
+        
+        Must be implemented by subclasses to display solution details.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement print()")
 
-    def isValid(self):
+    def isValid(self) -> bool:
+        """Return whether the solution is valid."""
         return self.__isValid
 
+    def setValid(self, valid: bool) -> None:
+        """Set the validity flag of the solution.
+        
+        Args:
+            valid: True if solution is valid, False otherwise
+        """
+        self.__isValid = valid
+
+    @abstractmethod
     def getParametersValues(self):
-        raise NotImplementedError("getParametersValues abstract solution")
+        """Return the current values of all parameters."""
+        raise NotImplementedError(f"{self.__class__.__name__} must implement getParametersValues()")
 
-    def setParametersValues(self, buff):
-        raise NotImplementedError("setParametersValues abstract solution")
+    @abstractmethod
+    def setParametersValues(self, buff: list) -> None:
+        """Set parameter values.
+        
+        Args:
+            buff: Array of parameter values
+        """
+        raise NotImplementedError
 
-    def getParameters(self):
-        raise NotImplementedError("getParameters abstract solution")
+    @abstractmethod
+    def getParameters(self) -> list:
+        """Return the parameter objects."""
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement getParameters()")
 
-    def setParameters(self, params):
-        raise NotImplementedError("setParameters abstract solution")
+    @abstractmethod
+    def setParameters(self, params: list) -> None:
+        """Set parameters.
+        
+        Args:
+            params: List of parameter objects
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement setParameters()")
 
-    def initialize(self, data):
-        raise NotImplementedError("initialize abstract solution")
+    @abstractmethod
+    def initialize(self, data) -> None:
+        """Initialize solution with data.
+        
+        Args:
+            data: Data object for initialization
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement initialize()")
 
-    def prepare(self, filename):
-        raise NotImplementedError("prepare abstract solution")
+    @abstractmethod
+    def prepare(self, filename: str) -> None:
+        """Prepare input file for solver.
+        
+        Args:
+            filename: Output filename to prepare
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement prepare()")

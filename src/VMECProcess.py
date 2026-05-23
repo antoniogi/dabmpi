@@ -28,6 +28,8 @@ import glob
 import subprocess
 import numpy as np
 import Utils as u
+from pathlib import Path
+
 
 __author__ = ' AUTHORS:     Antonio Gomez(antonio.gomez@csiro.au)'
 __version__ = ' REVISION:   1.1  - 09-01-2015'
@@ -198,7 +200,6 @@ class VMECProcess(object):
     This method just calls to the solution.prepare function
     to write the input file
     """
-
     def create_input_file(self, solution):
         u.logger.debug("Creating input file")
         try:
@@ -210,24 +211,21 @@ class VMECProcess(object):
         return
 
     def clean_folder(self):
-        try:
-            if os.path.exists("threed1.tj" + self.__rank):
-                os.remove("threed1.tj" + self.__rank)
-            if os.path.exists("wout_tj" + self.__rank + ".txt"):
-                os.remove("wout_tj" + self.__rank + ".txt")
-            if os.path.exists("wout.flx"):
-                os.remove("wout.flx")
-            if os.path.exists("wout.txt"):
-                os.remove("wout.txt")
-            if os.path.exists("mercier.tj" + self.__rank):
-                os.remove("mercier.tj" + self.__rank)
-            if os.path.exists("jxbout.tj" + self.__rank):
-                os.remove("jxbout.tj" + self.__rank)
-            if os.path.exists("fort.9"):
-                os.remove("fort.9")
-        except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                           "). " + str(e))
+        files = [
+            f"threed1.tj{self.__rank}",
+            f"wout_tj{self.__rank}.txt",
+            "wout.flx",
+            "wout.txt",
+            f"mercier.tj{self.__rank}",
+            f"jxbout.tj{self.__rank}",
+            "fort.9",
+        ]
+
+        for name in files:
+            try:
+                Path(name).unlink(missing_ok=True)
+            except OSError:
+                u.logger.exception(f"Failed removing {name}")
 
     """
     Main method of this class. It is responsible for calling the different
@@ -342,124 +340,106 @@ class VMECProcess(object):
 
     def process_wout(self, filepath, filepath_out):
         try:
-            file_wout = open(filepath, 'r')
-            for i in range(0, 4):
+            with open(filepath) as file_wout:
+                for i in range(0, 4):
+                    file_wout.readline()
+                line = file_wout.readline()
+                parts = line.split()
+
+                ns = int(parts[1].strip())
+                nmax = int(parts[4].strip())
+
+                u.logger.debug("NS " + parts[1] + " NMAX " + parts[4])
+
                 file_wout.readline()
-            line = file_wout.readline()
-            parts = line.split()
-#            parts = map(string.strip, string.split(line))
+                file_wout.readline()
+                file_wout.readline()
 
-            ns = int(parts[1].strip())
-            nmax = int(parts[4].strip())
+                m = np.zeros(nmax, dtype=int)
+                n = np.zeros(nmax, dtype=int)
 
-            u.logger.debug("NS " + parts[1] + " NMAX " + parts[4])
+                rmn = u.Matrix(ns, nmax)
+                zmn = u.Matrix(ns, nmax)
+                bmn = u.Matrix(ns, nmax)
 
-            file_wout.readline()
-            file_wout.readline()
-            file_wout.readline()
+                iotas = []
+                phi = np.zeros(ns)
+                rho = np.zeros(ns)
 
-            m = np.zeros(nmax, dtype=np.int)
-            n = np.zeros(nmax, dtype=np.int)
+                for i in range(0, ns):
+                    for j in range(0, nmax):
+                        if i==0:
+                            line = file_wout.readline()
+                            parts = line.split()
+                            m[j] = int(parts[0].strip())
+                            n[j] = int(parts[1].strip())
+                            u.logger.debug("m " + parts[0] + " n " + parts[1])
 
-            rmn = u.Matrix(ns, nmax)
-            zmn = u.Matrix(ns, nmax)
-            bmn = u.Matrix(ns, nmax)
-
-            iotas = []
-            phi = np.zeros(ns)
-            rho = np.zeros(ns)
-
-            for i in range(0, ns):
-                for j in range(0, nmax):
-                    if i==0:
                         line = file_wout.readline()
                         parts = line.split()
-                        m[j] = int(parts[0].strip())
-                        n[j] = int(parts[1].strip())
-                        u.logger.debug("m " + parts[0] + " n " + parts[1])
 
-                    line = file_wout.readline()
-                    parts = line.split()
-#                    parts = map(string.strip, string.split(line))
-
-                    rmn.setitem(j, i, float(parts[0].strip()))
-                    zmn.setitem(j, i, float(parts[1].strip()))
-                for j in range(0, nmax):
-                    if i==0:
+                        rmn.setitem(j, i, float(parts[0].strip()))
+                        zmn.setitem(j, i, float(parts[1].strip()))
+                    for j in range(0, nmax):
+                        if i==0:
+                            line = file_wout.readline()
+                            parts = line.split()
+                            u.logger.debug("m " + parts[0] + " n " + parts[1])
                         line = file_wout.readline()
-#                        parts = map(string.strip, string.split(line))
                         parts = line.split()
-                        u.logger.debug("m " + parts[0] + " n " + parts[1])
+                        bmn.setitem(j, i, float(parts[0]))
+                        file_wout.readline()
+                        file_wout.readline()
+
+                for i in range(0, ns):
                     line = file_wout.readline()
                     parts = line.split()
-#                    parts = map(string.strip, string.split(line))
-                    bmn.setitem(j, i, float(parts[0]))
+                    iotas.append(float(parts[0]))
+                    file_wout.readline()
+                    line = file_wout.readline()
+                    parts = line.split()
+                    phi[i] = float(parts[1])
+                    rho[i] = math.sqrt(abs(phi[i]))
                     file_wout.readline()
                     file_wout.readline()
 
-            for i in range(0, ns):
-                line = file_wout.readline()
-#                parts = map(string.strip, string.split(line))
-                parts = line.split()
-                iotas.append(float(parts[0]))
-                file_wout.readline()
-                line = file_wout.readline()
-                parts = line.split()
-#                parts = map(string.strip, string.split(line))
-                phi[i] = float(parts[1])
-                rho[i] = math.sqrt(abs(phi[i]))
-                file_wout.readline()
-                file_wout.readline()
+            with open(filepath_out, 'w') as file_out:
+                file_out.write('Br, Bphi, Bz, dBr, dBphi, dBz , rho\n')
 
-            file_wout.close()
+                delta = 0.000001
+                #for i in range(0, ns, 10):
+                for i in range(0, ns, 20):
+                    u.logger.debug('Surface: ' + str(i) + '\n')
+                    file_out.write('Surface: ' + str(i) + '\n')
+                    #for phi in range(0, 90):
+                    #    for epsilon in range(0, 90):
+                    for phi in range(0, 90, 2):
+                        for epsilon in range(0, 90, 2):
+                            Z = 0.0
+                            R = 0.0
+                            BR = 0.0
+                            BZ = 0.0
+                            BPHI = 0.0
+                            dBR = 0.0
+                            dBZ = 0.0
+                            dBphi = 0.0
+                            for j in range(0, nmax):
+                                angle = m[j] * phi * 4 - n[j] * epsilon * 4
+                                c = math.cos(angle)
+                                s = math.sin(angle)
+                                R = R + rmn.getitem(j, i) * c
+                                Z = Z + zmn.getitem(j, i) * s
+                                BR = BR + bmn.getitem(j, i) * c
+                                BZ = BZ + bmn.getitem(j, i) * s
+                                BPHI = BPHI + bmn.getitem(j, i) * c
+                                dBR = BR + ((delta + bmn.getitem(j, i)) * c)
+                                dBZ = BZ + ((delta + bmn.getitem(j, i)) * s)
+                                dBphi = BPHI + ((delta + bmn.getitem(j, i)) * c)
 
-            file_out = open(filepath_out, 'w')
-            file_out.write('Br, Bphi, Bz, dBr, dBphi, dBz , rho\n')
-
-            delta = 0.000001
-            #for i in range(0, ns, 10):
-            for i in range(0, ns, 20):
-                u.logger.debug('Surface: ' + str(i) + '\n')
-                file_out.write('Surface: ' + str(i) + '\n')
-                #for phi in range(0, 90):
-                #    for epsilon in range(0, 90):
-                for phi in range(0, 90, 2):
-                    for epsilon in range(0, 90, 2):
-                        Z = 0.0
-                        R = 0.0
-                        BR = 0.0
-                        BZ = 0.0
-                        BPHI = 0.0
-                        dBR = 0.0
-                        dBZ = 0.0
-                        dBphi = 0.0
-                        for j in range(0, nmax):
-                            R = R + rmn.getitem(j, i) * math.cos(
-                                m[j] * phi * 4 - n[j] * epsilon * 4)
-                            Z = Z + zmn.getitem(j, i) * math.sin(
-                                m[j] * phi * 4 - n[j] * epsilon * 4)
-                            BR = BR + bmn.getitem(j, i) * math.cos(
-                                m[j] * phi * 4 - n[j] * epsilon * 4)
-                            BZ = BZ + bmn.getitem(j, i) * math.sin(
-                                m[j] * phi * 4 - n[j] * epsilon * 4)
-                            BPHI = BPHI + bmn.getitem(j, i) * math.cos(
-                                m[j] * phi * 4 - n[j] * epsilon * 4)
-                            dBR = BR + ((delta + bmn.getitem(j, i)) *
-                                  math.cos(m[j] * phi * 4 - n[j] *
-                                  epsilon * 4))
-                            dBZ = BZ + ((delta + bmn.getitem(j, i)) *
-                                  math.sin(m[j] * phi * 4 - n[j] *
-                                  epsilon * 4))
-                            dBphi = BPHI + ((delta + bmn.getitem(j, i)) *
-                                    math.cos(m[j] * phi * 4 - n[j] *
-                                    epsilon * 4))
-
-                            file_out.write(str('%e' % BR) + ', ' + str(
-                            '%e' % BPHI) + ', ' + str('%e' % BZ) + ', ' + str(
-                            '%e' % dBR) + ', ' + str('%e' % dBphi) + ', ' +
-                            str('%e' % dBZ) + ', ' + str('%e' % rho[i]) + '\n')
-
-            file_out.close()
+                                file_out.write(str('%e' % BR) + ', ' + str(
+                                '%e' % BPHI) + ', ' + str('%e' % BZ) + ', ' + str(
+                                '%e' % dBR) + ', ' + str('%e' % dBphi) + ', ' +
+                                str('%e' % dBZ) + ', ' + str('%e' % rho[i]) + '\n')
             return True
         except Exception as e:
             u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +

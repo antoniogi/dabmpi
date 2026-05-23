@@ -19,72 +19,90 @@
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
-
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   2.0  -  23-05-2026'
 
 """
 HISTORY
     Version 0.1 (17-04-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.0 (15-01-2014):   First stable version.
+    Version 2.0 (23-05-2026):   Refactoring and modernization
 """
 
 from SolutionBase import SolutionBase
 from VMECData import VMECData
 import Utils as u
 
+# Range for polynomial derivative check
+DERIVATIVE_CHECK_RANGE = range(-100, 100)
 
-class SolutionFusion (SolutionBase):
+
+class SolutionFusion(SolutionBase):
     def __init__(self, infile):
-        SolutionBase.__init__(self, infile)
+        super().__init__(infile)
         self.__data = VMECData()
         self.__data.initialize(infile)
-        return
 
     def initialize(self, data):
+        """Initialize with external data object."""
         self.__data = data
-        return
 
     def prepare(self, filename):
+        """Create input file for VMEC."""
         self.__data.create_input_file(filename)
 
-    def getNumberofParams(self):
+    def get_number_of_params(self):
+        """Return the number of parameters."""
         return self.__data.getNumParams()
 
     def getMaxNumberofValues(self):
+        """Return the maximum range of parameter values."""
         return self.__data.getMaxRange()
 
     def getParameters(self):
+        """Return the parameters."""
         return self.__data.getParameters()
 
     def getParametersValues(self):
+        """Return the current values of all parameters."""
         return self.__data.getValsOfParameters()
 
-    """
-    Receives an array of floats and sets the values of the parameters
-    """
-
     def setParametersValues(self, buff):
+        """Set parameter values from a float array.
+        
+        Args:
+            buff: Array of float values for parameters
+        """
         u.logger.debug("SolutionFusion. Setting parameters")
         self.__data.setValsOfParameters(buff)
 
-    #Receives a list of parameters with, at least, index and value
-    #Updates the parameters of the object with the new values specified in
-    #the list
     def setParameters(self, params):
+        """Update parameters from a list of parameter objects.
+        
+        Args:
+            params: List of parameter objects with at least index and value
+        """
         for p in params:
             self.__data.assign_parameter(p)
 
     def getData(self):
+        """Return the underlying VMEC data object."""
         return self.__data
 
     def checkPressureDerivative(self):
+        """Check if pressure derivative is non-positive across range.
+        
+        Evaluates the derivative of a polynomial (coefficients in parameter
+        values) at each point in the derivative check range. Returns True only
+        if the derivative is <= 0 at all points.
+        
+        Returns:
+            bool: True if derivative is non-positive everywhere, False otherwise
+        """
         values = self.getParametersValues()
-        val = 0.0
-        for v in range(-100, 100):
-            for i in len(values):
-                if (i == 0):
-                    continue
-                val += pow(v, i - 1) * values[i] * i
-        if (val > 0.0):
-            return False
+        for v in DERIVATIVE_CHECK_RANGE:
+            derivative = 0.0
+            for i in range(1, len(values)):
+                derivative += pow(v, i - 1) * values[i] * i
+            if derivative > 0.0:
+                return False
         return True
