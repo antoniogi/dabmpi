@@ -803,7 +803,7 @@ class VMECProcess(object):
                 u.logger.debug("VMECProcess(" + self.__rank +
                                "): Invalid configuration")
                 return False
-            last_line = u.Tail('wout_tj' + self.__rank + '.txt')
+            last_line = u.tail('wout_tj' + self.__rank + '.txt')
             if last_line.find('mgrid') != -1:
                 # Invalid configuration
                 return False
