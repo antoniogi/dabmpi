@@ -1,98 +1,72 @@
-#!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
+#!/usr/bin/env python3
 
-#############################################################################
-#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
-#                                                                           #
-#   Licensed under the Apache License, Version 2.0 (the "License");         #
-#   you may not use this file except in compliance with the License.        #
-#   You may obtain a copy of the License at                                 #
-#                                                                           #
-#       http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                           #
-#   Unless required by applicable law or agreed to in writing, software     #
-#   distributed under the License is distributed on an "AS IS" BASIS,       #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-#   See the License for the specific language governing permissions and     #
-#   limitations under the License.                                          #
-#############################################################################
+from dataclasses import dataclass, field
+from typing import Optional
 
-
-from Parameter import Parameter
+from Parameter import Parameter, ParamType
 import Utils as u
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
-__version__ = ' REVISION:   1.0  -  15-01-2014'
-
-"""
-HISTORY
-    Version 0.1 (12-04-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
-"""
-
+@dataclass
 class ParameterVMEC(Parameter):
-    """
-    Extension of the Parameter class. This class adds some extra attribute
-    to a parameter (if it is fixed (we can fix a parameter at any time), if
-    we have to display the parameter in the VMEC input file, and
-    x & y indexes for parameters that are part of a matrix)
-    """
+    """VMEC-specific parameter with display, fixed, and matrix indices."""
 
-    def __init__(self):
-        Parameter.__init__(self)
-        self.__display = False
-        self.__fixed = False
-        self.__x_index = None
-        self.__y_index = None
+    display: bool = field(default=False)
+    fixed: bool = field(default=False)
 
-    def set_x_index(self, index):
-        try:
-            if index is not None:
-                self.__x_index = int(index)
-        except ValueError:
-            pass
+    x_index: Optional[int] = field(default=None)
+    y_index: Optional[int] = field(default=None)
 
-    def set_y_index(self, index):
-        try:
-            if index is not None:
-                self.__y_index = int(index)
-        except ValueError:
-            pass
+    # ------------------------------------------------------------
+    # Index handling
+    # ------------------------------------------------------------
 
-    def set_display(self, display):
-        self.__display = str(display) == "True"
+    def set_x_index(self, index: Optional[int]) -> None:
+        self.x_index = int(index) if index is not None else None
 
-    def set_fixed(self, fixed):
-        self.__fixed = str(fixed) == "True"
+    def set_y_index(self, index: Optional[int]) -> None:
+        self.y_index = int(index) if index is not None else None
 
-    def get_display(self):
-        return self.__display
+    def get_x_index(self) -> Optional[int]:
+        return self.x_index
 
-    def get_fixed(self):
-        return self.__fixed
+    def get_y_index(self) -> Optional[int]:
+        return self.y_index
 
-    def to_be_modified(self):
-        if self.__display and not self.__fixed:
-            return True
-        return False
+    # ------------------------------------------------------------
+    # Flags
+    # ------------------------------------------------------------
 
-    def get_x_index(self):
-        return self.__x_index
+    def set_display(self, display: bool) -> None:
+        self.display = bool(display)
 
-    def get_y_index(self):
-        return self.__y_index
+    def set_fixed(self, fixed: bool) -> None:
+        self.fixed = bool(fixed)
 
-    def print_value(self):
-        if self.__type == "bool":
-            if self.__value:
-                u.logger.info(str(self.__name) + ' = TRUE')
-            else:
-                u.logger.info(str(self.__name) + ' = FALSE')
+    def get_display(self) -> bool:
+        return self.display
+
+    def get_fixed(self) -> bool:
+        return self.fixed
+
+    def to_be_modified(self) -> bool:
+        return self.display and not self.fixed
+
+    # ------------------------------------------------------------
+    # Output helpers
+    # ------------------------------------------------------------
+
+    def print_value(self) -> None:
+        if self.type == ParamType.BOOL:
+            value_str = "TRUE" if self.value else "FALSE"
         else:
-            u.logger.info(str(self.__name) + ' = ' + str(self.__value))
+            value_str = str(self.value)
 
-    def get_value_and_index(self):
-        if str(self.__type) in ["float", "double"]:
-            return str("%.6E" % float(self.__value))
-        return str(self.__value)
+        u.logger.info(f"{self.name} = {value_str}")
+
+    def get_value_and_index(self) -> str:
+        if self.type == ParamType.FLOAT:
+            return f"{float(self.value):.6E}"
+        if self.type == ParamType.INT:
+            return str(int(self.value))
+        return str(self.value)
