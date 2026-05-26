@@ -33,8 +33,8 @@ import sys
 import math
 import traceback
 from xml.dom import minidom
-import Utils as u
 from ParameterVMEC import ParameterVMEC
+from Parameter import ParamType
 from array import array
 
 import subprocess
@@ -47,13 +47,14 @@ class VMECData (object):
     parameter, specifies the min/max/default values, the gap, the index,...
     It can also create an XML output file with the data it contains
     """
-    def __init__(self):
-        self.__numParams = 0
-        self.__maxRange = 0
-        self.__show_indata = True
-        self.__show_optimum = True
-        self.__show_bootin = True
-        self.__fInput = None
+    def __init__(self, runtime):
+        self._runtime = runtime
+        self._numParams = 0
+        self._maxRange = 0
+        self._show_indata = True
+        self._show_optimum = True
+        self._show_bootin = True
+        self._fInput = None
 
         self.mgrid_file = None
         self.loldout = None
@@ -158,7 +159,7 @@ class VMECData (object):
 
     #returns the number of parameters that can be actually modified
     def getNumParams(self):
-        return self.__numParams
+        return self._numParams
 
     #returns the maximum range(maximum number of values) that a parameter
     #can take. This is the global maximum, meaning that most of the
@@ -166,13 +167,13 @@ class VMECData (object):
     #If param.max_value = 3, and param.min_value=1, and param.gap=1, the
     #range for param is 3 (it can take values 1,2,3)
     def getMaxRange(self):
-        return self.__maxRange
+        return self._maxRange
 
     """
     Returns a list of doubles with the values of the modificable parameters
     """
     def getValsOfParameters(self):
-        buff = array('f', [0]) * self.__numParams
+        buff = array('f', [0]) * self._numParams
         idx = 0
         if (self.delt.to_be_modified()):
             buff[idx] = float(self.delt.get_value())
@@ -430,7 +431,7 @@ class VMECData (object):
     """
 
     def setValsOfParameters(self, buff):
-        u.logger.debug("VMECData. Setting parameters (number: " + str(len(buff)) + ")")
+        self._runtime.logger.debug("VMECData. Setting parameters (number: " + str(len(buff)) + ")")
         idx = 0
         if (self.delt.to_be_modified()):
             self.delt.set_value(buff[idx])
@@ -515,7 +516,7 @@ class VMECData (object):
         for i in range(len(self.rbc)):
             if (self.rbc[i].to_be_modified()):
                 #just testing everything works fine
-                #u.logger.debug ("rbc " + str(i) + " " + str(buff[idx]))
+                #self._runtime.logger.debug ("rbc " + str(i) + " " + str(buff[idx]))
                 self.rbc[i].set_value(buff[idx])
                 idx += 1
         for i in range(len(self.zbc)):
@@ -942,339 +943,134 @@ class VMECData (object):
                 parameters.append(self.ati)
 
         except Exception as e:
-            u.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+            self._runtime.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+            raise
             
-        if (int(self.__numParams) != len(parameters)):
-            u.logger.error("VMECData. Incorrect number of parameters (" + str(self.__numParams) + "--" + str(len(parameters)) + ")")
+        if (int(self._numParams) != len(parameters)):
+            self._runtime.logger.error("VMECData. Incorrect number of parameters (" + str(self._numParams) + "--" + str(len(parameters)) + ")")
         return parameters
 
     """
     Assign a parameter with a new value to an older version of the same parameter
     """
 
+    def _assign_to_list(self, attr_name, pos, parameter):
+        lst = getattr(self, attr_name)
+        if pos >= len(lst):
+            lst.append(parameter)
+        else:
+            lst[pos] = parameter
+        return 1
+
     def assign_parameter(self, parameter):
+        DIRECT_ASSIGNMENTS = {
+            0: "mgrid_file",
+            1: "lfreeb",
+            2: "loldout",
+            3: "lwouttxt",
+            4: "ldiagno",
+            5: "loptim",
+            6: "delt",
+            7: "tcon0",
+            8: "nfp",
+            9: "ncurr",
+            10: "mpol",
+            11: "ntor",
+            12: "nzeta",
+            43: "niter",
+            44: "nstep",
+            45: "nvacskip",
+            46: "gamma",
+            52: "phiedge",
+            53: "bloat",
+            59: "curtor",
+            60: "spres_ped",
+            61: "pres_scale",
+            62: "pmass",
+            83: "piota",
+            105: "pcurr",
+            551: "epsfcn",
+            552: "niter_opt",
+            553: "lreset_opt",
+            554: "lprof_opt",
+            555: "lbmn",
+            556: "lfix_ntor",
+            557: "lsurf_mask",
+            558: "target_aspectratio",
+            559: "target_beta",
+            560: "target_maxcurrent",
+            561: "target_rmax",
+            562: "target_rmin",
+            585: "sigma_aspect",
+            586: "sigma_curv",
+            587: "sigma_beta",
+            588: "sigma_kink",
+            589: "sigma_maxcurrent",
+            590: "sigma_rmax",
+            591: "sigma_rmin",
+            933: "sigma_pedge",
+            934: "lballon_test",
+            935: "bal_zeta0",
+            936: "bal_theta0",
+            937: "bal_xmax",
+            938: "bal_np0",
+            939: "bal_kth",
+            940: "bal_x0",
+            941: "nrh",
+            942: "mbuse",
+            943: "nbuse",
+            944: "zeff1",
+            945: "damp",
+            946: "isymm0",
+            947: "ate",
+            948: "ati",
+        }
+        RANGE_ASSIGNMENTS = [
+            (13, 42, "ns"),
+            (47, 51, "ftol"),
+            (54, 58, "extcur"),
+            (63, 82, "am"),
+            (84, 104, "ai"),
+            (106, 128, "ac"),
+            (129, 139, "raxis"),
+            (140, 150, "zaxis"),
+            (563, 573, "target_iota"),
+            (574, 584, "target_well"),
+            (592, 622, "sigma_iota"),
+            (623, 653, "sigma_vp"),
+            (654, 684, "sigma_bmin"),
+            (685, 715, "sigma_bmax"),
+            (716, 746, "sigma_ripple"),
+            (747, 777, "sigma_jstar0"),
+            (778, 808, "sigma_jstar1"),
+            (809, 839, "sigma_jstar2"),
+            (840, 870, "sigma_jstar3"),
+            (871, 901, "sigma_balloon"),
+            (902, 932, "sigma_pgrad"),
+        ]
         index = parameter.get_index()
-        if (index == 0):
-            self.mgrid_file = parameter
-            return 1
-        if (index == 1):
-            self.lfreeb = parameter
-            return 1
-        if (index == 2):
-            self.loldout = parameter
-            return 1
-        if (index == 3):
-            self.lwouttxt = parameter
-            return 1
-        if (index == 4):
-            self.ldiagno = parameter
-            return 1
-        if (index == 5):
-            self.loptim = parameter
-            return 1
-        if (index == 6):
-            self.delt = parameter
-            return 1
-        if (index == 7):
-            self.tcon0 = parameter
-            return 1
-        if (index == 8):
-            self.nfp = parameter
-            return 1
-        if (index == 9):
-            self.ncurr = parameter
-            return 1
-        if (index == 10):
-            self.mpol = parameter
-            return 1
-        if (index == 11):
-            self.ntor = parameter
-            return 1
-        if (index == 12):
-            self.nzeta = parameter
-            return 1
-        if (index >= 13 and index < 43):
-            if ((index - 13) >= len(self.ns)):
-                self.ns.append(parameter)
-            else:
-                self.ns[index - 13] = parameter
-            return 1
-        if (index == 43):
-            self.niter = parameter
-            return 1
-        if (index == 44):
-            self.nstep = parameter
-            return 1
-        if (index == 45):
-            self.nvacskip = parameter
-            return 1
-        if (index == 46):
-            self.gamma = parameter
-            return 1
-        if (index >= 47 and index <= 51):
-            if ((index - 47) >= len(self.ftol)):
-                self.ftol.append(parameter)
-            else:
-                self.ftol[index - 47] = parameter
-            return 1
-        if (index == 52):
-            self.phiedge = parameter
-            return 1
-        if (index == 53):
-            self.bloat = parameter
-            return 1
-        if (index >= 54 and index <= 58):
-            if ((index - 54) >= len(self.extcur)):
-                self.extcur.append(parameter)
-            else:
-                self.extcur[index - 54] = parameter
-            return 1
-        if (index == 59):
-            self.curtor = parameter
-            return 1
-        if (index == 60):
-            self.spres_ped = parameter
-            return 1
-        if (index == 61):
-            self.pres_scale = parameter
-            return 1
-        if (index == 62):
-            self.pmass = parameter
-            return 1
-        if (index >= 63 and index <= 82):
-            if ((index - 63) >= len(self.am)):
-                self.am.append(parameter)
-            else:
-                self.am[index - 63] = parameter
-            return 1
-        if (index==83):
-            self.piota = parameter
-            return 1
-        if (index >= 84 and index <= 104):
-            if ((index - 84) >= len(self.ai)):
-                self.ai.append(parameter)
-            else:
-                self.ai[index - 84] = parameter
-            return 1
-        if (index==105):
-            self.pcurr = parameter
-            return 1
-        if (index >= 106 and index <= 128):
-            if ((index - 106) >= len(self.ac)):
-                self.ac.append(parameter)
-            else:
-                self.ac[index - 106] = parameter
-            return 1
-        if (index >= 129 and index <= 139):
-            if ((index - 129) >= len(self.raxis)):
-                self.raxis.append(parameter)
-            else:
-                self.raxis[index - 129] = parameter
-            return 1
-        if (index >= 140 and index <= 150):
-            if ((index - 140) >= len(self.zaxis)):
-                self.zaxis.append(parameter)
-            else:
-                self.zaxis[index - 140] = parameter
-            return 1
-        if (index >= 151 and index <= 550):
-            pos = int(math.floor((index - 151) / 2))
-            if ((index - 151) % 2 == 0):
-                if (pos >= len(self.rbc)):
-                    self.rbc.append(parameter)
-                else:
-                    self.rbc[pos] = parameter
-            else:
-                if (pos >= len(self.zbc)):
-                    self.zbc.append(parameter)
-                else:
-                    self.zbc[pos] = parameter
-            return 1
-        if (index == 551):
-            self.epsfcn = parameter
-            return 1
-        if (index == 552):
-            self.niter_opt = parameter
-            return 1
-        if (index == 553):
-            self.lreset_opt = parameter
-            return 1
-        if (index == 554):
-            self.lprof_opt = parameter
-            return 1
-        if (index == 555):
-            self.lbmn = parameter
-            return 1
-        if (index == 556):
-            self.lfix_ntor = parameter
-            return 1
-        if (index == 557):
-            self.lsurf_mask = parameter
-            return 1
-        if (index == 558):
-            self.target_aspectratio = parameter
-            return 1
-        if (index == 559):
-            self.target_beta = parameter
-            return 1
-        if (index == 560):
-            self.target_maxcurrent = parameter
-            return 1
-        if (index == 561):
-            self.target_rmax = parameter
-            return 1
-        if (index == 562):
-            self.target_rmin = parameter
-            return 1
-        if (index >= 563 and index <= 573):
-            if ((index - 563) >= len(self.target_iota)):
-                self.target_iota.append(parameter)
-            else:
-                self.target_iota[index - 563] = parameter
-            return 1
-        if (index >= 574 and index <= 584):
-            if ((index - 574) >= len(self.target_well)):
-                self.target_well.append(parameter)
-            else:
-                self.target_well[index - 574] = parameter
-            return 1
-        if (index == 585):
-            self.sigma_aspect = parameter
-            return 1
-        if (index == 586):
-            self.sigma_curv = parameter
-            return 1
-        if (index == 587):
-            self.sigma_beta = parameter
-            return 1
-        if (index == 588):
-            self.sigma_kink = parameter
-            return 1
-        if (index == 589):
-            self.sigma_maxcurrent = parameter
-            return 1
-        if (index == 590):
-            self.sigma_rmax = parameter
-            return 1
-        if (index == 591):
-            self.sigma_rmin = parameter
-            return 1
-        if (index >= 592 and index <= 622):
-            if ((index - 592) >= len(self.sigma_iota)):
-                self.sigma_iota.append(parameter)
-            else:
-                self.sigma_iota[index - 592] = parameter
-            return 1
-        if (index >= 623 and index <= 653):
-            if ((index - 623) >= len(self.sigma_vp)):
-                self.sigma_vp.append(parameter)
-            else:
-                self.sigma_vp[index - 623] = parameter
-            return 1
-        if (index >= 654 and index <= 684):
-            if ((index - 654) >= len(self.sigma_bmin)):
-                self.sigma_bmin.append(parameter)
-            else:
-                self.sigma_bmin[index - 654] = parameter
-            return 1
-        if (index >= 685 and index <= 715):
-            if ((index - 685) >= len(self.sigma_bmax)):
-                self.sigma_bmax.append(parameter)
-            else:
-                self.sigma_bmax[index - 685] = parameter
-            return 1
-        if (index >= 716 and index <= 746):
-            if ((index - 716) >= len(self.sigma_ripple)):
-                self.sigma_ripple.append(parameter)
-            else:
-                self.sigma_ripple[index - 716] = parameter
-            return 1
-        if (index >= 747 and index <= 777):
-            if ((index - 747) >= len(self.sigma_jstar0)):
-                self.sigma_jstar0.append(parameter)
-            else:
-                self.sigma_jstar0[index - 747] = parameter
-            return 1
-        if (index >= 778 and index <= 808):
-            if ((index - 778) >= len(self.sigma_jstar1)):
-                self.sigma_jstar1.append(parameter)
-            else:
-                self.sigma_jstar1[index - 778] = parameter
-            return 1
-        if (index >= 809 and index <= 839):
-            if ((index - 809) >= len(self.sigma_jstar2)):
-                self.sigma_jstar2.append(parameter)
-            else:
-                self.sigma_jstar2[index - 809] = parameter
-            return 1
-        if (index >= 840 and index <= 870):
-            if ((index - 840) >= len(self.sigma_jstar3)):
-                self.sigma_jstar3.append(parameter)
-            else:
-                self.sigma_jstar3[index - 840] = parameter
-            return 1
-        if (index >= 871 and index <= 901):
-            if ((index - 871) >= len(self.sigma_balloon)):
-                self.sigma_balloon.append(parameter)
-            else:
-                self.sigma_balloon[index - 871] = parameter
-            return 1
-        if (index >= 902 and index <= 932):
-            if ((index - 902) >= len(self.sigma_pgrad)):
-                self.sigma_pgrad.append(parameter)
-            else:
-                self.sigma_pgrad[index - 902] = parameter
-            return 1
-        if (index == 933):
-            self.sigma_pedge = parameter
-            return 1
-        if (index == 934):
-            self.lballon_test = parameter
-            return 1
-        if (index == 935):
-            self.bal_zeta0 = parameter
-            return 1
-        if (index == 936):
-            self.bal_theta0 = parameter
-            return 1
-        if (index == 937):
-            self.bal_xmax = parameter
-            return 1
-        if (index == 938):
-            self.bal_np0 = parameter
-            return 1
-        if (index == 939):
-            self.bal_kth = parameter
-            return 1
-        if (index == 940):
-            self.bal_x0 = parameter
-            return 1
-        if (index == 941):
-            self.nrh = parameter
-            return 1
-        if (index == 942):
-            self.mbuse = parameter
-            return 1
-        if (index == 943):
-            self.nbuse = parameter
-            return 1
-        if (index == 944):
-            self.zeff1 = parameter
-            return 1
-        if (index == 945):
-            self.damp = parameter
-            return 1
-        if (index == 946):
-            self.isymm0 = parameter
-            return 1
-        if (index == 947):
-            self.ate = parameter
-            return 1
-        if (index == 948):
-            self.ati = parameter
-            return 1
-        u.logger.warning("Unassigned element with index: " + str(index))
+
+        # Direct assignments
+        if attr := DIRECT_ASSIGNMENTS.get(index):
+            setattr(self, attr, parameter)
+            return 1
+
+        # Standard ranged assignments
+        for start, end, target in RANGE_ASSIGNMENTS:
+            if start <= index <= end:
+                return self._assign_to_list(target, index - start, parameter)
+
+        # Special alternating rbc/zbc case
+        if 151 <= index <= 550:
+            offset = index - 151
+            target = "rbc" if offset % 2 == 0 else "zbc"
+            return self._assign_to_list(target, offset // 2, parameter)
+
+        self._runtime.logger.warning(
+            f"Unassigned element with index: {index}"
+        )
         return -1
+
 
     """
     Method that reads the xml input file. Puts into memory all the data
@@ -1293,529 +1089,328 @@ class VMECData (object):
                 if namelists.nodeType == namelists.ELEMENT_NODE:
                     if (namelists.attributes["display"].value == "False"):
                         if (namelists.localName == "indata"):
-                            self.__show_indata = False
+                            self._show_indata = False
                         if (namelists.localName == "optimum"):
-                            self.__show_optimum = False
+                            self._show_optimum = False
                         if (namelists.localName == "bootin"):
-                            self.__show_bootin = False
+                            self._show_bootin = False
                     for node in namelists.childNodes:
                         if node.nodeType == node.ELEMENT_NODE:
-                            c = ParameterVMEC()
+                            c = ParameterVMEC(self._runtime)
                             for node_param in node.childNodes:
                                 if (node_param.nodeType == node_param.ELEMENT_NODE):
-                                    if (node_param.localName == "display"):
-                                        c.set_display(node_param.firstChild.data)
-                                    if (node_param.localName == "fixed"):
-                                        c.set_fixed(node_param.firstChild.data)
-                                    if (node_param.localName == "type"):
-                                        c.set_type(node_param.firstChild.data)
-                                    if (node_param.localName == "value"):
-                                        c.set_value(node_param.firstChild.data)
-                                        try:
-                                            x_index = node_param.attributes["x"].value
-                                            c.set_x_index(x_index)
-                                            y_index = node_param.attributes["y"].value
-                                            c.set_y_index(y_index)
-                                        except:
-                                            pass
-                                    if (node_param.localName == "min_value"):
-                                        c.set_min_value(node_param.firstChild.data)
-                                    if (node_param.localName == "max_value"):
-                                        c.set_max_value(node_param.firstChild.data)
-                                    if (node_param.localName == "index"):
-                                        c.set_index(node_param.firstChild.data)
-                                    if (node_param.localName == "name"):
-                                        c.set_name(node_param.firstChild.data)
-                                    if (node_param.localName == "gap"):
-                                        c.set_gap(node_param.firstChild.data)
+                                            name = node_param.localName
+                                            # helper to safely read text
+                                            text = None
+                                            if node_param.firstChild is not None:
+                                                text = node_param.firstChild.data
+
+                                            if name == "display" and text is not None:
+                                                c.set_display(text)
+
+                                            if name == "fixed" and text is not None:
+                                                c.set_fixed(text)
+
+                                            if name == "type" and text is not None:
+                                                t = text.strip().lower()
+                                                mapping = {
+                                                    "float": ParamType.FLOAT,
+                                                    "double": ParamType.FLOAT,
+                                                    "int": ParamType.INT,
+                                                    "bool": ParamType.BOOL,
+                                                    "string": ParamType.STRING,
+                                                }
+                                                c.set_type(mapping.get(t, ParamType.STRING))
+
+                                            if name == "value" and text is not None:
+                                                c.set_value(text)
+                                                try:
+                                                    if node_param.hasAttribute("x"):
+                                                        x_index = node_param.getAttribute("x")
+                                                        c.set_x_index(x_index)
+                                                    if node_param.hasAttribute("y"):
+                                                        y_index = node_param.getAttribute("y")
+                                                        c.set_y_index(y_index)
+                                                except Exception:
+                                                    pass
+
+                                            if name == "min_value" and text is not None:
+                                                c.set_min_value(text)
+
+                                            if name == "max_value" and text is not None:
+                                                c.set_max_value(text)
+
+                                            if name == "index" and text is not None:
+                                                c.set_index(text)
+
+                                            if name == "name" and text is not None:
+                                                c.set_name(text)
+
+                                            if name == "gap" and text is not None:
+                                                c.set_gap(text)
                             try:
                                 self.assign_parameter(c)
                                 if (c.to_be_modified()):
-                                    self.__numParams += 1
-                                    values = 1 + int(round((c.get_max_value() - c.get_min_value())
-                                            / c.get_gap()))
-                                    self.__maxRange = max(values, self.__maxRange)
+                                    self._numParams += 1
+                                    values = 1 + int(round((c.get_max_value() - c.get_min_value()) / c.get_gap()))
+                                    self._maxRange = max(values, self._maxRange)
                             except Exception as e:
                                 traceback.print_tb(sys.exc_info()[2])
-                                u.logger.warning("Problem calculating max range: " + str(e))
+                                self._runtime.logger.warning("Problem calculating max range: " + str(e))
                                 pass
         except Exception as e:
-            u.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). Problem reading input xml file: " + str(e))
+            self._runtime.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). Problem reading input xml file: " + str(e))
             traceback.print_tb(sys.exc_info()[2])
             sys.exit(111)
         return
 
-    """
-    Writes the /indata section of VMEC's input file
-    Argument:
-      - fInput: file struct that will store the input
-    """
+    def _write_bool(self, f, name, param):
+        if param.get_display():
+            value = "T" if param.get_value() else "F"
+            f.write(f"  {name} = {value}\n")
 
-    def __write_indata(self, fInput):
+
+    def _write_scalar(self, f, name, param, fmt="{}"):
+        if param.get_display():
+            value = fmt.format(param.get_value())
+            f.write(f"  {name} = {value}\n")
+
+
+    def _write_array(
+        self,
+        f,
+        name,
+        params,
+        fmt="{:.4E}",
+        per_line=5,
+        header_suffix=" = ",
+    ):
+        displayed = [p for p in params if p.get_display()]
+
+        if not displayed:
+            return
+
+        values = [fmt.format(float(p.get_value())) for p in displayed]
+
+        lines = [
+            " ".join(values[i:i + per_line])
+            for i in range(0, len(values), per_line)
+        ]
+
+        f.write(f"  {name}{header_suffix}")
+        f.write("\n".join(lines))
+        f.write("\n")
+
+
+    def _write_group(self, f, params):
+        """
+        params:
+            [
+                ("NAME", parameter, format),
+                ...
+            ]
+        """
+        if not all(param.get_display() for _, param, _ in params):
+            return
+        values = [
+            f"{name}={fmt.format(param.get_value())}"
+            for name, param, fmt in params
+        ]
+        f.write(f"  {', '.join(values)}\n")
+
+    def __write_indata(self, f_input):
         try:
-            fInput.write("&INDATA\n")
-            fInput.write("  MGRID_FILE = " +
-                            self.mgrid_file.get_value() + '\n')
-            if (self.lfreeb.get_display()):
-                if (self.lfreeb.get_value() == True):
-                    fInput.write("  LFREEB = T\n")
-                else:
-                    fInput.write("  LFREEB = F\n")
-            if (self.loldout.get_display()):
-                if (self.loldout.get_value() == True):
-                    fInput.write("  LOLDOUT = T\n")
-                else:
-                    fInput.write("  LOLDOUT = F\n")
-            if (self.lwouttxt.get_display()):
-                if (self.lwouttxt.get_value() == True):
-                    fInput.write("  LWOUTTXT = T\n")
-                else:
-                    fInput.write("  LWOUTTXT = F\n")
-            if (self.ldiagno.get_display()):
-                if (self.ldiagno.get_value() == True):
-                    fInput.write("  LDIAGNO = T\n")
-                else:
-                    fInput.write("  LDIAGNO = F\n")
-            if (self.loptim.get_display()):
-                if (self.loptim.get_value() == True):
-                    fInput.write("  LOPTIM =  T\n")
-                else:
-                    fInput.write("  LOPTIM =  F\n")
-            if (self.delt.get_display()):
-                fInput.write("  DELT = " + str(self.delt.get_value()) + "\n")
-            if (self.tcon0.get_display()):
-                fInput.write("  TCON0 = " + str(self.tcon0.get_value()) + "\n")
-            if (self.nfp.get_display()):
-                fInput.write("  NFP = " + str(self.nfp.get_value()) + "\n")
-            if (self.ncurr.get_display()):
-                fInput.write("  NCURR = " + str(
-                             int(self.ncurr.get_value())) + "\n")
-            if (self.mpol.get_display() and self.ntor.get_display()):
-                fInput.write("  MPOL = " + str(self.mpol.get_value()) +
-                             "  NTOR = " + str(self.ntor.get_value()) + "\n")
-            if (self.nzeta.get_display()):
-                fInput.write("  NZETA = " + str(self.nzeta.get_value()) + "\n")
-            if (self.ns[0].get_display()):
-                temptxt = "  NS_ARRAY ="
-                cont = 0
-                for i in self.ns:
-                    if (i.get_display()):
-                        if (cont % 5 == 0 and cont > 0):
-                            temptxt = temptxt + "\n"
-                        cont = cont + 1
-                        temptxt = temptxt + "  " + str(i.get_value())
-                fInput.write(temptxt + "\n")
-            if (self.niter.get_display()):
-                fInput.write("  NITER = " + str(
-                                           self.niter.get_value()) + "\n")
-            if (self.nstep.get_display()):
-                fInput.write("  NSTEP = " + str(
-                                           self.nstep.get_value()) + "\n")
-            if (self.nvacskip.get_display()):
-                fInput.write("  NVACSKIP = " + str(
-                                        self.nvacskip.get_value()) + "\n")
-            if (self.gamma.get_display()):
-                fInput.write("  GAMMA = " + str(
-                                "%E" % float(self.gamma.get_value())) + "\n")
+            f_input.write("&INDATA\n")
 
-            if (self.ftol[0].get_display()):
-                temptxt = "  FTOL_ARRAY = "
-                for i in self.ftol:
-                    if (i.get_display()):
-                        temptxt = temptxt + "  " + str(
-                                        "%E" % float(i.get_value()))
-                fInput.write(temptxt + "\n")
+            self._write_scalar(
+                f_input,
+                "MGRID_FILE",
+                self.mgrid_file,
+            )
 
-            if (self.phiedge.get_display()):
-                fInput.write("  PHIEDGE =" + str(
-                                "%E" % float(self.phiedge.get_value())) + "\n")
-            if (self.bloat.get_display()):
-                fInput.write("  BLOAT =" + str(
-                                "%E" % float(self.bloat.get_value())) + "\n")
+            for name, param in [
+                ("LFREEB", self.lfreeb),
+                ("LOLDOUT", self.loldout),
+                ("LWOUTTXT", self.lwouttxt),
+                ("LDIAGNO", self.ldiagno),
+                ("LOPTIM", self.loptim),
+            ]:
+                self._write_bool(f_input, name, param)
 
-            if (self.extcur[0].get_display()):
-                temptxt = "  EXTCUR( 1) = "
-                cont = 0
-                for i in self.extcur:
-                    if (i.get_display()):
-                        if (cont % 5 == 0 and cont > 0):
-                            temptxt = temptxt + "\n"
-                    cont = cont + 1
-                    temptxt = temptxt + "  " + str(
-                              "%E" % float(i.get_value()))
-                fInput.write(temptxt + "\n")
+            scalar_fields = [
+                ("DELT", self.delt, "{}"),
+                ("TCON0", self.tcon0, "{}"),
+                ("NFP", self.nfp, "{}"),
+                ("NCURR", self.ncurr, "{:d}"),
+                ("NZETA", self.nzeta, "{}"),
+                ("NITER", self.niter, "{}"),
+                ("NSTEP", self.nstep, "{}"),
+                ("NVACSKIP", self.nvacskip, "{}"),
+                ("GAMMA", self.gamma, "{:.6E}"),
+                ("PHIEDGE", self.phiedge, "{:.6E}"),
+                ("BLOAT", self.bloat, "{:.6E}"),
+                ("CURTOR", self.curtor, "{}"),
+                ("SPRES_PED", self.spres_ped, "{:.6E}"),
+                ("PRES_SCALE", self.pres_scale, "{:.6E}"),
+                ("PMASS_TYPE", self.pmass, "{}"),
+                ("PIOTA_TYPE", self.piota, "{}"),
+                ("PCURR_TYPE", self.pcurr, "{}"),
+            ]
 
-            if (self.curtor.get_display()):
-                fInput.write("  CURTOR = " + str(
-                                 self.curtor.get_value()) + "\n")
-            if (self.spres_ped.get_display()):
-                fInput.write("  SPRES_PED = " + str(
-                    "%E" % float(self.spres_ped.get_value())) + "\n")
-            if (self.pres_scale.get_display()):
-                fInput.write("  PRES_SCALE = " + str(
-                    "%E" % float(self.pres_scale.get_value())) + "\n")
-            if (self.pmass.get_display()):
-                fInput.write("  PMASS_TYPE = " + self.pmass.get_value() + "\n")
-            display = False
-            for i in self.am:
-                if (i.get_display()):
-                    display = True
-                    break
-            if (display):
-                temptxt = "  AM = "
-                cont = 0
-                for i in self.am:
-                    if (i.get_display()):
-                        if (cont % 5 == 0 and cont > 0):
-                            temptxt = temptxt + "\n"
-                        cont = cont + 1
-                        temptxt = temptxt + "  " + str(
-                                  "%E" % float(i.get_value()))
-                fInput.write(temptxt + "\n")
-            if (self.piota.get_display()):
-                fInput.write("  PIOTA_TYPE = " + self.piota.get_value() + "\n")
-                            
-            display = False
-            for i in self.ai:
-                if (i.get_display()):
-                    display = True
-                    break
-            if (display):
-                temptxt = "  AI = "
-                cont = 0
-                for i in self.ai:
-                    if (i.get_display()):
-                        if (cont % 5 == 0 and cont > 0):
-                            temptxt = temptxt + "\n"
-                        cont = cont + 1
-                        temptxt = temptxt + "  " + str("%E" % float(i.get_value()))
-                fInput.write(temptxt + "\n")
-            if (self.pcurr.get_display()):
-                fInput.write("  PCURR_TYPE = " + self.pcurr.get_value() + "\n")
-                            
-            display = False
-            for i in self.ac:
-                if (i.get_display()):
-                    display = True
-                    break
-            if (display):
-                temptxt = "  AC = "
-                cont = 0
-                for i in self.ac:
-                    if (i.get_display()):
-                        if (cont % 5 == 0 and cont > 0):
-                            temptxt = temptxt + "\n"
-                        cont = cont + 1
-                        temptxt = temptxt + "  " + str("%E" % float(i.get_value()))
-                fInput.write(temptxt + "\n")
+            for name, param, fmt in scalar_fields:
+                self._write_scalar(f_input, name, param, fmt)
 
-            temptxt = "  RAXIS = "
-            cont = 0
-            for i in self.raxis:
-                if (i.get_display()):
-                    if cont > 0:
-                        if (cont % 5 == 0):
-                            temptxt = temptxt + "\n" + str("%E" % i.get_value())
-                        else:
-                            temptxt = temptxt + "\t" + str("%E" % i.get_value())
-                    else:
-                        temptxt = temptxt + str("%E" % i.get_value())
-                    cont = cont + 1
-            fInput.write(temptxt + "\n")
+            if self.mpol.get_display() and self.ntor.get_display():
+                f_input.write(
+                    f"  MPOL = {self.mpol.get_value()}  "
+                    f"NTOR = {self.ntor.get_value()}\n"
+                )
 
-            temptxt = "  ZAXIS = "
-            cont = 0
-            for i in self.zaxis:
-                if (i.get_display()):
-                    if cont > 0:
-                        if (cont % 5 == 0):
-                            temptxt = temptxt + "\n" + str(
-                            "%E" % i.get_value())
-                        else:
-                            temptxt = temptxt + "\t" + str(
-                            "%E" % i.get_value())
-                    else:
-                        temptxt = temptxt + str("%E" % i.get_value())
-                    cont = cont + 1
-            fInput.write(temptxt + "\n")
+            self._write_array(
+                f_input,
+                "NS_ARRAY",
+                self.ns,
+                fmt="{}",
+            )
 
-            index = 0
-            for i in self.rbc:
-                j = self.zbc[index]
-                index = index + 1
-                if (i.get_display()):
-                    temptxt = "  RBC("
-                    if (i.get_x_index() > -10):
-                        temptxt = temptxt + ' '
-                    if (i.get_x_index() < 10) and (i.get_x_index() >= 0):
-                        temptxt = temptxt + ' '
-                    temptxt = temptxt + str(i.get_x_index()) + ',' + str(
-                                i.get_y_index()) + ') =  '
-                    if (float(i.get_value()) >= 0):
-                        temptxt = temptxt + ' '
-                    temptxt = temptxt + str(
-                                "%.4E" % float(i.get_value())) + "     ZBS("
-                    if (j.get_x_index() > -10):
-                        temptxt = temptxt + ' '
-                    if (j.get_x_index() < 10) and (j.get_x_index() >= 0):
-                        temptxt = temptxt + ' '
-                    temptxt = temptxt + str(j.get_x_index()) + ',' + str(
-                              j.get_y_index()) + ') =  '
-                    if (float(j.get_value()) >= 0):
-                        temptxt = temptxt + ' '
-                    temptxt = temptxt + str("%.4E" % float(j.get_value()))
-                    fInput.write(temptxt + "\n")
-            fInput.write('/\n')
-        except Exception as e:
-            u.logger.warning("Error writting indata:" +
-                str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
-            sys.exit(111)
-            pass
-        return True
+            self._write_array(
+                f_input,
+                "FTOL_ARRAY",
+                self.ftol,
+                fmt="{:.6E}",
+            )
 
-    """
-    Writes the /optimum section of VMEC's input file
-    Argument:
-      - fInput: file struct that will store the input
-    """
+            self._write_array(
+                f_input,
+                "EXTCUR( 1)",
+                self.extcur,
+                fmt="{:.6E}",
+            )
 
-    def __write_optimum(self, fInput):
+            self._write_array(
+                f_input,
+                "AM",
+                self.am,
+            )
+
+            self._write_array(
+                f_input,
+                "AI",
+                self.ai,
+            )
+
+            self._write_array(
+                f_input,
+                "AC",
+                self.ac,
+            )
+
+            self._write_array(
+                f_input,
+                "RAXIS",
+                self.raxis,
+            )
+
+            self._write_array(
+                f_input,
+                "ZAXIS",
+                self.zaxis,
+            )
+
+            for rbc, zbs in zip(self.rbc, self.zbc):
+                if not rbc.get_display():
+                    continue
+
+                f_input.write(
+                    f"  RBC({rbc.get_x_index():3d},"
+                    f"{rbc.get_y_index()}) = "
+                    f"{float(rbc.get_value()): .4E}     "
+                    f"ZBS({zbs.get_x_index():3d},"
+                    f"{zbs.get_y_index()}) = "
+                    f"{float(zbs.get_value()): .4E}\n"
+                )
+
+            f_input.write("/\n")
+
+        except Exception:
+            self._runtime.logger.exception(
+                "Error writing INDATA section"
+            )
+            raise
+
+
+    def __write_optimum(self, f_input):
         try:
-            fInput.write("\n/\n&OPTIMUM\n")
-            if (self.epsfcn.get_display()):
-                fInput.write("  EPSFCN = " + str("%E" %
-                        float(self.epsfcn.get_value())) + "\n")
-            if (self.niter_opt.get_display()):
-                fInput.write("  NITER_OPT = " + str(int(
-                        self.niter_opt.get_value())) + "\n")
-            if (self.lreset_opt.get_display()):
-                if (self.lreset_opt.get_value() == True):
-                    fInput.write("  LRESET_OPT = T\n")
-                else:
-                    fInput.write("  LRESET_OPT = F\n")
-            if (self.lprof_opt.get_display()):
-                if (self.lprof_opt.get_value() == True):
-                    fInput.write("  LPROF_OPT = T\n")
-                else:
-                    fInput.write("  LPROF_OPT = F\n")
-            if (self.lbmn.get_display()):
-                if (self.lbmn.get_value() == True):
-                    fInput.write("  LBMN = T\n")
-                else:
-                    fInput.write("  LBMN = F\n")
-            if (self.lfix_ntor.get_display()):
-                fInput.write("  LFIX_NTOR = " + str(
-                        self.lfix_ntor.get_value()) + "\n")
+            f_input.write("\n/\n&OPTIMUM\n")
 
-            if (self.lsurf_mask.get_display()):
-                fInput.write("  LFIX_NTOR = " + str(
-                        self.lsurf_mask.get_value()) + "\n")
+            for name, param in [
+                ("LRESET_OPT", self.lreset_opt),
+                ("LPROF_OPT", self.lprof_opt),
+                ("LBMN", self.lbmn),
+                ("LBALLOON_TEST", self.lballon_test),
+            ]:
+                self._write_bool(f_input, name, param)
 
-            if (self.target_aspectratio.get_display()):
-                fInput.write("  TARGET_ASPECTRATIO = " + str(
-                        self.target_aspectratio.get_value()) + "\n")
-            if (self.target_beta.get_display()):
-                fInput.write("  TARGET_BETA = " + str("%.4E"
-                        % float(self.target_beta.get_value())) + "\n")
-            if (self.target_maxcurrent.get_display()):
-                fInput.write("  TARGET_MAXCURRENT = " + str(
-                        self.target_maxcurrent.get_value()) + "\n")
-            if (self.target_rmax.get_display()):
-                fInput.write("  TARGET_RMAX = " + str(
-                        self.target_rmax.get_value()) + "\n")
-            if (self.target_rmin.get_display()):
-                fInput.write("  TARGET_RMIN = " + str(
-                        self.target_rmin.get_value()) + "\n")
+            scalar_fields = [
+                ("EPSFCN", self.epsfcn, "{:.6E}"),
+                ("NITER_OPT", self.niter_opt, "{:d}"),
+                ("LFIX_NTOR", self.lfix_ntor, "{}"),
+                ("LSURF_MASK", self.lsurf_mask, "{}"),
+                ("TARGET_ASPECTRATIO", self.target_aspectratio, "{}"),
+                ("TARGET_BETA", self.target_beta, "{:.4E}"),
+                ("TARGET_MAXCURRENT", self.target_maxcurrent, "{}"),
+                ("TARGET_RMAX", self.target_rmax, "{}"),
+                ("TARGET_RMIN", self.target_rmin, "{}"),
+                ("SIGMA_ASPECT", self.sigma_aspect, "{}"),
+                ("SIGMA_CURV", self.sigma_curv, "{}"),
+                ("SIGMA_BETA", self.sigma_beta, "{:.4E}"),
+                ("SIGMA_KINK", self.sigma_kink, "{:.4E}"),
+                ("SIGMA_MAXCURRENT", self.sigma_maxcurrent, "{:.4E}"),
+                ("SIGMA_RMAX", self.sigma_rmax, "{:.4E}"),
+                ("SIGMA_RMIN", self.sigma_rmin, "{:.4E}"),
+                ("SIGMA_PEDGE", self.sigma_pedge, "{:.4E}"),
+                ("BAL_ZETA0", self.bal_zeta0, "{:.4E}"),
+                ("BAL_THETA0", self.bal_theta0, "{:.4E}"),
+                ("BAL_XMAX", self.bal_xmax, "{:.4E}"),
+                ("BAL_NP0", self.bal_np0, "{:d}"),
+                ("BAL_KTH", self.bal_kth, "{:d}"),
+                ("BAL_X0", self.bal_x0, "{:.4E}"),
+            ]
 
-            temptxt = "  TARGET_IOTA = "
-            cont = 0
-            for i in self.target_iota:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
+            for name, param, fmt in scalar_fields:
+                self._write_scalar(f_input, name, param, fmt)
 
-            temptxt = "  TARGET_WELL = "
-            cont = 0
-            for i in self.target_well:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
+            array_fields = [
+                ("TARGET_IOTA", self.target_iota, "{:.4E}", 5),
+                ("TARGET_WELL", self.target_well, "{:.4E}", 5),
+                ("SIGMA_IOTA", self.sigma_iota, "{:.4E}", 5),
+                ("SIGMA_VP", self.sigma_vp, "{:.4E}", 5),
+                ("SIGMA_BMIN", self.sigma_bmin, "{:.4E}", 5),
+                ("SIGMA_BMAX", self.sigma_bmax, "{:.4E}", 5),
+                ("SIGMA_RIPPLE", self.sigma_ripple, "{:.4E}", 5),
+                ("SIGMA_JSTAR(1,1)", self.sigma_jstar0, "{:.3E}", 8),
+                ("SIGMA_JSTAR(1,2)", self.sigma_jstar1, "{:.3E}", 8),
+                ("SIGMA_JSTAR(1,3)", self.sigma_jstar2, "{:.3E}", 8),
+                ("SIGMA_JSTAR(1,4)", self.sigma_jstar3, "{:.3E}", 8),
+                ("SIGMA_BALLOON", self.sigma_balloon, "{:.3E}", 8),
+                ("SIGMA_PGRAD", self.sigma_pgrad, "{:.3E}", 8),
+            ]
 
-            if (self.sigma_aspect.get_display()):
-                fInput.write("  SIGMA_ASPECT = " + str(
-                self.sigma_aspect.get_value()) + "\n")
-            if (self.sigma_curv.get_display()):
-                fInput.write("  SIGMA_CURV = " + str(
-                self.sigma_curv.get_value()) + "\n")
-            if (self.sigma_beta.get_display()):
-                fInput.write("  SIGMA_BETA = " + str(
-                "%E" % float(self.sigma_beta.get_value())) + "\n")
-            if (self.sigma_kink.get_display()):
-                fInput.write("  SIGMA_KINK = " + str(
-                "%E" % float(self.sigma_kink.get_value())) + "\n")
-            if (self.sigma_maxcurrent.get_display()):
-                fInput.write("  SIGMA_MAXCURRENT = " + str(
-                "%E" % float(self.sigma_maxcurrent.get_value())) + "\n")
-            if (self.sigma_rmax.get_display()):
-                fInput.write("  SIGMA_RMAX = " + str(
-                "%E" % float(self.sigma_rmax.get_value())) + "\n")
-            if (self.sigma_rmin.get_display()):
-                fInput.write("  SIGMA_RMIN = " + str(
-                "%E" % float(self.sigma_rmin.get_value())) + "\n")
+            for name, params, fmt, per_line in array_fields:
+                self._write_array(
+                    f_input,
+                    name,
+                    params,
+                    fmt=fmt,
+                    per_line=per_line,
+                    header_suffix=" =\n",
+                )
 
-            temptxt = "  SIGMA_IOTA = "
-            cont = 0
-            for i in self.sigma_iota:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            temptxt = "  SIGMA_VP = "
-            cont = 0
-            for i in self.sigma_vp:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            temptxt = "  SIGMA_BMIN = "
-            cont = 0
-            for i in self.sigma_bmin:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            temptxt = "  SIGMA_BMAX = "
-            cont = 0
-            for i in self.sigma_bmax:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            temptxt = "  SIGMA_RIPPLE = "
-            cont = 0
-            for i in self.sigma_ripple:
-                if (i.get_display()):
-                    if (cont % 5 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.4E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            cont = 0
-            temptxt = ""
-            fInput.write("  SIGMA_JSTAR(1,1) =\n")
-            for i in self.sigma_jstar0:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            cont = 0
-            temptxt = ""
-            fInput.write("  SIGMA_JSTAR(1,2) =\n")
-            for i in self.sigma_jstar1:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            cont = 0
-            temptxt = ""
-            fInput.write("  SIGMA_JSTAR(1,3) =\n")
-            for i in self.sigma_jstar2:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            cont = 0
-            temptxt = ""
-            fInput.write("  SIGMA_JSTAR(1,4) =\n")
-            for i in self.sigma_jstar3:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            fInput.write("  SIGMA_BALLOON  =\n")
-            cont = 0
-            temptxt = ""
-            for i in self.sigma_balloon:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            fInput.write("  SIGMA_PGRAD  =\n")
-            cont = 0
-            temptxt = ""
-            for i in self.sigma_pgrad:
-                if (i.get_display()):
-                    if (cont % 8 == 0 and cont > 0):
-                        temptxt = temptxt + "\n"
-                    temptxt = temptxt + str("%.3E" % float(i.get_value())) + " "
-                    cont += 1
-            fInput.write(temptxt + "\n")
-
-            if (self.sigma_pedge.get_display()):
-                fInput.write("  SIGMA_PEDGE = " + (str("%E" %
-                        float(self.sigma_pedge.get_value())) + "\n"))
-            if (self.lballon_test.get_display()):
-                if (self.lballon_test.get_value() == True):
-                    fInput.write("  LBALLOON_TEST = T\n")
-                else:
-                    fInput.write("  LBALLOON_TEST = F\n")
-            if (self.bal_zeta0.get_display()):
-                fInput.write("  BAL_ZETA0 = " + (str("%E" %
-                        float(self.bal_zeta0.get_value())) + "\n"))
-            if (self.bal_theta0.get_display()):
-                fInput.write("  BAL_THETA0 = " + (str("%E" %
-                        float(self.bal_theta0.get_value())) + "\n"))
-            if (self.bal_xmax.get_display()):
-                fInput.write("  BAL_XMAX = " + (str("%E" %
-                        float(self.bal_xmax.get_value())) + "\n"))
-            if (self.bal_np0.get_display()):
-                fInput.write("  BAL_NP0 = " +
-                        str(int(self.bal_np0.get_value())) + "\n")
-            if (self.bal_kth.get_display()):
-                fInput.write("  BAL_KTH = " +
-                        str(int(self.bal_kth.get_value())) + "\n")
-            if (self.bal_x0.get_display()):
-                fInput.write("  BAL_X0 = " +
-                        str("%E" % float(self.bal_x0.get_value())) + "\n")
-        except Exception as e:
-            u.logger.warning("Error writting optimum " +
-                    str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
-            pass
-        return True
+        except Exception:
+            self._runtime.logger.exception(
+                "Error writing OPTIMUM section"
+            )
+            raise
 
     """
     Writes the /bootin section of VMEC's input file
@@ -1823,55 +1418,60 @@ class VMECData (object):
       - fInput: file struct that will store the input
     """
 
-    def __write_bootin(self, fInput):
+    def __write_bootin(self, f_input):
         try:
-            fInput.write("/\n&BOOTIN\n")
-            if (self.nrh.get_display() and
-                self.mbuse.get_display() and
-                self.nbuse.get_display() and
-                self.zeff1.get_display()):
-                fInput.write("  NRHO=" + str(self.nrh.get_value()) +
-                ", MBUSE=" + str(self.mbuse.get_value()) + ", NBUSE=" +
-                str(self.nbuse.get_value()) + ", ZEFF1=" +
-                str(self.zeff1.get_value()) + ", \n")
-
-            if (self.damp.get_display() and
-            self.isymm0.get_display() and
-            self.ate.get_display()):
-                fInput.write("  DAMP=" + str(self.damp.get_value()) +
-                ", ISYMM0=" + str(self.isymm0.get_value()) + ", ATE=" +
-                str(self.ate.get_value()) + "\n")
-
-            if (self.ati.get_display()):
-                fInput.write("  ATI=" + str(self.ati.get_value()) + "\n")
-            fInput.write("/\n \n")
-        except Exception as e:
-            u.logger.warning("Error writting booting " + str(e) +
-            " line: " + str(sys.exc_info()[2].tb_lineno))
-            pass
-        return True
+            f_input.write("/\n&BOOTIN\n")
+            self._write_group(
+                f_input,
+                [
+                    ("NRHO", self.nrh, "{}"),
+                    ("MBUSE", self.mbuse, "{}"),
+                    ("NBUSE", self.nbuse, "{}"),
+                    ("ZEFF1", self.zeff1, "{}"),
+                ],
+            )
+            self._write_group(
+                f_input,
+                [
+                    ("DAMP", self.damp, "{}"),
+                    ("ISYMM0", self.isymm0, "{}"),
+                    ("ATE", self.ate, "{}"),
+                ],
+            )
+            self._write_scalar(
+                f_input,
+                "ATI",
+                self.ati,
+            )
+            f_input.write("/\n\n")
+        except Exception:
+            self._runtime.logger.exception(
+                "Error writing BOOTIN section"
+            )
+            raise
 
     """
     Main method for creating the input file
     """
 
-    def create_input_file(self, filename):
-        try:
-            try:
-                subprocess.call(['touch', filename])
-            except:
-                pass
-            fInput = open(filename, 'w')
-            u.logger.debug("Worker " + str(u.rank) + " creating file " + filename)
-
-            if (self.__show_indata):
-                self.__write_indata(fInput)
-            if (self.__show_optimum):
-                self.__write_optimum(fInput)
-            if (self.__show_bootin):
-                self.__write_bootin(fInput)
-            fInput.close()
-        except Exception as e:
-            u.logger.warning("When creating input file (" + str(u.rank) + "): " + str(e))
-            return False
+def create_input_file(self, filename):
+    try:
+        self._runtime.logger.debug(
+            f"Worker {self._comms.rank} creating file {filename}"
+        )
+        with open(filename, "w", encoding="utf-8") as f_input:
+            writers = [
+                (self._show_indata, self._write_indata),
+                (self._show_optimum, self._write_optimum),
+                (self._show_bootin, self._write_bootin),
+            ]
+            for enabled, writer in writers:
+                if enabled:
+                    writer(f_input)
         return True
+    except Exception:
+        self._runtime.logger.exception(
+            f"Error creating input file "
+            f"(worker {self._comms.rank}): {filename}"
+        )
+        return False

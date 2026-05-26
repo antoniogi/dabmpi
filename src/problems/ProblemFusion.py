@@ -17,10 +17,9 @@
 #   limitations under the License.                                          #
 #############################################################################
 
-import sys
-from ProblemBase import ProblemBase
+import traceback
+from problems.ProblemBase import ProblemBase
 from VMECProcess import VMECProcess
-import Utils as u
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
@@ -43,13 +42,18 @@ The solve method will use the information to actually solve the instance
 
 class ProblemFusion (ProblemBase):
 
-    def __init__(self):
+    def __init__(self, runtime, comms):
         try:
-            ProblemBase.__init__(self)
-            self.__vmec = VMECProcess(u.cfile)
+            super().__init__(runtime, comms)
+            self.__vmec = VMECProcess(runtime, comms)
+
         except Exception as e:
-            u.logger.error("ProblemFusion (" + sys.exc_info()[2].tb_lineno +
-                            ") " + str(e))
+            tb = traceback.extract_tb(e.__traceback__)
+            line = tb[-1].lineno
+
+            self._runtime.logger.error(
+                f"ProblemFusion ({line}) {e}"
+            )
 
     #Creates a input.tj input file for vmec
     def create_input_file(self, solution):
@@ -57,7 +61,7 @@ class ProblemFusion (ProblemBase):
             if not self.__vmec.create_input_file(solution):
                 return False
         except Exception as e:
-            u.logger.error("ProblemFusion, when creating input file: " +
+            self._runtime.logger.error("ProblemFusion, when creating input file: " +
                             str(e))
             return False
         return True
@@ -67,16 +71,20 @@ class ProblemFusion (ProblemBase):
     def execute_configuration(self):
         return self.__vmec.execute_configuration()
 
-    def extractSolution(self):
-        u.logger.debug("Extract solution fusion")
+    def extractSolution(self) -> tuple[float, float]:
+        self._runtime.logger.debug("Extract solution fusion")
         #This function actually only needs to send back the values we need
         return self.__vmec.get_beta(), self.__vmec.get_bgradbval()
 
-    def solve(self, solution):
-        self.create_input_file(solution)
-        value = self.execute_configuration()
-        solution.setValue(value)
-        u.logger.debug("Solve Problem Fusion")
+    def solve(self, solution) -> None:
+        try:
+            self._runtime.logger.debug("Solve Problem Fusion")
+            self.create_input_file(solution)
+            value = self.execute_configuration()
+            solution.setValue(value)
+            self._runtime.logger.debug("Solve Problem Fusion")
+        except Exception as e:
+            self._runtime.logger.error(f"Error solving Problem Fusion: {e}")
 
-    def finish(self):
-        u.logger.debug("Finish Problem Fusion")
+    def finish(self) -> None:
+        self._runtime.logger.debug("Finish Problem Fusion")

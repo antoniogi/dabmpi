@@ -1,0 +1,1048 @@
+#!/usr/bin/env python
+# vim: set fileencoding=utf-8 :
+
+#############################################################################
+#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
+#                                                                           #
+#   Licensed under the Apache License, Version 2.0 (the "License");         #
+#   you may not use this file except in compliance with the License.        #
+#   You may obtain a copy of the License at                                 #
+#                                                                           #
+#       http://www.apache.org/licenses/LICENSE-2.0                          #
+#                                                                           #
+#   Unless required by applicable law or agreed to in writing, software     #
+#   distributed under the License is distributed on an "AS IS" BASIS,       #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+#   See the License for the specific language governing permissions and     #
+#   limitations under the License.                                          #
+#############################################################################
+
+import traceback
+
+from mpi4py import MPI
+import sys
+import math
+import random
+import shutil
+import time
+from datetime import datetime
+from core.enums import ProblemType, SolutionType, ObjectiveType, CommModelType
+from array import array
+from solvers.SolverBase import SolverBase
+from problems.ProblemCristina import ProblemCristina
+from problems.ProblemFusion import ProblemFusion
+from problems.ProblemNonSeparable import ProblemNonSeparable
+from solution.SolutionBase import SolutionBase
+from solution.SolutionCristina import SolutionCristina
+from solution.SolutionFusion import SolutionFusion
+from solution.SolutionNonSeparable import SolutionNonSeparable
+from solution.SolutionsQueue import SolutionsQueue
+import configparser
+from core.runtime import GlobalRuntime
+from core.comms import GlobalComms
+from core.enums import Tags
+from core.matrix import Matrix
+
+_author_ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
+
+
+_version_ = ' REVISION:   1.0  -  15-01-2014'
+
+"""
+HISTORY
+    Version 0.1 (12-04-2013):   Creation of the file.
+    Version 1.0 (15-01-2014):   Fist stable version.
+"""
+
+"""
+Class that implements the DAB solver. It has to:
+  - Create the different bees.
+  - Solve is the main method that actually implements the algorithm
+  - Once the algorithm has finish, we have to call the finish method if
+  there is something else to be done.
+"""
+
+
+"""
+Base class for bees
+"""
+
+"""
+Still pending: when we have evaluated a solution, we have to find the bee
+that created that solution and set the value for that solution in the bee
+"""
+
+
+class BeeBase ():
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix):
+        random.seed()
+        self._problem = None
+        self._bestLocalSolution: SolutionBase = None
+        self._bestGlobalSolution: SolutionBase = None
+        self._bestLocalInitialised = False
+        #Number of iterations since the local solution
+        #was created
+        self._itersinceLastUpdate = 0
+        self._runtime = runtime
+        self._comms = comms
+
+        if self._runtime.problem_type == ProblemType.FUSION:
+            self._problem = ProblemFusion(self._runtime, self._comms)
+            self._solution = SolutionFusion(self._runtime)
+            self._bestLocalSolution = SolutionFusion(self._runtime)
+            self._bestGlobalSolution = SolutionFusion(self._runtime)
+        elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
+            self._problem = ProblemNonSeparable(self._runtime, self._comms)
+            self._bestLocalSolution = SolutionNonSeparable(self._runtime)
+            self._bestGlobalSolution = SolutionNonSeparable(self._runtime)
+        elif self._runtime.problem_type == ProblemType.CRISTINA:
+            self._problem = ProblemCristina(self._runtime, self._comms)
+            self._bestLocalSolution = SolutionCristina(self._runtime)
+            self._bestGlobalSolution = SolutionCristina(self._runtime)
+
+        if self._runtime.objective == ObjectiveType.MAXIMIZE:
+            self._bestLocalSolution.setValue(-math.inf)
+            self._bestGlobalSolution.setValue(-math.inf)
+        else:
+            self._bestLocalSolution.setValue(math.inf)
+            self._bestGlobalSolution.setValue(math.inf)
+
+        self._matrix = matrix
+        self._runtime.logger.info(f"Problem initialized (type {self._runtime.problem_type})")
+        self._runtime.logger.info(f"Solution initialized (type {self._runtime.problem_type})")
+        self._runtime.logger.info(f"Best local solution initialized {self._bestLocalSolution}")
+        self._runtime.logger.info(f"Best global solution initialized {self._bestGlobalSolution}")
+        return
+
+    def getIter(self):
+        return self._itersinceLastUpdate
+
+    def setIter(self, val):
+        self._itersinceLastUpdate = val
+
+    def getBestLocalSolution(self):
+        return self._bestLocalSolution
+
+    def bestLocalInitialised(self):
+        return self._bestLocalInitialised
+
+    def createNewCandidate(self, pendingSolutions=None, finishedSolutions=None):
+        self._runtime.logger.error('Solver DAB. Create new candidate base')
+        raise NotImplementedError("Abstract bee (calling create\
+                                   new candidate)")
+
+    def is_new(self, solution, pending_solutions: SolutionsQueue, finished_solutions: SolutionsQueue):
+        pending = set(pending_solutions.getAllSolutions())
+        finished = set(finished_solutions.getAllSolutions())
+        return solution not in pending and solution not in finished
+
+
+    """
+    Creates a new random solution
+    Extracts the parameters that can be modified, and generates a new
+    value for each parameter considering the min and max values of that
+    parameter
+    """
+    def createRandomSolution(self, pendingSolutions=None, finishedSolutions=None):
+        self._runtime.logger.info('create new candidate scout')
+        while (True):
+            solution = self.getBestLocalSolution()
+            params = solution.getParameters()
+            self._runtime.logger.debug('number of parameters: ' + str(len(params)))
+            for i in range(len(params)):
+                ptype = params[i].get_type()
+                newVal = None
+                if ptype in ['double', 'float']:
+                    minVal = params[i].get_min_value()
+                    maxVal = params[i].get_max_value()
+                    if minVal == maxVal:
+                        newVal = minVal
+                    else:
+                        if minVal > maxVal:
+                            minVal, maxVal = maxVal, minVal
+                        if params[i].get_gap() == 0.0:
+                            newVal = random.uniform(minVal, maxVal)
+                        else:
+                            newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
+                elif ptype == "bool":
+                    val = random.randint(0, 1)
+                    newVal = val == 0
+                else:
+                    minVal = params[i].get_min_value()
+                    maxVal = params[i].get_max_value()
+                    if minVal == maxVal:
+                        newVal = minVal
+                    else:
+                        if minVal > maxVal:
+                            minVal, maxVal = maxVal, minVal
+                        newVal = random.randint(minVal, maxVal)
+                params[i].set_value(newVal)
+            if self.is_new(solution, pendingSolutions, finishedSolutions):
+                break
+        solution.setParameters(params)
+        solution.print()
+        return solution
+
+    """
+    This function is used to check the value of the best local solution. This
+    will be used to decide whether an employed bee becomes a scout
+    """
+    def getBestLocalValue(self):
+        return self._bestLocalSolution.getValue()
+
+    """
+    Allows to modify the best local solution. When a scout generates a new
+    a new solution after one solution has been abandoned, it replaces the
+    best local solution of the employed by this new solution
+    """
+    def setSolution(self, solution):
+        self._bestLocalSolution = solution
+        self._bestLocalInitialised = True
+
+    """
+    This function allows to create a random number between start and
+    stop, using a step of step
+    for example, we can call it like randrange_float (2.5, 4.0, 0.5) and
+    it will generate random numbers in the set 2.5, 3, 3.5, 4.0
+    """
+    def randrange_float(self, start, stop, step):
+        if start>stop:
+            start, stop = stop, start
+        if start==stop:
+            return start
+        return random.randint(0, int(abs((stop - start) / step))) * step + start
+"""
+Employed bees
+"""
+
+class Employed (BeeBase):
+    def __init__(self, runtime, comms, matrix, change, useMatrix):
+        super().__init__(runtime, comms, matrix)
+        #list of neighbours of the current best local solution. This list is
+        #used to create new solutions
+        self._neighbours = []
+        self._probEmployedChange = change
+        self._useMatrix = useMatrix
+        return
+
+    def getSolutionBasedOnMatrix(self, solution):
+        if not self._useMatrix:
+            return solution
+        values = self._matrix._repr_()
+        with open("matrix.txt", 'w') as fileMat:
+            fileMat.write(values)
+        solutionCopy = solution
+        try:
+            parameters = solutionCopy.getParameters()
+            numCols = self._matrix.getNumCols()
+            for i in range(len(parameters)):
+                sumRow = 0.0
+                for j in range(numCols):
+                    sumRow += self._matrix.getitem(i, j)
+                if sumRow == numCols:
+                    continue
+                #randomly select a position in the row. The larger the value, the
+                #higher the possibility for selecting a given row
+                val = random.uniform(numCols, sumRow)
+                tempSum = 0.0
+                selectedPos = -1
+                for j in range(numCols):
+                    tempSum += self._matrix.getitem(i, j)
+                    if tempSum >= val:
+                        selectedPos = j
+                        break
+                if selectedPos == -1:
+                    self._runtime.logger.warning("getSolutionBasedOnMatrix couldn't select a position. " + str(val) + " -- " + str(sumRow))
+                value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
+                parameters[i].set_value(value)
+            solutionCopy.setParameters(parameters)
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+        return solutionCopy
+
+    def createNewCandidate(self, pendingSolutions, finishedSolutions, topSolutions=None):
+        solution = None
+        try:
+        #this is the one that has to use the probMatrix
+            self._runtime.logger.info('create new candidate employed')
+
+            if not self.bestLocalInitialised():
+                solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
+                return solution, -1
+
+            solution = self.getBestLocalSolution()
+            if self._useMatrix:
+                if random.randint(0, 10) == 0:
+                    solution = self.getSolutionBasedOnMatrix(solution)
+                    return solution, -1
+            while (True):
+            #while not isNew:
+                parameters = solution.getParameters()
+                for i in range(len(parameters)):
+                    val = random.randint(0, self._probEmployedChange)
+                    if val != 0:
+                        continue
+                    ptype = parameters[i].get_type()
+                    newVal = None
+                    if ptype in ['double', 'float']:
+                        currentVal = parameters[i].get_value()
+                        minVal = currentVal - 10.0 * abs(parameters[i].get_gap())
+                        maxVal = currentVal + 10.0 * abs(parameters[i].get_gap())
+                        minVal = max(parameters[i].get_min_value(), minVal)
+                        maxVal = min(parameters[i].get_max_value(), maxVal)
+                        if minVal == maxVal:
+                            newVal = minVal
+                        else:
+                            if minVal > maxVal:
+                                minVal, maxVal = maxVal, minVal
+                            if parameters[i].get_gap() == 0.0:
+                                newVal = random.uniform(minVal, maxVal)
+                            else:
+                                newVal = self.randrange_float(minVal, maxVal, parameters[i].get_gap())
+                    elif ptype == "bool":
+                        val = random.randint(0, 1)
+                        newVal = val == 0
+                    else:
+                        currentVal = parameters[i].get_value()
+                        if random.randint(0, 10) == 0:
+                            minVal = currentVal - 10 * abs(parameters[i].get_gap())
+                            maxVal = currentVal + 10 * abs(parameters[i].get_gap())
+                        else:
+                            minVal = currentVal - 5 * abs(parameters[i].get_gap())
+                            maxVal = currentVal + 5 * abs(parameters[i].get_gap())
+                        minVal = max(parameters[i].get_min_value(), minVal)
+                        maxVal = min(parameters[i].get_max_value(), maxVal)
+                        if minVal == maxVal:
+                            newVal = minVal
+                        else:
+                            if minVal > maxVal:
+                                minVal, maxVal = maxVal, minVal
+                            newVal = random.randint(int(minVal), int(maxVal))
+
+                    currentVal = parameters[i].get_value()
+                    if newVal != currentVal:
+                        parameters[i].set_value(newVal)
+                solution.setParameters(parameters)
+                parameters = solution.getParameters()
+                if self.is_new(solution, pendingSolutions, finishedSolutions):
+                    return solution, -1
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+            raise
+
+
+"""
+Scout bees
+"""
+
+
+class Scout (BeeBase):
+    def __init__(self, runtime, comms, matrix):
+        super().__init__(runtime, comms, matrix)
+        #BeeBase.__init__(self, problem_type, infile)
+        return
+
+    """
+    Creates a new random solution
+    Extracts the parameters that can be modified, and generates a new
+    value for each parameter considering the min and max values of that
+    parameter
+    """
+    def createNewCandidate(self, pendingSolutions, finishedSolutions, topSolutions=None):
+        solution = None
+        try:
+            self._runtime.logger.info('create new candidate scout')
+            solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+            raise
+
+        return solution, -1
+
+"""
+Onlooker bees
+"""
+class Onlooker (BeeBase):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix, modFactor, probChange):
+        super().__init__(runtime, comms, matrix)
+        self._modFactor = modFactor
+        #BeeBase._init_(self, runtime)
+        self._probOnlookerChange = probChange
+        return
+
+    def createNewCandidate(self, totalSumGoodSolutions: float, topSolutions: SolutionsQueue, pendingSolutions: SolutionsQueue=None, finishedSolutions: SolutionsQueue=None):
+        self._runtime.logger.info('create new candidate onlooker')
+        val = random.uniform(0.0, totalSumGoodSolutions)
+        solutionTuple = topSolutions.GetTupleOnPriorityByValue(val)
+        solution = solutionTuple[0]
+
+        if solution is None:
+            self._runtime.logger.debug("Onlooker. Couldn't select a solution from the list of finished solutions")
+            return None, -1
+        beeIdx = solutionTuple[2]
+        try:
+            while (True):
+                for p in solution.getParameters():
+                    val = random.randint(0, self._probOnlookerChange)
+                    if val != 0:
+                        continue
+                    isNew = True
+                    ptype = p.get_type()
+                    newVal = None
+                    if ptype in ['double', 'float']:
+                        minVal = p.get_min_value()
+                        maxVal = p.get_max_value()
+                        currentVal = p.get_value()
+                        minNewVal = currentVal - self._modFactor * currentVal
+                        maxNewVal = currentVal + self._modFactor * currentVal
+                        minVal = max(minVal, minNewVal)
+                        maxVal = min(maxVal, maxNewVal)
+                        if minVal > maxVal:
+                            minVal, maxVal = maxVal, minVal
+                        if minVal == maxVal:
+                            newVal = minVal
+                        else:
+                            if not p.get_gap():
+                                newVal = random.uniform(minVal, maxVal)
+                            else:
+                                newVal = self.randrange_float(minVal, maxVal, p.get_gap())
+                    elif ptype == "bool":
+                        val = random.randint(0, 1)
+                        newVal = val == 0
+                    else:
+                        minVal = p.get_min_value()
+                        maxVal = p.get_max_value()
+                        currentVal = p.get_value()
+                        minNewVal = int(currentVal - 2 * abs(p.get_gap()))
+                        maxNewVal = int(currentVal + 2 * abs(p.get_gap()))
+                        if minNewVal != currentVal:
+                            minVal = max(minVal, minNewVal)
+                        if maxNewVal != currentVal:
+                            maxVal = min(maxVal, maxNewVal)
+                        if minVal == maxVal:
+                            minVal = maxVal - 1
+                        if minVal > maxVal:
+                            minVal, maxVal = maxVal, minVal
+                        newVal = random.randint(int(minVal), int(maxVal))
+                        while newVal == currentVal:
+                            newVal = random.randint(int(minVal), int(maxVal))
+                    p.set_value(newVal)
+                if self.is_new(solution, pendingSolutions, finishedSolutions):
+                    self._runtime.logger.debug("Onlooker. Selected a solution from the list of finished solutions")
+                    self._runtime.logger.debug("Top solutions queue size " + str(topSolutions.qSize()))
+                    return solution, beeIdx
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
+                                  "). " + str(e))
+        return None, None
+
+"""
+Solver DAB main class
+"""
+
+
+class SolverDAB (SolverBase):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
+        #Decorator
+        #self._runtime: GlobalRuntime
+        #self._comms: GlobalComms
+        super().__init__(runtime, comms)
+        self._runtime.logger.info("SolverDAB init")
+
+        """
+        probMatrix stores the probability for each parameter, for each
+        value, to be selected. Everytime a new feasible solution is found,
+        we increase the probability of the current value of each parameter
+        """
+        self._useMatrix = False
+        self._probMatrix:Matrix = None
+        #default values
+        self._nEmployed = 0
+        self._nOnlooker = 0
+        self._bees = []
+        self._scout = None
+        self._exectime = 0
+        self._pendingSize = 10
+        self._iterAbandoned = 10
+        self._probEmployedChange = 4
+        self._onlookerModFactor = 0.5
+        self._probOnlookerChange = 50
+        self._maxNumTopSolutions = 100
+        
+        try:
+            self._runtime.logger.info("SolverDAB init")
+            #runtime.start_time = time.time()
+            #u.comm = MPI.COMM_WORLD
+            #u.rank = u.comm.Get_rank()
+            #u.size = u.comm.Get_size()
+
+            origin = -1
+
+            self._totalSumGoodSolutions = 0.0
+
+            self._requestsEnd = []
+            self._requestsInput = []
+            self._requestSolution = []
+            for i in range(self._comms.size):
+                self._requestSolution.append(MPI.REQUEST_NULL)
+
+            self._dump = array('i', [0]) * 1
+
+            self._bestSolution = None
+            self._bestGlobalSolution = None
+
+            if self._runtime.problem_type == ProblemType.FUSION:
+                self._problem = ProblemFusion(self._runtime, self._comms)
+                self._bestSolution = SolutionFusion(self._runtime)
+                self._bestGlobalSolution = SolutionFusion(self._runtime)
+            elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
+                self._problem = ProblemNonSeparable(self._runtime, self._comms)
+                self._bestSolution = SolutionNonSeparable(self._runtime)
+                self._bestGlobalSolution = SolutionNonSeparable(self._runtime)
+            elif self._runtime.problem_type == ProblemType.CRISTINA:
+                self._problem = ProblemCristina(self._runtime, self._comms)
+                self._bestSolution = SolutionCristina(self._runtime.input_file)
+                self._bestGlobalSolution = SolutionCristina(self._runtime.input_file)
+            else:
+                self._runtime.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
+                                  "). Unknown problem type " + str(self._runtime.problem_type))
+                sys.exit(-1)
+            self._numParams = self._bestSolution.getNumberofParams()
+            
+            #if top solutions is not empty, that means we have a best solution from the previous execution
+            try:
+                if self._topSolutions.qSize() != 0:
+                    self._bestSolution, value, origin = self._topSolutions.GetSolutionTuple(False)
+                    self._bestSolution.setValue(value)
+            except Exception as e:
+                self._runtime.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_info()[2].tb_lineno))
+
+            if self._comms.rank == 0:
+                #parse arguments from the ini file
+                try:
+                    config = configparser.ConfigParser()
+                    config.read(self._runtime.config_file)
+
+                    if not config.has_section("Bees"):
+                        raise ValueError("Missing [Bees] section in configuration file")
+
+                    self._nEmployed = config.getint("Bees", "nemployed", fallback=self._nEmployed)
+                    self._nOnlooker = config.getint("Bees", "nonlooker", fallback=self._nOnlooker)
+                    self._onlookerModFactor = config.getfloat(
+                        "Bees",
+                        "onlookerModFactor",
+                        fallback=self._onlookerModFactor,
+                    )
+                    self._iterAbandoned = config.getint(
+                        "Bees",
+                        "iterationsAbandoned",
+                        fallback=self._iterAbandoned,
+                    )
+                    self._probEmployedChange = config.getint(
+                        "Bees",
+                        "probEmployedChange",
+                        fallback=self._probEmployedChange,
+                    )
+                    self._probOnlookerChange = config.getfloat(
+                        "Bees",
+                        "probOnlookerChange",
+                        fallback=self._probOnlookerChange,
+                    )
+                    self._useMatrix = config.getboolean(
+                        "Bees",
+                        "useProbMatrix",
+                        fallback=self._useMatrix,
+                    )
+
+                    self._exectime = config.getint(
+                        "Algorithm",
+                        "time",
+                        fallback=self._exectime,
+                    )
+
+                    self._pendingSize = config.getint(
+                        "Algorithm",
+                        "pendingSize",
+                        fallback=self._pendingSize,
+                    )
+
+                    self._maxNumTopSolutions = config.getint(
+                        "Algorithm",
+                        "eliteQueue",
+                        fallback=self._maxNumTopSolutions,
+                    )
+
+                except Exception:
+                    self._runtime.logger.exception(
+                        "SolverDAB: Problem reading DAB configuration from ini file"
+                    )
+                    raise
+                if self._useMatrix:
+                    self._probMatrix = u.Matrix(self._bestSolution.getMaxNumberofValues() + 1,
+                         self._bestSolution.getNumberofParams(), 1.0)
+
+                self._topSolutions.setMaxSize(self._maxNumTopSolutions)
+                """
+                Create bees
+                """
+                idxBees = 0
+                for i in range(self._nEmployed):
+                    self._bees.insert(idxBees, Employed(self._runtime, self._comms, self._probMatrix, self._probEmployedChange, self._useMatrix))
+                    idxBees += 1
+                self._runtime.logger.debug("Created " + str(self._nEmployed) + " employed bees")
+
+                for i in range(self._nOnlooker):
+                    self._bees.insert(idxBees, Onlooker(self._runtime, self._comms, self._probMatrix, self._onlookerModFactor, self._probOnlookerChange))
+                    idxBees += 1
+                self._runtime.logger.debug("Created " + str(self._nOnlooker) + " onlooker bees")
+
+                try:
+                    if origin != -1:
+                        self._bees[i].setSolution(self._bestSolution)
+                except:
+                    pass
+                """
+                Create only one scout. The scout creates a random solution, so
+                it is just called when needed
+                """
+                self._scout = Scout(self._runtime, self._comms, self._probMatrix)
+                self._runtime.logger.debug("Created 1 scout bee")
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+            raise
+
+    """
+    Initializer method (if needed)
+    """
+
+    def initialize(self):
+        self._runtime.logger.info('DAB initializer')
+        try:
+            if self._runtime.comm_model == CommModelType.DRIVERWORKER:
+                #initialises the lists of requests
+                for i in range(self._comms.size):
+                    self._requestsEnd.append(MPI.REQUEST_NULL)
+                    self._requestsInput.append(MPI.REQUEST_NULL)
+                for i in range(self._comms.size):
+                    if i == self._comms.rank:
+                        continue
+                    self._requestsEnd[i] = self._comms.comm.Irecv(self._dump, source=i, tag=Tags.ENDSIM)
+                    self._requestsInput[i] = self._comms.comm.comm.Irecv(self._dump, source=i, tag=Tags.REQINPUT)
+
+                while (self._pendingSolutions.qSize() < self._pendingSize):
+                    self._pendingSolutions.PutSolution(
+                                    self._scout.createNewCandidate(self._pendingSolutions, self._finishedSolutions, self._topSolutions)[0], -1.0, -1)
+            self._runtime.logger.debug('created initial set of solutions')
+        except Exception as e:
+            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+
+    """
+    This function checks if the size of the pending queue is correct. If smaller,
+    it creates new solutions
+    """
+
+    def checkPendingSolutionsQueue(self):
+        while (self._pendingSolutions.qSize() < self._pendingSize):
+            try:
+                for bee in range(len(self._bees)):
+                    self._runtime.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
+                    newSolution, beeIdx = self._bees[bee].createNewCandidate(
+                            self._probMatrix, self._totalSumGoodSolutions, self._topSolutions)
+                    if bee < self._nEmployed:
+                        beeIdx = bee
+                    if newSolution is None:
+                        newSolution = self._scout.createNewCandidate(self._probMatrix)[0]
+                        self._pendingSolutions.PutSolution(newSolution, -1.0, -1)
+                    else:
+                        self._pendingSolutions.PutSolution(newSolution, -1.0, beeIdx)
+
+                #Check if there are abandoned solutions
+                for bee in range(self._nEmployed):
+                    if self._bees[bee].getIter() > self._iterAbandoned:
+                        self._runtime.logger.info("Bee " + str(bee) + ". Abandoning food source")
+                        solution = self._scout.createNewCandidate(self._probMatrix)[0]
+                        self._bees[bee].setIter(0)
+                        self._bees[bee].setSolution(solution)
+                        self._runtime.logger.debug("Scout bee putting solution on pending queue")
+                        self._pendingSolutions.PutSolution(solution, -1.0, bee)
+            except Exception as e:
+                self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+
+    """
+    This function checks if there are workers waiting for solutions to be evaluated.
+    """
+
+    def checkWaitingForSolutions(self):
+        status = MPI.Status()
+        flag = False
+        iters = 0
+        while (not flag and iters < 3):
+            idx, flag = MPI.Request.Testany(self._requestsInput, status)
+            iters += 1
+
+        while (flag and idx >= 0):
+            if status.tag == Tags.REQINPUT:
+                destination = status.source
+                try:
+                    self._runtime.logger.debug('DRIVER. Worker ' + str(destination) + ' was waiting for a solution')
+                    #Sends the front of the pending Solutions queue
+                    solTuple = self._pendingSolutions.GetSolutionList()
+                    if self._pendingSolutions.qSize() == 0:
+                        self.checkPendingSolutionsQueue()
+                    while len(solTuple) < 3:
+                        solTuple = self._pendingSolutions.GetSolutionList()
+                        if (self._pendingSolutions.qSize() < 1):
+                            self._pendingSolutions.PutSolution(self._scout.createNewCandidate(self._matrix)[0], -1.0, -1)
+
+                    beeIdx = array('i', [0]) * 1
+                    buff = array('f', [0]) * self._numParams
+                    try:
+                        beeIdx[0] = solTuple[1]
+                        #buff = solTuple[0].getParametersValues()
+                        for i in range(len(buff)):
+                            buff[i] = float(solTuple[2][i])
+                            self._runtime.logger.debug("Val param (" + str(i) + "): " + str(buff[i]))
+                    except Exception as e:
+                        self._runtime.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
+                                "): " + str(e))
+                        continue
+                    #sends the parameters
+                    u.comm.Isend([buff, MPI.FLOAT], destination, Tags.RECVFROMDRIVER)
+                    #sends the index of the bee that created the solution
+                    u.comm.Isend([beeIdx, MPI.INT], destination, Tags.RECVFROMDRIVER)
+                    #adds a request for receiving the solution
+                    req = u.comm.Irecv([self._dump, MPI.INT], destination, Tags.REQSENDINPUT)
+                    self._requestSolution[destination] = req
+                    #adds a request for sending more input
+                    req = u.comm.Irecv(self._dump, source=destination, tag=Tags.REQINPUT)
+                    self._requestsInput[destination] = req
+                    self._runtime.logger.info("DRIVER. Solution sent to worker " + str(destination))
+                except Exception as e:
+                    self._runtime.logger.error("DRIVER. WaitingForSolutions (" +
+                                    str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+
+            idx, flag = MPI.Request.Testany(self._requestsInput, status)
+
+    """
+    This function checks if there are workers waiting to send solutions to the driver
+    """
+
+    def receiveSolutions(self):
+        status = MPI.Status()
+        sourceIdx, flag = MPI.Request.Testany(self._requestSolution, status)
+
+        while (flag and sourceIdx >= 0):
+            source = status.source
+            if (source < 0 or source >= len(self._requestSolution)):
+                self._runtime.logger.critical("DRIVER. Invalid source: " + str(source))
+            self._requestSolution[source] = MPI.REQUEST_NULL
+            self._runtime.logger.debug('DRIVER. Receiving solution (worker ' + str(source) + ')')
+            isNewBest = False
+            try:
+                self._runtime.logger.debug("DRIVER. Buffer size: " + str(self._numParams))
+                buff = array('f', [0]) * self._numParams
+                solVal = array('f', [0]) * 1
+                beeIdx = array('i', [0]) * 1
+                origin = status.source
+                self._comms.comm.Recv(buff, origin, Tags.COMMSOLUTION)
+                self._comms.comm.Recv(solVal, origin, Tags.COMMSOLUTION)
+                self._comms.comm.Recv(beeIdx, origin, Tags.COMMSOLUTION)
+            except Exception as e:
+                self._runtime.logger.error("DRIVER (comm). " + str(e) + " line: " +
+                           str(sys.exc_info()[2].tb_lineno))
+            try:
+                self._runtime.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
+                if (float(solVal[0]) >= 0.0 and float(solVal[0]) < u.infinity / 100):
+                    #Add the solution to the list of best solutions (the method will implement the
+                    #priority list)
+                    solutionTemp = None
+                    try:
+                        if self._runtime.problem_type == ProblemType.FUSION:
+                            solutionTemp = SolutionFusion(self._runtime)
+                        elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
+                            solutionTemp = SolutionNonSeparable(self._runtime)
+                        elif self._runtime.problem_type == ProblemType.CRISTINA:
+                            solutionTemp = SolutionCristina(self._runtime)
+
+                        if solutionTemp is None:
+                            self._runtime.logger.error(f"Solution is None after creation (type {self._runtime.problem_type})")
+                        else:
+                            solutionTemp.setParametersValues(buff)
+                        if self._useMatrix:
+                            for i in range(self._probMatrix.getNumRows()):
+                                for j in range(self._probMatrix.getNumCols()):
+                                    val = self._probMatrix.getitem(i, j)
+                                    newVal = max(1.0, val - 0.01)
+                                    self._probMatrix.setitem(i, j, newVal)
+
+                            parameters = solutionTemp.getParameters()
+                            for i in range(len(parameters)):
+                                idx = (parameters[i].get_value() - parameters[i].get_min_value())
+                                idx = idx / parameters[i].get_gap()
+                                idx = round(idx)
+                                idx = int(idx)
+                                val = self._probMatrix.getitem(i, idx)
+                                self._probMatrix.setitem(i, idx, val + 0.5)
+                    except Exception as e:
+                        self._runtime.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
+                    self._topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self._nEmployed)
+                    self._totalSumGoodSolutions = self._topSolutions.GetTotalSolutionsValues()
+
+                    if ((u.objective == u.objectiveType.MAXIMIZE and float(solVal[0]) > float(self._bestSolution.getValue())) or
+                        (u.objective == u.objectiveType.MINIMIZE and float(solVal[0]) < float(self._bestSolution.getValue()))):
+
+                        isNewBest = True
+                        self._runtime.logger.log(u.extraLog, "New best solution found. Value " + str(solVal[0]) +
+                                       " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx[0]))
+
+                        self._bestSolution.setValue(solVal[0])
+
+                        self._bestSolution.setParametersValues(buff)
+                        if self._problem_type == u.solution_type.FUSION:
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
+                            self._bestSolution.prepare("input.best." + filenametime)
+                            shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
+                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
+                            try:
+                                shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
+                            except:
+                                pass
+            except Exception as e:
+                self._runtime.logger.error("DRIVER (comm). " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
+
+            try:
+                solutionTemp = None
+                if self._runtime.problem_type == ProblemType.FUSION:
+                    solutionTemp = SolutionFusion(self._runtime)
+                elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
+                    solutionTemp = SolutionNonSeparable(self._runtime)
+                elif self._runtime.problem_type == ProblemType.CRISTINA:
+                    solutionTemp = SolutionCristina(self._runtime)
+
+                if solutionTemp is None:
+                    self._runtime.logger.error(f"Solution is None after creation (type {self._runtime.problem_type})")
+                else:
+                    solutionTemp.setParametersValues(buff)
+
+                    self._finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
+                    self._runtime.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
+                                  ") added to the list of finished solutions")
+                    if (float(solVal[0]) >= 0.0 and float(solVal[0])<(u.infinity/100.0)):
+                        if isNewBest:
+                            parameters = solutionTemp.getParameters()
+                            if (self._useMatrix):
+                                try:
+                                    for i in range(self._probMatrix.getNumRows()):
+                                        for j in range(self._probMatrix.getNumCols()):
+                                            val = self._probMatrix.getitem(i, j)
+                                            newVal = max(1.0, val - 0.5)
+                                            self._probMatrix.setitem(i, j, newVal)
+                                    for i in range(len(parameters)):
+                                        idx = (parameters[i].get_value() - parameters[i].get_min_value())
+                                        idx = idx / parameters[i].get_gap()
+                                        idx = round(idx)
+                                        idx = int(idx)
+                                        val = self._probMatrix.getitem(i, idx)
+                                        self._probMatrix.setitem(i, idx, val + 5.0)
+                                except Exception as e:
+                                    self._runtime.logger.warning("DRIVER (fill matrix). " + str(e) +
+                                       " line: " + str(sys.exc_traceback.tb_lineno))
+                        #Update the best local solution in the bees
+                        reset = False
+                        if (int(beeIdx[0]) >= 0 and int(beeIdx[0]) < len(self._bees)):
+                            if (float(solVal[0]) >= 0.0):
+                                if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solVal[0]) > float(self._bees[beeIdx[0]].getBestLocalValue())) or
+                                    (self._runtime.objective == ObjectiveType.MINIMIZE and float(solVal[0]) < float(self._bees[beeIdx[0]].getBestLocalValue()))):
+                                    self._runtime.logger.info("Bee " + str(beeIdx[0]) + ". Resetting counter")
+                                    self._bees[beeIdx[0]].setIter(0)
+                                    solutionTemp.setValue(solVal[0])
+                                    self._runtime.logger.info("Bee " + str(beeIdx[0]) + ". Best local " + str(self._bees[beeIdx[0]].getBestLocalValue()) + " new best " + str(solVal[0]))
+                                    self._bees[beeIdx[0]].setSolution(solutionTemp)
+                                    reset = True
+                        if not reset:
+                            self._bees[beeIdx[0]].setIter(self._bees[beeIdx[0]].getIter() + 1)
+                            self._runtime.logger.info("Bee " + str(beeIdx[0]) + ". Current iterations " + str(self._bees[beeIdx[0]].getIter()))
+            except Exception as e:
+                self._runtime.logger.error("DRIVER (receiveSolutions). " + str(e) +
+                                   " line: " + str(sys.exc_info()[2].tb_lineno))
+
+            self._runtime.logger.info('DRIVER. Received solution (worker ' + str(source) + ')')
+            sourceIdx, flag = MPI.Request.Testany(self._requestSolution, status)
+
+    """
+    Main method. Implements the algorithm
+    """
+
+    def solve(self):
+        self._runtime.logger.info('DAB solver started')
+
+        if (self._runtime.comm_model == CommModelType.DRIVERWORKER):
+            while (not self.check_finish()):
+                try:
+                    #check if it has to create solutions
+                    self.checkPendingSolutionsQueue()
+                    #check if there are worker processes waiting for input
+                    self.checkWaitingForSolutions()
+                    #check if it has to receive solutions
+                    self.receiveSolutions()
+
+                    elapsedTime = time.time() - self._runtime.start_time
+                    self._runtime.logger.debug("DRIVER. Elapsed time " + str(elapsedTime) +
+                                    " - Remaining " + str(self._runtime.max_execution_time - elapsedTime))
+                except Exception as e:
+                    # Extract the last frame of the traceback (where the error actually happened)
+                    tb = e.__traceback__
+                    # extract_tb returns a list of FrameSummary objects
+                    summary = traceback.extract_tb(tb)[-1]
+                    filename = summary.filename
+                    line_number = summary.lineno
+                    self._runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+        else:
+            self.runDistributed()
+
+    def runDistributed(self):
+        if (self._runtime.problem_type == ProblemType.FUSION):
+            self._problem = ProblemFusion(self._runtime, self._comms)
+        elif (self._runtime.problem_type == ProblemType.NONSEPARABLE):
+            self._problem = ProblemNonSeparable(self._runtime, self._comms)
+        elif (self._runtime.problem_type == ProblemType.CRISTINA):
+            self._problem = ProblemCristina(self._runtime, self._comms)
+
+        numParams = self._bestSolution.getNumberofParams()
+        buff = array('f', [0]) * numParams
+        solValue = array('f', [0]) * 1
+
+        while (not self.check_finish()):
+            for bee in range(len(self._bees)):
+                self._runtime.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
+                newSolution, beeIdx = self._bees[bee].createNewCandidate(
+                        self._probMatrix, self._totalSumGoodSolutions, self._topSolutions)
+                if bee < self._nEmployed:
+                    beeIdx = bee
+                if newSolution is None:
+                    newSolution = self._scout.createNewCandidate(self._probMatrix)[0]
+                self._problem.solve(newSolution)
+                solutionValue = float(newSolution.getValue())
+
+                if solutionValue<=0.0 or solutionValue>u.infinity/100.0:
+                    continue
+                self._totalSumGoodSolutions = self._topSolutions.GetTotalSolutionsValues()
+                if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestSolution.getValue())) or
+                    (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestSolution.getValue()))):
+
+                    self._runtime.logger.log(self._runtime.extraLog, "New best solution found. Value " + str(newSolution) +
+                                   " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
+
+                    self._bestSolution = newSolution
+
+                    if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestGlobalSolution.getValue())) or
+                        (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestGlobalSolution.getValue()))):
+                        self._bestGlobalSolution = self._bestSolution
+
+                    buff = self._bestSolution.getParametersValues()
+                    solValue[0] = solutionValue
+
+                    if (self._runtime.problem_type == ProblemType.FUSION):
+                        filenametime = "0"
+                        try:
+                            filenametime = datetime.now().isoformat(timespec="milliseconds")
+                        except:
+                            pass
+                        self._bestSolution.prepare("input.best." + filenametime)
+                        shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
+                        shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
+                        try:
+                            shutil.copyfile(str(beeIdx) + '/OUTPUT/results.av', 'results.best.' + filenametime)
+                        except:
+                            pass
+
+            #Check if there are abandoned solutions
+            for bee in range(self._nEmployed):
+                if (self._bees[bee].getIter() > self._iterAbandoned):
+                    self._runtime.logger.info("Bee " + str(bee) + ". Abandoning food source")
+                    newSolution = self._scout.createNewCandidate(self._probMatrix)[0]
+                    self._bees[bee].setIter(0)
+                    self._bees[bee].setSolution(newSolution)
+                    self._problem.solve(newSolution)
+                    solutionValue = float(newSolution.getValue())
+
+                    if (solutionValue<=0.0 or solutionValue >= u.infinity/100.0):
+                        continue
+
+                    if ((u.objective == u.objectiveType.MAXIMIZE and
+                        float(solutionValue) > float(self._bestSolution.getValue())) or
+                        (u.objective == u.objectiveType.MINIMIZE and
+                        float(solutionValue) < float(self._bestSolution.getValue()))):
+
+
+                        self._runtime.logger.log(u.extraLog, "New best solution found. Value " + str(newSolution) +
+                                       " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
+
+                        self._bestSolution = newSolution
+
+                        if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestGlobalSolution.getValue())) or
+                            (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestGlobalSolution.getValue()))):
+                            self._bestGlobalSolution = self._bestSolution
+
+                        buff = self._bestSolution.getParametersValues()
+                        solValue[0] = solutionValue
+
+                        if (self._runtime.problem_type == ProblemType.FUSION):
+                            filenametime = "0"
+                            try:
+                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
+                            except:
+                                pass
+                            self._bestSolution.prepare("input.best." + filenametime)
+                            shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
+                            shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
+                            try:
+                                shutil.copyfile(str(beeIdx) +
+                                                '/OUTPUT/results.av',
+                                                'results.best.' + filenametime)
+                            except:
+                                pass
+                    self._runtime.logger.debug("Scout bee putting solution on pending queue")
+        return
+
+    def check_finish(self):
+        try:
+            #first check if it's too early to finish
+            elapsedTime = time.time() - self._runtime.start_time
+            if (elapsedTime + (60 * 5) < self._runtime.max_execution_time):
+                return False
+            allNull = True
+            for i in range(len(self._requestsEnd)):
+                if (self._requestsEnd[i] != MPI.REQUEST_NULL):
+                    allNull = False
+                    break
+            if (allNull):
+                self._runtime.logger.info("DRIVER. All workers have finished")
+                return True
+            status = MPI.Status()
+            idx, flag = MPI.Request.Testany(self._requestsEnd, status)
+            if (flag and idx >= 0):
+                source = status.source
+                self._requestsEnd[source] = MPI.REQUEST_NULL
+                self._runtime.logger.info('SolverDAB. Received a termination request from worker' +
+                               str(source))
+            return False
+        except Exception as e:
+            # Extract the last frame of the traceback (where the error actually happened)
+            tb = e.__traceback__
+        
+            # extract_tb returns a list of FrameSummary objects
+            summary = traceback.extract_tb(tb)[-1]
+        
+            filename = summary.filename
+            line_number = summary.lineno
+            self._runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+            return True
+
+    def finish(self):
+        self._pendingSolutions.writeAllSolutions()
+        self._runtime.logger.info('DAB Driver finished')

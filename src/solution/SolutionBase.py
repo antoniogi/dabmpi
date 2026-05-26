@@ -27,10 +27,9 @@ HISTORY
     Version 1.0 (15-01-2014):   First stable version.
     Version 2.0 (23-05-2026):   Refactoring and modernization
 """
-
+import math
 from abc import ABC, abstractmethod
-import Utils as util
-
+from core.enums import ObjectiveType
 
 class SolutionBase(ABC):
     """Abstract base class for optimization solutions.
@@ -41,7 +40,7 @@ class SolutionBase(ABC):
     - MAXIMIZE: starts at -infinity (any real value improves it)
     """
 
-    def __init__(self, infile):
+    def __init__(self, runtime):
         """Initialize solution with appropriate initial value.
         
         Args:
@@ -51,17 +50,17 @@ class SolutionBase(ABC):
             ValueError: If objective type is not defined
         """
         # Set initial value based on optimization objective
-        if util.objective == util.objectiveType.MINIMIZE:
-            self.__value = util.infinity  # Start at +infinity for minimization
-        elif util.objective == util.objectiveType.MAXIMIZE:
-            self.__value = -util.infinity  # Start at -infinity for maximization
+        if runtime.objective == ObjectiveType.MINIMIZE:
+            self._value = math.inf  # Start at +infinity for minimization
         else:
-            raise ValueError("Objective type not defined")
-        self.__isValid = True
+            self._value = -math.inf  # Start at -infinity for maximization
+
+        self._isValid = True
+        self._runtime = runtime
 
     def getValue(self) -> float:
         """Return the current solution value."""
-        return self.__value
+        return self._value
 
     def setValue(self, value: float) -> None:
         """Set the solution value.
@@ -69,19 +68,19 @@ class SolutionBase(ABC):
         Args:
             value: New solution value
         """
-        self.__value = value
+        self._value = value
 
     @abstractmethod
     def getNumberofParams(self) -> int:
         """Return the number of parameters in this solution."""
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement getNumberofParams()")
+            f"{self._class__.__name__} must implement getNumberofParams()")
 
     @abstractmethod
     def getMaxNumberofValues(self) -> int:
         """Return the maximum number of parameter values."""
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement getMaxNumberofValues()")
+            f"{self._class__.__name__} must implement getMaxNumberofValues()")
 
     @abstractmethod
     def print(self) -> None:
@@ -90,11 +89,11 @@ class SolutionBase(ABC):
         Must be implemented by subclasses to display solution details.
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement print()")
+            f"{self._class__.__name__} must implement print()")
 
     def isValid(self) -> bool:
         """Return whether the solution is valid."""
-        return self.__isValid
+        return self._isValid
 
     def setValid(self, valid: bool) -> None:
         """Set the validity flag of the solution.
@@ -102,12 +101,12 @@ class SolutionBase(ABC):
         Args:
             valid: True if solution is valid, False otherwise
         """
-        self.__isValid = valid
+        self._isValid = valid
 
     @abstractmethod
     def getParametersValues(self):
         """Return the current values of all parameters."""
-        raise NotImplementedError(f"{self.__class__.__name__} must implement getParametersValues()")
+        raise NotImplementedError(f"{self._class__.__name__} must implement getParametersValues()")
 
     @abstractmethod
     def setParametersValues(self, buff: list) -> None:
@@ -122,7 +121,7 @@ class SolutionBase(ABC):
     def getParameters(self) -> list:
         """Return the parameter objects."""
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement getParameters()")
+            f"{self._class__.__name__} must implement getParameters()")
 
     @abstractmethod
     def setParameters(self, params: list) -> None:
@@ -132,7 +131,7 @@ class SolutionBase(ABC):
             params: List of parameter objects
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement setParameters()")
+            f"{self._class__.__name__} must implement setParameters()")
 
     @abstractmethod
     def initialize(self, data) -> None:
@@ -142,7 +141,7 @@ class SolutionBase(ABC):
             data: Data object for initialization
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement initialize()")
+            f"{self._class__.__name__} must implement initialize()")
 
     @abstractmethod
     def prepare(self, filename: str) -> None:
@@ -152,4 +151,4 @@ class SolutionBase(ABC):
             filename: Output filename to prepare
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement prepare()")
+            f"{self._class__.__name__} must implement prepare()")

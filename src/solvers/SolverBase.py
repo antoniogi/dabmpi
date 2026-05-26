@@ -24,41 +24,34 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 
 """
 HISTORY
-    Version 0.1 (17-04-2013):   Creation of the file.
+    Version 0.1 (12-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
 """
 
-from SolutionBase import SolutionBase
-from NonSeparableData import NonSeparableData
+from abc import ABC, abstractmethod
+from core.comms import GlobalComms
+from core.runtime import GlobalRuntime
+from solution.SolutionsQueue import SolutionsQueue
 
 
-class SolutionNonSeparable (SolutionBase):
-    def __init__(self, infile):
-        SolutionBase.__init__(self, infile)
-        self.__data = NonSeparableData()
-        self.__data.initialize(infile)
+class SolverBase(ABC):
+
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
+        self._runtime = runtime
+        self._comms = comms
+        self._finishedSolutions = SolutionsQueue(runtime, "finished.queue", True, True)
+        self._pendingSolutions = SolutionsQueue(runtime, "pending.queue", False)
+        self._topSolutions = SolutionsQueue(runtime, "top.queue", False, True)
         return
 
-    def getParametersValues(self):
-        return self.__data.getValsOfParameters()
+    @abstractmethod
+    def initialize(self):
+        pass
+    
+    @abstractmethod
+    def solve(self):
+        pass
 
-    def setParametersValues(self, buff):
-        self.__data.setValsOfParameters(buff)
-
-    def getParameters(self):
-        return self.__data.getParameters()
-
-    def setParameters(self, params):
-        self.__data.setParameters(params)
-
-    def initialize(self, data):
-        self.__data = data
-
-    def getNumberofParams(self):
-        return self.__data.getNumParams()
-
-    def getMaxNumberofValues(self):
-        return self.__data.getMaxRange()
-
-    def prepare(self, filename):
-        return
+    @abstractmethod
+    def finish(self):
+        pass

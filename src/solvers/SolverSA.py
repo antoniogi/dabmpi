@@ -28,17 +28,40 @@ HISTORY
     Version 1.0 (15-01-2014):   Fist stable version.
 """
 
+"""
+Class that implements the DAB solver. It has to:
+  - Create the different bees.
+  - Solve is the main method that actually implements the algorithm
+  - Once the algorithm has finish, we have to call the finish method if
+  there is something else to be done.
+"""
 
-class SolverBase():
 
-    def __init__(self, problem_type, infile, configfile):
-        return
+import sys
+import random
+import shutil
+import time
+import configparser
+from mpi4py import MPI
+from array import array
 
-    def initialize(self):
-        raise NotImplementedError("Initialize abstract solver")
+from solvers.SolverBase import SolverBase
+from problems.ProblemFusion import ProblemFusion
+from problems.ProblemNonSeparable import ProblemNonSeparable
+from solution.SolutionFusion import SolutionFusion
+from solution.SolutionNonSeparable import SolutionNonSeparable
+import solution.SolutionsQueue as solQueue
 
-    def solve(self):
-        raise NotImplementedError("Abstract solver")
 
-    def finish(self):
-        raise NotImplementedError("Finish abstract solver")
+class SolverSA (SolverBase):
+    def readConfigFile(self, runtime):
+        config = configparser.ConfigParser()
+        config.read(runtime.config_file)
+        if (not config.has_section("SA")):
+            runtime.logger.critical("SA section not specified in the ini file")
+            sys.exit(-1)
+
+    def __init__(self, problem_type, infile, runtime):
+        runtime.logger.info("SolverSA init")
+        self.readConfigFile(runtime)
+        random.seed()

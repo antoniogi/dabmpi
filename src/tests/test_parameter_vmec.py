@@ -3,6 +3,11 @@ import pytest
 from ParameterVMEC import ParameterVMEC
 from Parameter import ParamType
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 # ============================================================
 # Fixtures
@@ -21,10 +26,10 @@ def mock_logger(monkeypatch):
     """
     Replaces Utils.logger with a test-friendly logger.
     """
-    import Utils as u
+    from ParameterVMEC import ParameterVMEC
 
     logger = MockLogger()
-    monkeypatch.setattr(u, "logger", logger)
+    monkeypatch.setattr(ParameterVMEC, "_logger", lambda self: logger)
 
     return logger
 

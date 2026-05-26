@@ -24,20 +24,44 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 
 """
 HISTORY
-    Version 0.1 (12-04-2013):   Creation of the file.
+    Version 0.1 (17-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
 """
 
+from solution.SolutionBase import SolutionBase
+from NonSeparableData import NonSeparableData
 
-class ProblemBase(object):
-    def __init__(self):
+
+class SolutionNonSeparable (SolutionBase):
+    def __init__(self, runtime):
+        SolutionBase.__init__(self, runtime)
+        self._data = NonSeparableData(runtime)
+        self._data.initialize(runtime.input_file)
         return
 
-    def solve(self, solution):
-        raise NotImplementedError("Abstract problem")
+    def getParametersValues(self):
+        return self._data.getValsOfParameters()
 
-    def extractSolution(self):
-        raise NotImplementedError("Extract solution abstract problem")
+    def setParametersValues(self, buff):
+        self._data.setValsOfParameters(buff)
 
-    def finish(self):
-        raise NotImplementedError("Finish abstract problem")
+    def getParameters(self):
+        return self._data.getParameters()
+
+    def setParameters(self, params):
+        self._data.setParameters(params)
+
+    def initialize(self, data):
+        self._data = data
+
+    def getNumberofParams(self):
+        return self._data.getNumParams()
+
+    def getMaxNumberofValues(self):
+        return self._data.getMaxRange()
+
+    def prepare(self, filename):
+        return
+    
+    def print(self):
+        pass

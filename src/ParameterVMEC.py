@@ -1,72 +1,129 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# vim: set fileencoding=utf-8 :
 
-from dataclasses import dataclass, field
-from typing import Optional
+#############################################################################
+#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
+#                                                                           #
+#   Licensed under the Apache License, Version 2.0 (the "License");         #
+#   you may not use this file except in compliance with the License.        #
+#   You may obtain a copy of the License at                                 #
+#                                                                           #
+#       http://www.apache.org/licenses/LICENSE-2.0                          #
+#                                                                           #
+#   Unless required by applicable law or agreed to in writing, software     #
+#   distributed under the License is distributed on an "AS IS" BASIS,       #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+#   See the License for the specific language governing permissions and     #
+#   limitations under the License.                                          #
+#############################################################################
 
-from Parameter import Parameter, ParamType
-import Utils as u
 
+import logging
+from Parameter import INFINITY, ParamType, Parameter
 
-@dataclass
+__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
+
+__version__ = ' REVISION:   1.0  -  15-01-2014'
+
+"""
+HISTORY
+    Version 0.1 (12-04-2013):   Creation of the file.
+    Version 1.0 (15-01-2014):   Fist stable version.
+"""
+
 class ParameterVMEC(Parameter):
-    """VMEC-specific parameter with display, fixed, and matrix indices."""
+    """
+    Extension of the Parameter class. This class adds some extra attribute
+    to a parameter (if it is fixed (we can fix a parameter at any time), if
+    we have to display the parameter in the VMEC input file, and
+    x & y indexes for parameters that are part of a matrix)
+    """
 
-    display: bool = field(default=False)
-    fixed: bool = field(default=False)
+    def __init__(
+        self,
+        runtime=None,
+        name: str = "",
+        index=None,
+        type=None,
+        value=None,
+        gap=None,
+        min_value=None,
+        max_value=None,
+    ):
+        super().__init__(
+            runtime=runtime,
+            name=name,
+            index=index,
+            type=type or ParamType.STRING,
+            value=value,
+            gap=gap,
+            min_value=min_value if min_value is not None else -INFINITY,
+            max_value=max_value if max_value is not None else INFINITY,
+        )
+        self.display = False
+        self.fixed = False
+        self.x_index = None
+        self.y_index = None
 
-    x_index: Optional[int] = field(default=None)
-    y_index: Optional[int] = field(default=None)
+    def set_x_index(self, index):
+        if index is None:
+            self.x_index = None
+            return
 
-    # ------------------------------------------------------------
-    # Index handling
-    # ------------------------------------------------------------
+        self.x_index = int(index)
 
-    def set_x_index(self, index: Optional[int]) -> None:
-        self.x_index = int(index) if index is not None else None
+    def set_y_index(self, index):
+        if index is None:
+            self.y_index = None
+            return
 
-    def set_y_index(self, index: Optional[int]) -> None:
-        self.y_index = int(index) if index is not None else None
+        self.y_index = int(index)
 
-    def get_x_index(self) -> Optional[int]:
-        return self.x_index
+    def set_display(self, display):
+        if isinstance(display, str):
+            self.display = display.strip().lower() in ("true", "t", "yes", "1")
+            return
 
-    def get_y_index(self) -> Optional[int]:
-        return self.y_index
-
-    # ------------------------------------------------------------
-    # Flags
-    # ------------------------------------------------------------
-
-    def set_display(self, display: bool) -> None:
         self.display = bool(display)
 
-    def set_fixed(self, fixed: bool) -> None:
+    def set_fixed(self, fixed):
+        if isinstance(fixed, str):
+            self.fixed = fixed.strip().lower() in ("true", "t", "yes", "1")
+            return
+
         self.fixed = bool(fixed)
 
-    def get_display(self) -> bool:
+    def get_display(self):
         return self.display
 
-    def get_fixed(self) -> bool:
+    def get_fixed(self):
         return self.fixed
 
-    def to_be_modified(self) -> bool:
+    def to_be_modified(self):
         return self.display and not self.fixed
 
-    # ------------------------------------------------------------
-    # Output helpers
-    # ------------------------------------------------------------
+    def get_x_index(self):
+        return self.x_index
 
-    def print_value(self) -> None:
-        if self.type == ParamType.BOOL:
-            value_str = "TRUE" if self.value else "FALSE"
+    def get_y_index(self):
+        return self.y_index
+
+    def _logger(self):
+        if getattr(self, "_runtime", None) is not None and getattr(self._runtime, "logger", None) is not None:
+            return self._runtime.logger
+        return logging.getLogger(__name__)
+
+
+    def print_value(self):
+        logger = self._logger()
+        if self._type == ParamType.BOOL:
+            formatted_value = "TRUE" if self._value else "FALSE"
         else:
-            value_str = str(self.value)
+            formatted_value = self._value
 
-        u.logger.info(f"{self.name} = {value_str}")
+        logger.info(f"{self._name} = {formatted_value}")
 
-    def get_value_and_index(self) -> str:
-        if self.type == ParamType.FLOAT:
-            return f"{float(self.value):.6E}"
-        if self.type == ParamType.INT:
-            return str(int(self.value))
-        return str(self.value)
+    def get_value_and_index(self):
+        if self._type == ParamType.FLOAT:
+            return f"{float(self._value):.6E}"
+        return str(self._value)

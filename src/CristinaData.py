@@ -21,7 +21,6 @@ import os
 import sys
 from array import array
 from xml.dom import minidom
-import Utils as u
 from Parameter import Parameter
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
@@ -42,11 +41,12 @@ class CristinaData (object):
     parameter, specifies the min/max/default values, the gap, the index,...
     It can also create an XML output file with the data it contains
     """
-    def __init__(self):
+    def __init__(self, runtime):
         self.__numParams = 0
         self.__maxRange = 0
         self.__fInput = None
         self.__params = []
+        self.__runtime = runtime
         return
 
     def __del__(self):
@@ -61,7 +61,7 @@ class CristinaData (object):
 
     def printData(self):
         for i in range(self.__numParams):
-            u.logger.info("CristinaData. Param(" + str(i) +") - Value: " + str(self.__params[i].get_value()))
+            self.__runtime.logger.info("CristinaData. Param(" + str(i) +") - Value: " + str(self.__params[i].get_value()))
 
     """
     Returns a list of doubles with the values of the modificable parameters
@@ -80,7 +80,7 @@ class CristinaData (object):
     """
 
     def setValsOfParameters(self, buff):
-        u.logger.debug("CristinaData. Setting parameters (number: "
+        self.__runtime.logger.debug("CristinaData. Setting parameters (number: "
                          + str(len(buff)) + ")")
         for i in range(len(buff)):
             self.__params[i].set_value(buff[i])
@@ -145,14 +145,14 @@ class CristinaData (object):
                                 c.get_min_value()) / c.get_gap()))
                         self.__maxRange = max(values, self.__maxRange)
                     except ValueError as e:
-                        u.logger.warning("Problem calculating max range: " + 
+                        self.__runtime.logger.warning("Problem calculating max range: " + 
                                          str(e) + " . Fileno: " + str(sys.exc_info()[2].tb_lineno))
                         pass
-            u.logger.debug("Number of parameters " +
+            self.__runtime.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")
         except Exception as e:
-            u.logger.error("CristinaData (" +
+            self.__runtime.logger.error("CristinaData (" +
                             str(sys.exc_info()[2].tb_lineno) +
                             "). Problem reading input xml file: " + str(e))
             sys.exit(111)

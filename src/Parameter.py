@@ -2,163 +2,224 @@
 # vim: set fileencoding=utf-8 :
 
 #############################################################################
-#    Copyright 2013 by Antonio Gomez and Miguel Cardenas                    #
+#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
 #                                                                           #
-#    Licensed under the Apache License, Version 2.0 (the "License");        #
-#    you may not use this file except in compliance with the License.       #
-#    You may obtain a copy of the License at                                #
+#   Licensed under the Apache License, Version 2.0 (the "License");         #
+#   you may not use this file except in compliance with the License.        #
+#   You may obtain a copy of the License at                                 #
 #                                                                           #
-#        http://www.apache.org/licenses/LICENSE-2.0                         #
+#       http://www.apache.org/licenses/LICENSE-2.0                          #
 #                                                                           #
-#    Unless required by applicable law or agreed to in writing, software    #
-#    distributed under the License is distributed on an "AS IS" BASIS,      #
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied#
-#    See the License for the specific language governing permissions and    #
-#    limitations under the License.                                         #
+#   Unless required by applicable law or agreed to in writing, software     #
+#   distributed under the License is distributed on an "AS IS" BASIS,       #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
+#   See the License for the specific language governing permissions and     #
+#   limitations under the License.                                          #
 #############################################################################
-from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Optional, Union
+
+from __future__ import annotations
+
+from enum import IntEnum
+from typing import Any, Optional
+import math
+
+INFINITY = math.inf
 
 
-class ParamType(Enum):
+class ParamType(IntEnum):
     INT = 1
     FLOAT = 2
     BOOL = 3
     STRING = 4
 
 
-Number = Union[int, float]
+TRUE_VALUES = {"true", "t", "yes", "y", "1"}
+FALSE_VALUES = {"false", "f", "no", "n", "0"}
 
 
-@dataclass
 class Parameter:
-    """
-    Optimization parameter (e.g., GA gene).
+    """Represents a parameter used during optimization."""
 
-    Fully type-safe version using Enum-based typing.
-    """
+    def __init__(
+        self,
+        runtime: Optional[Any] = None,
+        name: str = "",
+        index: Optional[int] = None,
+        type: ParamType = ParamType.STRING,
+        value: Any = None,
+        gap: Optional[float] = None,
+        min_value: Any = -INFINITY,
+        max_value: Any = INFINITY,
+    ) -> None:
+        self._runtime = runtime
+        self._name = str(name)
+        self._index = int(index) if index is not None else None
+        self._type = type
+        self._value = None
+        self._gap = float(gap) if gap is not None else None
+        self._min_value = min_value
+        self._max_value = max_value
 
-    name: str = ""
-    index: Optional[int] = None
-    value: Any = None
+        if not isinstance(self._type, ParamType):
+            raise TypeError("type must be a ParamType")
 
-    type: ParamType = ParamType.STRING
-    gap: Optional[float] = None
+        if value is not None:
+            self.set_value(value)
 
-    min_value: Optional[Number] = None
-    max_value: Optional[Number] = None
-
-    # ------------------------------------------------------------
-    # Value handling
-    # ------------------------------------------------------------
+    def _parse_bool(self, value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return value != 0
+        normalized = str(value).strip().lower()
+        if normalized in TRUE_VALUES:
+            return True
+        if normalized in FALSE_VALUES:
+            return False
+        raise ValueError(f"Cannot parse boolean value: {value}")
 
     def set_value(self, value: Any) -> None:
-        if self.type == ParamType.STRING:
-            self.value = str(value)
+        if self._type == ParamType.STRING:
+            self._value = str(value)
+            return
 
-        elif self.type == ParamType.FLOAT:
-            self.value = float(value)
+        if self._type == ParamType.FLOAT:
+            self._value = float(value)
+            return
 
-        elif self.type == ParamType.INT:
-            self.value = int(round(float(value)))
+        if self._type == ParamType.INT:
+            self._value = int(round(float(value)))
+            return
 
-        elif self.type == ParamType.BOOL:
-            if isinstance(value, bool):
-                self.value = value
-            elif isinstance(value, (int, float)):
-                self.value = bool(value)
-            else:
-                self.value = str(value).strip().lower() in (
-                    "true", "t", "1", "yes", "y"
-                )
+        if self._type == ParamType.BOOL:
+            self._value = self._parse_bool(value)
+            return
 
-        else:
-            raise ValueError(f"Unsupported ParamType: {self.type}")
-
-    def get_value(self) -> Any:
-        return self.value
-
-    # ------------------------------------------------------------
-    # Index
-    # ------------------------------------------------------------
-
-    def set_index(self, index: int) -> None:
-        self.index = int(index)
+        raise TypeError(f"Unsupported parameter type: {self._type}")
 
     def get_index(self) -> Optional[int]:
-        return self.index
+        return self._index
 
-    # ------------------------------------------------------------
-    # Name / type
-    # ------------------------------------------------------------
-
-    def set_name(self, name: str) -> None:
-        self.name = str(name)
+    def set_index(self, index: Any) -> None:
+        self._index = int(index)
 
     def get_name(self) -> str:
-        return self.name
+        return self._name
 
-    def set_type(self, type_: ParamType) -> None:
-        if not isinstance(type_, ParamType):
-            raise TypeError("type_ must be a ParamType enum")
-        self.type = type_
+    def set_name(self, name: Any) -> None:
+        self._name = str(name)
+
+    def set_type(self, type_: Any) -> None:
+        if isinstance(type_, ParamType):
+            self._type = type_
+            return
+
+        if isinstance(type_, str):
+            normalized = type_.strip()
+            if normalized in ("float", "double"):
+                self._type = ParamType.FLOAT
+                return
+            if normalized == "int":
+                self._type = ParamType.INT
+                return
+            if normalized == "bool":
+                self._type = ParamType.BOOL
+                return
+            if normalized == "string":
+                self._type = ParamType.STRING
+                return
+
+        raise TypeError("type must be a ParamType")
 
     def get_type(self) -> ParamType:
-        return self.type
+        return self._type
 
-    # ------------------------------------------------------------
-    # Bounds
-    # ------------------------------------------------------------
+    def get_value(self) -> Any:
+        if self._type == ParamType.FLOAT:
+            return float(self._value)
+        if self._type == ParamType.INT:
+            return int(self._value)
+        if self._type == ParamType.BOOL:
+            return self._parse_bool(self._value)
+        return self._value
 
-    def set_min_value(self, v: Number) -> None:
-        self.min_value = v
+    def set_min_value(self, min_value: Any) -> None:
+        if self._type == ParamType.STRING:
+            self._min_value = str(min_value)
+            return
+        if self._type == ParamType.FLOAT:
+            self._min_value = float(min_value)
+            return
+        if self._type == ParamType.INT:
+            self._min_value = int(min_value)
+            return
+        if self._type == ParamType.BOOL:
+            self._min_value = self._parse_bool(min_value)
+            return
+        raise TypeError(f"Unsupported parameter type: {self._type}")
 
-    def set_max_value(self, v: Number) -> None:
-        self.max_value = v
+    def get_min_value(self) -> Any:
+        return self._min_value
 
-    def validate_bounds(self) -> None:
-        if (
-            self.min_value is not None
-            and self.max_value is not None
-            and self.min_value > self.max_value
-        ):
-            raise ValueError(
-                f"Invalid bounds: min_value ({self.min_value}) "
-                f"> max_value ({self.max_value})"
-            )
+    def set_max_value(self, max_value: Any) -> None:
+        if self._type == ParamType.STRING:
+            self._max_value = str(max_value)
+            return
+        if self._type == ParamType.FLOAT:
+            self._max_value = float(max_value)
+            return
+        if self._type == ParamType.INT:
+            self._max_value = int(max_value)
+            return
+        if self._type == ParamType.BOOL:
+            self._max_value = self._parse_bool(max_value)
+            return
+        raise TypeError(f"Unsupported parameter type: {self._type}")
 
-    # ------------------------------------------------------------
-    # Gap
-    # ------------------------------------------------------------
+    def get_max_value(self) -> Any:
+        return self._max_value
 
-    def set_gap(self, gap: float) -> None:
-        self.gap = float(gap)
+    def set_gap(self, gap: Any) -> None:
+        self._gap = float(gap)
 
     def get_gap(self) -> Optional[float]:
-        return self.gap
-
-    # ------------------------------------------------------------
-    # Utilities
-    # ------------------------------------------------------------
+        return self._gap
 
     def is_numeric(self) -> bool:
-        return self.type in (ParamType.INT, ParamType.FLOAT)
+        return self._type in {ParamType.INT, ParamType.FLOAT}
 
-    def is_in_bounds(self) -> bool:
-        """Check if current value is within min/max bounds."""
-        if self.value is None or not self.is_numeric():
-            return True
-        if self.min_value is not None and self.value < self.min_value:
-            return False
-        if self.max_value is not None and self.value > self.max_value:
-            return False
-        return True
+    def validate_bounds(self) -> None:
+        if float(self._min_value) > float(self._max_value):
+            raise ValueError(
+                f"min_value ({self._min_value}) must be less than or equal to max_value ({self._max_value})"
+            )
 
     def __repr__(self) -> str:
         return (
-            f"Parameter(name={self.name!r}, "
-            f"type={self.type.name}, "
-            f"value={self.value}, "
-            f"index={self.index})"
+            f"Parameter(name={self._name!r}, index={self._index}, "
+            f"type={self._type.name}, value={self._value!r})"
         )
+
+    @property
+    def type(self) -> ParamType:
+        return self._type
+
+    @type.setter
+    def type(self, type_: Any) -> None:
+        self.set_type(type_)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, name: Any) -> None:
+        self.set_name(name)
+
+    @property
+    def index(self) -> Optional[int]:
+        return self._index
+
+    @index.setter
+    def index(self, index: Any) -> None:
+        self.set_index(index)

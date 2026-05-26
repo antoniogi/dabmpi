@@ -20,11 +20,13 @@
 import sys
 import os
 
-from SolutionFusion import SolutionFusion
-from SolutionCristina import SolutionCristina
-from SolutionNonSeparable import SolutionNonSeparable
-import Utils as util
+from solution.SolutionFusion import SolutionFusion
+from solution.SolutionCristina import SolutionCristina
+from solution.SolutionNonSeparable import SolutionNonSeparable
 from Parameter import Parameter
+from core.runtime import GlobalRuntime
+from core.enums import SolutionType, ObjectiveType
+import math
 
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
@@ -44,44 +46,44 @@ The format of the elements in the queue is as follows:
     ,..., param_index:param_val - solutionVal
 """
 class SolutionsQueue (object):
-    def __init__(self, filename, solution_type, infile, writeToFile,
-                 isPriority=False):
+    def __init__(self, runtime: GlobalRuntime, solutions_file: str, writeToFile: bool, isPriority: bool=False):
         try:
-            self.__queue = []
-            self.__filename = filename
-            self.__solType = solution_type
-            self.__isPriority = isPriority
-            self.__infile = infile
-            self.__writeToFile = writeToFile
-            self.__maxSize = util.infinity
-            if self.__solType == util.solution_type.FUSION:
-                self.__solutionBase = SolutionFusion(self.__infile)
-                util.logger.info("QUEUE: Initialised fusion queue (" +
-                                  filename + ")" + self.__infile)
-            if self.__solType == util.solution_type.CRISTINA:
-                self.__solutionBase = SolutionCristina(self.__infile)
-                util.logger.info("QUEUE: Initialised Cristina queue (" +
-                                  filename + ")" + self.__infile)
+            self._queue = []
+            self._filename = solutions_file
+            self._solType = runtime.solution_type
+            self._isPriority = isPriority
+            self._infile = runtime.input_file
+            self._writeToFile = writeToFile
+            self._maxSize = math.inf
+            self._runtime = runtime
+            if self._solType == SolutionType.FUSION:
+                self._solutionBase = SolutionFusion(self._runtime)
+                self._runtime.logger.info("QUEUE: Initialised fusion queue (" +
+                                self._filename + ")" + self._infile)
+            elif self._solType == SolutionType.CRISTINA:
+                self._solutionBase = SolutionCristina(self._runtime)
+                self._runtime.logger.info("QUEUE: Initialised Cristina queue (" +
+                                self._filename + ")" + self._infile)
             else:
-                self.__solutionBase = SolutionNonSeparable(self.__infile)
-                util.logger.info("QUEUE: Initialised non separable queue (" +
-                                  filename + ")" + self.__infile)
-            self.__numParams = self.__solutionBase.getNumberofParams()
-            if os.path.exists(self.__filename):
+                self._solutionBase = SolutionNonSeparable(self._runtime)
+                self._runtime.logger.info("QUEUE: Initialised non separable queue (" +
+                                self._filename + ")" + self._infile)
+            self._numParams = self._solutionBase.getNumberofParams()
+            if os.path.exists(self._filename):
                 self.LoadQueue()
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
 
     def __del__(self):
-        if self.__filename == "top.queue":
+        if self._filename == "top.queue":
             self.writeAllSolutions()
 
     def setMaxSize(self, maxS):
-        self.__maxSize = maxS
+        self._maxSize = maxS
 
     def qSize(self):
-        return len(self.__queue)
+        return len(self._queue)
 
     """
     solution is a solution object
@@ -94,16 +96,16 @@ class SolutionsQueue (object):
 
     def PutSolution(self, solution, value, agent_idx, sources=3):
         if solution is None:
-            util.logger.warning("QUEUE. Solution is None. " +
-                                str(self.__filename))
+            self._runtime.logger.warning("QUEUE. Solution is None. " +
+                                str(self._filename))
             return
         parameters = solution.getParameters()
         sol = ""
         try:
-            if self.__numParams != len(parameters):
-                util.logger.warning("QUEUE. Invalid number of parameters (" +
+            if self._numParams != len(parameters):
+                self._runtime.logger.warning("QUEUE. Invalid number of parameters (" +
                                     str(len(parameters)) + " instead of " +
-                                    str(self.__numParams) + ")")
+                                    str(self._numParams) + ")")
                 return
             for param in parameters:
                 idx = param.get_index()
@@ -111,48 +113,48 @@ class SolutionsQueue (object):
                 sol = sol + str(idx) + ":" + str(val) + ","
             sol = sol.rstrip(',')
             sol_tuple = sol, value, agent_idx
-            if not self.__isPriority:
-                if self.qSize() < self.__maxSize:
-                    self.__queue.append(sol_tuple)
+            if not self._isPriority:
+                if self.qSize() < self._maxSize:
+                    self._queue.append(sol_tuple)
             else:
                 inserted = False
                 origins = set()
-                for i in range(len(self.__queue)):
-                    origins.add(self.__queue[i][2])
-                    if util.objective == util.objectiveType.MAXIMIZE:
-                        if (float(self.__queue[i][1]) > value and
-                            float(self.__queue[i][1]) >= 0.0):
+                for i in range(len(self._queue)):
+                    origins.add(self._queue[i][2])
+                    if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                        if (float(self._queue[i][1]) > value and
+                            float(self._queue[i][1]) >= 0.0):
                             continue
-                    if util.objective == util.objectiveType.MINIMIZE:
-                        if (float(self.__queue[i][1]) < value and
-                            float(self.__queue[i][1]) >= 0.0):
+                    if self._runtime.objective == ObjectiveType.MINIMIZE:
+                        if (float(self._queue[i][1]) < value and
+                            float(self._queue[i][1]) >= 0.0):
                             continue
-                    if (i > self.__maxSize / 10 and len(origins) <= 1 and
+                    if (i > self._maxSize / 10 and len(origins) <= 1 and
                         agent_idx in origins):
                         break
-                    self.__queue.insert(i, sol_tuple)
+                    self._queue.insert(i, sol_tuple)
                     inserted = True
                     break
                 if (not inserted and len(origins) < sources):
                     if agent_idx not in origins:
                         if self.qSize() > 0:
                             for i in range(self.qSize() - 1, 0):
-                                if self.__queue[2] in origins:
-                                    self.__queue.pop(i)
+                                if self._queue[2] in origins:
+                                    self._queue.pop(i)
                                     break
-                        self.__queue.append(sol_tuple)
-                if self.qSize() > self.__maxSize:
-                    self.__queue.pop()
+                        self._queue.append(sol_tuple)
+                if self.qSize() > self._maxSize:
+                    self._queue.pop()
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                             "). " + str(e))
-        if not self.__writeToFile:
+        if not self._writeToFile:
             return
         try:
-            with open(self.__filename, 'a') as f:
+            with open(self._filename, 'a') as f:
                 f.write(sol + "#" + str(value) + '#' + str(agent_idx) + '\n')
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                             "). " + str(e))
 
     """
@@ -160,36 +162,36 @@ class SolutionsQueue (object):
     """
 
     def LoadQueue(self):
-        with open(self.__filename, 'r') as f:
+        with open(self._filename, 'r') as f:
             for line in f.readlines():
                 sol_tuple = line.split('#')
-                if not self.__isPriority:
-                    self.__queue.append(sol_tuple)
+                if not self._isPriority:
+                    self._queue.append(sol_tuple)
                 else:
                     value = float(sol_tuple[1])
                     inserted = False
-                    for i in range(len(self.__queue)):
-                        if float(self.__queue[i][1]) < value:
+                    for i in range(len(self._queue)):
+                        if float(self._queue[i][1]) < value:
                             continue
-                        self.__queue.insert(i - 1, sol_tuple)
+                        self._queue.insert(i - 1, sol_tuple)
                         inserted = True
                         break
                     if not inserted:
-                        self.__queue.append(sol_tuple)
+                        self._queue.append(sol_tuple)
 
     """
     Returns the queue
     """
 
     def getAllSolutions(self):
-        return self.__queue
+        return self._queue
 
     """
     Empties the queue and writes all it's content in a text file
     """
 
     def writeAllSolutions(self):
-        with open(self.__filename, 'w') as f:
+        with open(self._filename, 'w') as f:
             try:
                 while True:
                     if self.qSize() == 0:
@@ -197,10 +199,10 @@ class SolutionsQueue (object):
                     solutionTuple = self.GetSolutionTuple(True)
                     parameters = solutionTuple[0].getParameters()
                     sol = ""
-                    if self.__numParams != len(parameters):
-                        util.logger.warning("QUEUE. Invalid number of params (" +
-                                            str(len(parameters)) + " instead of " +
-                                            str(self.__numParams) + ")")
+                    if self._numParams != len(parameters):
+                        self._runtime.logger.warning("QUEUE. Invalid number of params (" +
+                                                    str(len(parameters)) + " instead of " +
+                                                    str(self._numParams) + ")")
                         return
                     for param in parameters:
                         idx = param.get_index()
@@ -210,7 +212,7 @@ class SolutionsQueue (object):
                     f.write(sol + "#" + str(solutionTuple[1]) + '#' +
                             str(solutionTuple[2]) + '\n')
             except Exception as e:
-                util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
+                self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
 
     """
@@ -230,13 +232,13 @@ class SolutionsQueue (object):
 
     def GetSolution(self, remove=True):
         solution = None
-        if len(self.__queue) == 0:
+        if len(self._queue) == 0:
             return solution
-        solution = self.__solutionBase
+        solution = self._solutionBase
         if remove:
-            sol_tuple = self.__queue.pop(0)
+            sol_tuple = self._queue.pop(0)
         else:
-            sol_tuple = self.__queue[0]
+            sol_tuple = self._queue[0]
         #split to get each idx:val
         parameters = sol_tuple[0].split(',')
         params = []
@@ -263,11 +265,11 @@ class SolutionsQueue (object):
         agent_idx = -1
         if self.qSize() == 0:
             return solution, val, agent_idx
-        solution = self.__solutionBase
+        solution = self._solutionBase
         if remove:
-            sol_tuple = self.__queue.pop(0)
+            sol_tuple = self._queue.pop(0)
         else:
-            sol_tuple = self.__queue[0]
+            sol_tuple = self._queue[0]
 
         val = sol_tuple[1]
         agent_idx = sol_tuple[2]
@@ -279,10 +281,10 @@ class SolutionsQueue (object):
             params.append(float(p.split(':')[1]))
 
         #this method expects a list of parameters
-        self.__solutionBase.setParametersValues(params)
-        #self.__solutionBase.setParameters (params)
+        self._solutionBase.setParametersValues(params)
+        #self._solutionBase.setParameters (params)
 
-        return self.__solutionBase, float(val), int(agent_idx)
+        return self._solutionBase, float(val), int(agent_idx)
 
     """
     if remove is true, it behaves as a regular queue, where the front of the
@@ -295,25 +297,25 @@ class SolutionsQueue (object):
         val = -1.0
         agent_idx = -1
         try:
-            if len(self.__queue) == 0:
+            if len(self._queue) == 0:
                 return val, agent_idx, solution
             if remove:
-                sol_tuple = self.__queue.pop(0)
+                sol_tuple = self._queue.pop(0)
             else:
-                sol_tuple = self.__queue[0]
+                sol_tuple = self._queue[0]
 
             val = float(sol_tuple[1])
             agent_idx = int(sol_tuple[2])
             #split to get each idx:val
             parameters = sol_tuple[0].split(',')
             #iterate through the elements in the list
-            util.logger.debug("QUEUE. Number of parameters: " +
+            self._runtime.logger.debug("QUEUE. Number of parameters: " +
                               str(len(parameters)))
             for p in parameters:
-                util.logger.debug("Appending: " + str(p.split(':')[1]))
+                self._runtime.logger.debug("Appending: " + str(p.split(':')[1]))
                 solution.append(float(p.split(':')[1]))
         except Exception as e:
-            util.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
                                 "). " + str(e))
         return val, agent_idx, solution
 
@@ -324,9 +326,9 @@ class SolutionsQueue (object):
     def GetTotalSolutionsValues(self):
         total_sum = 0.0
         for i in range(self.qSize()):
-            sol_tuple = self.__queue[i]
+            sol_tuple = self._queue[i]
             if float(sol_tuple[1])==0.0:
-                total_sum += util.infinity/100
+                total_sum += math.inf
             else:
                 total_sum += 1.0 / float(sol_tuple[1])
         return total_sum
@@ -340,31 +342,31 @@ class SolutionsQueue (object):
         temp_sum = 0.0
         total_val = self.GetTotalSolutionsValues()
         for i in range(self.qSize()):
-            if util.objective == util.objectiveType.MINIMIZE:
-                if float(self.__queue[i][1])==0.0:
-                    temp_sum += util.infinity
+            if self._runtime.objective == ObjectiveType.MINIMIZE:
+                if float(self._queue[i][1])==0.0:
+                    temp_sum += math.inf
                 else:
-                    temp_sum += float(1.0 / float(self.__queue[i][1]))
+                    temp_sum += float(1.0 / float(self._queue[i][1]))
             else:
-                temp_sum += float(self.__queue[i][1])
-            util.logger.debug("TempSum: " + str(temp_sum) + "/" +
-                               str(self.__queue[i][1]))
+                temp_sum += float(self._queue[i][1])
+            self._runtime.logger.debug("TempSum: " + str(temp_sum) + "/" +
+                                        str(self._queue[i][1]))
             if temp_sum > value:
                 #split to get each idx:val
-                parameters = self.__queue[i][0].split(',')
+                parameters = self._queue[i][0].split(',')
                 params = []
                 #iterate through the elements in the list
                 for p in parameters:
                     params.append(float(p.split(':')[1]))
 
                 #this method expects a list of parameters
-                util.logger.info("Queue. Returning solution in position " +
+                self._runtime.logger.info("Queue. Returning solution in position " +
                                  str(i) + " / " + str(temp_sum) + " / " +
                                  str(value) + " / " + str(self.qSize()) +
                                  " / " + str(total_val))
-                self.__solutionBase.setParametersValues(params)
-                return (self.__solutionBase, float(self.__queue[i][1]),
-                        int(self.__queue[i][2]))
-        util.logger.info("Queue. Returning None. " + str(value) +
+                self._solutionBase.setParametersValues(params)
+                return (self._solutionBase, float(self._queue[i][1]),
+                        int(self._queue[i][2]))
+        self._runtime.logger.info("Queue. Returning None. " + str(value) +
                          "/" + str(total_val) + "/" + str(temp_sum))
         return None, None, None

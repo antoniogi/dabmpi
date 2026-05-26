@@ -18,7 +18,6 @@
 #############################################################################
 
 import math
-import string
 import configparser
 import os
 import shutil
@@ -27,8 +26,12 @@ import time
 import glob
 import subprocess
 import numpy as np
-import Utils as u
 from pathlib import Path
+from core.file_utils import tail
+from core.comms import GlobalComms
+import core.enums as e
+from core.runtime import GlobalRuntime
+from core.enums import ObjectiveType
 
 
 __author__ = ' AUTHORS:     Antonio Gomez(antonio.gomez@csiro.au)'
@@ -41,6 +44,7 @@ HISTORY
     Version 1.1(09-01-2015):   Using numpy and new function.
 """
 
+INFINITY = math.inf
 
 class VMECProcess(object):
     """
@@ -48,17 +52,18 @@ class VMECProcess(object):
     It is responsible for callling VMEC and analising its result.
     """
 
-    def __init__(self, cfile):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         try:
+            self._runtime = runtime
+            self._comms = comms
             self.__currentPath = os.getcwd()
-            self.__rank = str(u.rank)
 
-            self.__execPath = self.__currentPath + '/' + self.__rank
-            self.__filename = "input.tj" + str(u.rank)
+            self.__execPath = f"{self.__currentPath}/{self._comms.rank}"
+            self._filename = "input.tj" + str(self._comms.rank)
 
-            self.__beta = -u.infinity
-            self.__bgradbval = -u.infinity
-            self.__bootstrap = u.infinity
+            self.__beta = -INFINITY
+            self.__bgradbval = -INFINITY
+            self.__bootstrap = INFINITY
             self.__is_mercier_stable = True
             self.__is_ballooning_stable = True
 
@@ -69,23 +74,23 @@ class VMECProcess(object):
             self.__bgradb = False
             self.__check_ballooning = False
             self.__get_beta = False
-            self.__min_beta = -u.infinity
-            self.__max_beta = u.infinity
+            self.__min_beta = -INFINITY
+            self.__max_beta = INFINITY
             self.__save_configs = False
 
             self.__netcdf = ""
 
             #read the configuration from the INI file
-            self.read_ini_config_file(cfile)
+            self.read_ini_config_file(self._runtime.config_file)
 
             #Create a symbolic link for the executable files on the
             #folder where the worker is executed
-            if int(self.__rank) == 0:
+            if int(self._comms.rank) == 0:
                 return
-            if not os.path.exists(self.__rank):
-                os.makedirs(self.__rank)
-            if not os.path.exists(self.__rank + "/finished"):
-                os.makedirs(self.__rank + "/finished")
+            if not os.path.exists(self._comms.rank):
+                os.makedirs(str(self._comms.rank))
+            if not os.path.exists(f"{self._comms.rank}/finished"):
+                os.makedirs(f"{self._comms.rank}/finished")
             os.chdir(self.__execPath)
             try:
                 if self.__check_ballooning and not os.path.lexists("xcobravmec"):
@@ -98,7 +103,7 @@ class VMECProcess(object):
                     subprocess.call(["ln", "-s", "/home/fraguas/bin/xvmec2000nc",
                                       "xvmec2000"])
             except Exception as e:
-                u.logger.error("VMECProcess(" +
+                self._runtime.logger.error("VMECProcess(" +
                                str(sys.exc_info()[2].tb_lineno) +
                                "). " + str(e))
 
@@ -116,7 +121,7 @@ class VMECProcess(object):
                                                    "/home/fraguas/bin/xvmec2000nc",
                                                    "xvmec2000"])
                 except Exception as e:
-                    u.logger.warning("VMECProcess(" +
+                    self._runtime.logger.warning("VMECProcess(" +
                                     str(sys.exc_info()[2].tb_lineno) + "). " +
                                     str(e))
                     process = subprocess.Popen(["ln", "-s",
@@ -125,7 +130,7 @@ class VMECProcess(object):
                     process = subprocess.Popen(["ln", "-s",
                                                "../../external/xgrid", "xgrid"])
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            ") " + str(e))
         os.chdir(self.__currentPath)
 
@@ -186,14 +191,14 @@ class VMECProcess(object):
                 val = config.get("General", "netcdf")
                 if val is not None:
                     self.__netcdf = val
-            u.logger.debug("bgradb " + str(self.__bgradb) + " - mercier " +
+            self._runtime.logger.debug("bgradb " + str(self.__bgradb) + " - mercier " +
                             str(self.__check_mercier) + " - min_radius " +
                             str(self.__min_mercier_radius) + " - ballooning " +
                             str(self.__check_ballooning) + " - threed1 " +
                             str(self.__extra_threed1) + " - beta " +
                             str(self.__get_beta))
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). " + str(e))
 
     """
@@ -201,23 +206,23 @@ class VMECProcess(object):
     to write the input file
     """
     def create_input_file(self, solution):
-        u.logger.debug("Creating input file")
+        self._runtime.logger.debug("Creating input file")
         try:
-            if os.path.exists("input.tj" + self.__rank):
-                os.remove("input.tj" + self.__rank)
+            if os.path.exists(f"input.tj{self._comms.rank}"):
+                os.remove(f"input.tj{self._comms.rank}")
         except:
             pass
-        solution.prepare(self.__rank + "/" + self.__filename)
+        solution.prepare(f"{self._comms.rank}/{self._filename}")
         return
 
     def clean_folder(self):
         files = [
-            f"threed1.tj{self.__rank}",
-            f"wout_tj{self.__rank}.txt",
+            f"threed1.tj{self._comms.rank}",
+            f"wout_tj{self._comms.rank}.txt",
             "wout.flx",
             "wout.txt",
-            f"mercier.tj{self.__rank}",
-            f"jxbout.tj{self.__rank}",
+            f"mercier.tj{self._comms.rank}",
+            f"jxbout.tj{self._comms.rank}",
             "fort.9",
         ]
 
@@ -225,7 +230,7 @@ class VMECProcess(object):
             try:
                 Path(name).unlink(missing_ok=True)
             except OSError:
-                u.logger.exception(f"Failed removing {name}")
+                self._runtime.logger.exception(f"Failed removing {name}")
 
     """
     Main method of this class. It is responsible for calling the different
@@ -239,69 +244,66 @@ class VMECProcess(object):
         os.chdir(self.__execPath)
         self.clean_folder()
 
-        if u.objective == u.objectiveType.MINIMIZE:
-            val = u.infinity
+        if self._runtime.objective == ObjectiveType.MINIMIZE:
+            val = INFINITY
         else:
-            val = -u.infinity
+            val = -INFINITY
         try:
             if not self.run_vmec():
                 os.chdir(self.__currentPath)
-                if u.objective == u.objectiveType.MAXIMIZE:
-                    return -u.infinity
-                return u.infinity
+                if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                    return -INFINITY
+                return INFINITY
 
             if not self.run_mercier():
                 os.chdir(self.__currentPath)
-                if u.objective == u.objectiveType.MAXIMIZE:
-                    return -u.infinity
-                return u.infinity
+                if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                    return -INFINITY
+                return INFINITY
 
             if not self.run_threed():
                 os.chdir(self.__currentPath)
-                if u.objective == u.objectiveType.MAXIMIZE:
-                    return -u.infinity
-                return u.infinity
+                if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                    return -INFINITY
+                return INFINITY
             else:
                 val = self.__beta
 
             if not self.run_ballooning():
                 os.chdir(self.__currentPath)
-                if u.objective == u.objectiveType.MAXIMIZE:
-                    return -u.infinity
-                return u.infinity
+                if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                    return -INFINITY
+                return INFINITY
 
             if self.__bgradb:
                 if not self.run_b_grad_b():
                     os.chdir(self.__currentPath)
-                    if u.objective == u.objectiveType.MAXIMIZE:
-                        return -u.infinity
-                    return u.infinity
+                    if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                        return -INFINITY
+                    return INFINITY
                 else:
                     val = self.__bgradbval
 
             if self.__dkes:
                 if not self.run_dkes():
                     os.chdir(self.__currentPath)
-                    if u.objective == u.objectiveType.MAXIMIZE:
-                        return -u.infinity
-                    return u.infinity
+                    if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                        return -INFINITY
+                    return INFINITY
                 else:
                     val = self.__bootstrap
 
             if not self.__is_mercier_stable:
-                u.logger.info("Unstable mercier")
-                if u.objective == u.objectiveType.MAXIMIZE:
-                    return -u.infinity
-                return u.infinity
+                self._runtime.logger.info("Unstable mercier")
+                if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                    return -INFINITY
+                return INFINITY
             self.save_configuration()
-            u.logger.info("VALID configuration(" + self.__rank + "). Val: " +
-                           str(val))
+            self._runtime.logger.info(f"VALID configuration({self._comms.rank}). Val: {val}")
 
         except Exception as e:
             os.chdir(self.__currentPath)
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                            "). Error when executing the configuration. " +
-                            str(e))
+            self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Error when executing the configuration. {e}")
             return val
         #Always restore the working directory to the original path
         os.chdir(self.__currentPath)
@@ -325,7 +327,7 @@ class VMECProcess(object):
                 except:
                     pass
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when saving the configuration. " +
                             str(e))
 
@@ -349,7 +351,7 @@ class VMECProcess(object):
                 ns = int(parts[1].strip())
                 nmax = int(parts[4].strip())
 
-                u.logger.debug("NS " + parts[1] + " NMAX " + parts[4])
+                self._runtime.logger.debug(f"NS {parts[1]} NMAX {parts[4]}")
 
                 file_wout.readline()
                 file_wout.readline()
@@ -373,7 +375,7 @@ class VMECProcess(object):
                             parts = line.split()
                             m[j] = int(parts[0].strip())
                             n[j] = int(parts[1].strip())
-                            u.logger.debug("m " + parts[0] + " n " + parts[1])
+                            self._runtime.logger.debug(f"m {parts[0]} n {parts[1]}")
 
                         line = file_wout.readline()
                         parts = line.split()
@@ -384,7 +386,7 @@ class VMECProcess(object):
                         if i==0:
                             line = file_wout.readline()
                             parts = line.split()
-                            u.logger.debug("m " + parts[0] + " n " + parts[1])
+                            self._runtime.logger.debug(f"m {parts[0]} n {parts[1]}")
                         line = file_wout.readline()
                         parts = line.split()
                         bmn.setitem(j, i, float(parts[0]))
@@ -409,8 +411,8 @@ class VMECProcess(object):
                 delta = 0.000001
                 #for i in range(0, ns, 10):
                 for i in range(0, ns, 20):
-                    u.logger.debug('Surface: ' + str(i) + '\n')
-                    file_out.write('Surface: ' + str(i) + '\n')
+                    self._runtime.logger.debug(f'Surface: {i}')
+                    file_out.write(f'Surface: {i}\n')
                     #for phi in range(0, 90):
                     #    for epsilon in range(0, 90):
                     for phi in range(0, 90, 2):
@@ -436,14 +438,11 @@ class VMECProcess(object):
                                 dBZ = BZ + ((delta + bmn.getitem(j, i)) * s)
                                 dBphi = BPHI + ((delta + bmn.getitem(j, i)) * c)
 
-                                file_out.write(str('%e' % BR) + ', ' + str(
-                                '%e' % BPHI) + ', ' + str('%e' % BZ) + ', ' + str(
-                                '%e' % dBR) + ', ' + str('%e' % dBphi) + ', ' +
-                                str('%e' % dBZ) + ', ' + str('%e' % rho[i]) + '\n')
+                                values = [BR, BPHI, BZ, dBR, dBphi, dBZ, rho[i]]
+                                file_out.write(", ".join(f"{v:e}" for v in values) + "\n")
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                           "). Unexpected error reading wout. " + str(e))
+            self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Unexpected error reading wout. {e}")
             return False
     """
     Calculate the fitness value for the BxgradB.
@@ -453,47 +452,41 @@ class VMECProcess(object):
     """
 
     def calculate_fitness_bgradb(self, filepath):
-        fitness = 0.0 #-u.infinity
+        fitness = 0.0 #-INFINITY
         try:
-            file_out = open(filepath, 'r')
-            file_out.readline()
-            lineRPhiZ = file_out.readline()
-            while len(lineRPhiZ) > 4:
-                if lineRPhiZ.find("Surface") != -1:
-                    lineRPhiZ = file_out.readline()
-                    continue
-                parts = lineRPhiZ.split(',').strip()
-#                parts = map(string.strip, string.split(lineRPhiZ, ','))
-                Br = float(parts[0])
-                Bphi = float(parts[1])
-                Bz = float(parts[2])
-                dBr = float(parts[3])
-                dBphi = float(parts[4])
-                dBz = float(parts[5])
-                rho = float(parts[6])
-                if Br != 0.0 or Bz != 0.0 or Bphi != 0.0:
-                    divisor = Br ** 3 + Bz ** 3 + Bphi ** 3
-                    if divisor == 0.0:
-                        continue
-                    tempBr = (Br * dBr) / divisor
-                    tempBz = (Bz * dBz) / divisor
-                    tempBphi = (Bphi * dBphi) / divisor
-                    temp = abs(math.sqrt(
-                        abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
-                    fitness = fitness + temp
+            with open(filepath, 'r') as file_out:
+                file_out.readline()
                 lineRPhiZ = file_out.readline()
-            file_out.close()
+                while len(lineRPhiZ) > 4:
+                    if lineRPhiZ.find("Surface") != -1:
+                        lineRPhiZ = file_out.readline()
+                        continue
+                    parts = lineRPhiZ.split(',').strip()
+    #                parts = map(string.strip, string.split(lineRPhiZ, ','))
+                    Br = float(parts[0])
+                    Bphi = float(parts[1])
+                    Bz = float(parts[2])
+                    dBr = float(parts[3])
+                    dBphi = float(parts[4])
+                    dBz = float(parts[5])
+                    rho = float(parts[6])
+                    if Br != 0.0 or Bz != 0.0 or Bphi != 0.0:
+                        divisor = Br ** 3 + Bz ** 3 + Bphi ** 3
+                        if divisor == 0.0:
+                            continue
+                        tempBr = (Br * dBr) / divisor
+                        tempBz = (Bz * dBz) / divisor
+                        tempBphi = (Bphi * dBphi) / divisor
+                        temp = abs(math.sqrt(
+                            abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
+                        fitness = fitness + temp
+                    lineRPhiZ = file_out.readline()
         except Exception as e:
-            fitness = -u.infinity
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                           "). Error when calculating the fitness " + str(e))
-            try:
-                file_out.close()
-            except:
-                pass
+            fitness = -INFINITY
+            self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Error when calculating the fitness {e}")
             pass
         if fitness < 1.0e+2:
-            fitness = -u.infinity
+            fitness = -INFINITY
         return fitness
 
     """
@@ -534,12 +527,11 @@ class VMECProcess(object):
             process = subprocess.Popen(["./EXE/recoge_res.sh"], stdout=subprocess.PIPE)
             outPost = process.communicate()[0]
 
-            u.logger.info(outDKES)
-            u.logger.info(outPost)
+            self._runtime.logger.info(outDKES)
+            self._runtime.logger.info(outPost)
 
             if not os.path.exists("OUTPUT/results.av"):
-                u.logger.info("(" + self.__rank +
-                              ") results.av does not exist")
+                self._runtime.logger.info(f"({self._comms.rank}) results.av does not exist")
                 return False
             try:
                 lines = [line.strip() for line in open("OUTPUT/results.av")]
@@ -547,13 +539,12 @@ class VMECProcess(object):
                 for l in lines:
                     if l.find('average')>0:
                         parts = l.split()
-#                        parts = map(string.strip, string.split(l))
                         try:
                             d31 = abs(float(parts[4]))
                             rho = math.sqrt(float(parts[0]))
                             sum += d31*rho
                         except:
-                            self.__bootstrap = u.infinity
+                            self.__bootstrap = INFINITY
                             return False
                 self.__bootstrap = sum
             except:
@@ -561,19 +552,18 @@ class VMECProcess(object):
             #last = u.Tail("OUTPUT/results.av")
             #parts = map(string.strip, string.split(last))
             #if(len(parts) < 3):
-            #    u.logger.info("VMECProcess. Invalid number of values " +
+            #    runtime.logger.info("VMECProcess. Invalid number of values " +
             #                  " in the results file")
             #    return False
             #self.__bootstrap = abs(float(parts[4]))
             try:
-                u.logger.info("(" + self.__rank + ") DKES VALUE: " +
-                              str(self.__bootstrap))
+                self._runtime.logger.info(f"({self._comms.rank}) DKES VALUE: {self.__bootstrap}")
             except:
                 pass
 
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when running DKES. " + str(e))
             return False
 
@@ -585,19 +575,17 @@ class VMECProcess(object):
         if not self.__bgradb:
             return True
         try:
-            if not os.path.exists("wout_tj" + self.__rank + ".txt"):
+            if not os.path.exists(f"wout_tj{self._comms.rank}.txt"):
                 return False
-            if not self.process_wout("wout_tj" + self.__rank + ".txt",
-                                     "wout_post.txt"):
+            if not self.process_wout(f"wout_tj{self._comms.rank}.txt", f"wout_post{self._comms.rank}.txt"):
                 return False
-            self.__bgradbval = self.calculate_fitness_bgradb("wout_post.txt")
-            u.logger.info("WORKER(" + self.__rank + "). The BxgradB value is " +
-                          str(self.__bgradbval))
-            if os.path.exists("wout_post.txt"):
-                os.remove("wout_post.txt")
+            self.__bgradbval = self.calculate_fitness_bgradb(f"wout_post{self._comms.rank}.txt")
+            self._runtime.logger.info(f"({self._comms.rank}) The BxgradB value is {self.__bgradbval}")
+            if os.path.exists(f"wout_post{self._comms.rank}.txt"):
+                os.remove(f"wout_post{self._comms.rank}.txt")
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when transforming output to FLX format. "
                             + str(e))
             return False
@@ -611,19 +599,18 @@ class VMECProcess(object):
             return True
         files = glob.glob('./wout*')
         for f in files:
-            os.symlink(f, 'WOUT.tj' + self.__rank)
-        shutil.copy2('../in_cobra_empty', 'in_cobra_tj' + self.__rank)
-        subprocess.call(["sed", "-i", "'s/___/wout_tj" + self.__rank +
-                         ".txt/g'", "in_cobra_tj" + self.__rank])
-        subprocess.call(["./xcobravmec", "in_cobra_tj" + self.__rank])
+            os.symlink(f, f'WOUT.tj{self._comms.rank}')
+        shutil.copy2('../in_cobra_empty', f'in_cobra_tj{self._comms.rank}')
+        subprocess.call(["sed", "-i", f"'s/___/wout_tj{self._comms.rank}.txt/g'", f'in_cobra_tj{self._comms.rank}'])
+        subprocess.call(["./xcobravmec", f'in_cobra_tj{self._comms.rank}'])
         try:
-            file_cobra = open('./cobra_grate.' + self.__rank, 'r')
+            file_cobra = open(f'./cobra_grate.{self._comms.rank}', 'r')
             num_lines = len(file_cobra.readlines())
             first_line_to_analyze = num_lines + int(num_lines / 10)
             file_cobra.close()
             if first_line_to_analyze == 0:
                 return False
-            file_cobra = open('./cobra_grate.' + self.__rank, 'r')
+            file_cobra = open(f'./cobra_grate.{self._comms.rank}', 'r')
             i = 0
             self.__is_ballooning_stable = True
             for line in file_cobra.readlines():
@@ -636,11 +623,10 @@ class VMECProcess(object):
                 i += 1
             file_cobra.close()
             if self.__is_ballooning_stable:
-                u.logger.info("WORKER(" + self.__rank +
-                              "). Configuration ballooning stable")
+                self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration ballooning stable")
             return self.__is_ballooning_stable
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when processing ballooning. " + str(e))
             return False
 
@@ -652,10 +638,9 @@ class VMECProcess(object):
         if not self.__check_mercier:
             return True
         try:
-            filename = "mercier.tj" + self.__rank
+            filename = f"mercier.tj{self._comms.rank}"
             if not os.path.exists(filename):
-                u.logger.error("VMECProcess(" + self.__rank + "): File " +
-                                str(filename) + " doesn't exist")
+                self._runtime.logger.error(f"VMECProcess({self._comms.rank}): File {filename} doesn't exist")
                 return False
             f = open(filename, 'r')
             line = f.readline()
@@ -693,12 +678,11 @@ class VMECProcess(object):
                 line = f.readline()
             f.close()
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing mercier. " + str(e))
             self.__is_mercier_stable = False
             return False
-        u.logger.info("WORKER(" + self.__rank +
-                      "). Configuration mercier stable")
+        self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration mercier stable")
         self.__is_mercier_stable = True
         return True
 
@@ -709,11 +693,12 @@ class VMECProcess(object):
 
     def extract_beta(self):
         try:
-            self.__beta = -u.infinity
+            self.__beta = -INFINITY
             if not self.__get_beta:
                 return True
-            file_threed = open('./threed1.tj' + self.__rank, 'r')
+            file_threed = open('./threed1.tj' + self._comms.rank, 'r')
             found = False
+            line = ""
             for line in file_threed.readlines():
                 if line.find('beta total') != -1:
                     found = True
@@ -724,17 +709,16 @@ class VMECProcess(object):
             parts = line.split('=')
 #            parts = map(string.strip, string.split(line, '='))
             self.__beta = float(parts[1])
-            u.logger.info("Worker " + self.__rank + ". Beta found " +
-                           str(self.__beta))
+            self._runtime.logger.info(f"Worker {self._comms.rank}. Beta found {self.__beta}")
             if self.__beta > self.__max_beta:
-                self.__beta = -u.infinity
+                self.__beta = -INFINITY
                 return False
             if self.__beta <= self.__min_beta:
-                self.__beta = -u.infinity
+                self.__beta = -INFINITY
                 return False
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing beta. " + str(e))
             return True
 
@@ -745,7 +729,7 @@ class VMECProcess(object):
             if not self.__extra_threed1:
                 return True
 
-            file_threed = open('./threed1.tj' + self.__rank, 'r')
+            file_threed = open(f'./threed1.tj{self._comms.rank}', 'r')
             cnt = 1
             for line in file_threed.readlines():
                 line = line.replace(" ", "")
@@ -753,13 +737,14 @@ class VMECProcess(object):
                     cnt += 1
             file_threed.close()
             i = 0
-            file_threed = open('threed1.tj' + self.__rank, 'r')
+            file_threed = open(f'./threed1.tj{self._comms.rank}', 'r')
             while i < cnt:
                 line = file_threed.readline().replace(" ", "")
                 if line.find('FSQRFSQZFSQL') != -1:
                     i += 1
             line = file_threed.readline()
             line = file_threed.readline()
+            old_line = ""
             while len(line) > 10:
                 old_line = line
                 line = file_threed.readline()
@@ -767,19 +752,23 @@ class VMECProcess(object):
 
 #            parts = map(string.strip, string.split(old_line))
             parts = old_line.split()
-
+            if len(parts) < 4:
+                #Incorrect number of values in the line with fsqr, fsqz and fsql
+                self._runtime.logger.error(f"Worker {self._comms.rank}. Incorrect number of values in the line with fsqr, fsqz and fsql")
+                return False
             fsqr = float(parts[1])
             fsqz = float(parts[2])
             fsql = float(parts[3])
             if(fsqr > 1.0e-10) or (fsqz > 1.0e-10) or (fsql > 1.0e-10):
                 #Incorrect values for fsqr, fsqz o fsql
+                self._runtime.logger.error(f"Worker {self._comms.rank}. Incorrect values for fsqr, fsqz and fsql")
                 return False
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing threed1 file. " +
                             str(e))
             return False
-        u.logger.info("WORKER(" + self.__rank + "). Configuration threed1 OK")
+        self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration threed1 OK")
         return True
 
     """
@@ -788,32 +777,31 @@ class VMECProcess(object):
 
     def run_vmec(self):
         try:
-            if not os.path.exists("input.tj" + str(self.__rank)):
+            if not os.path.exists(f"input.tj{self._comms.rank}"):
                 return False
-            proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", "tj" + self.__rank],
+            proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", f"tj{self._comms.rank}"],
                                     stdout=subprocess.PIPE)
             output = proc.stdout.read()
-            u.logger.debug(output)
+            self._runtime.logger.debug(output)
             try:
                 if os.path.exists("core"):
                     os.remove("core")
             except:
                 pass
-            if not os.path.exists('wout_tj' + self.__rank + '.txt'):
-                u.logger.debug("VMECProcess(" + self.__rank +
-                               "): Invalid configuration")
+            if not os.path.exists(f'wout_tj{self._comms.rank}.txt'):
+                self._runtime.logger.debug(f"VMECProcess({self._comms.rank}): Invalid configuration")
                 return False
-            last_line = u.tail('wout_tj' + self.__rank + '.txt')
+            last_line = tail(f'wout_tj{self._comms.rank}.txt')
             if last_line.find('mgrid') != -1:
                 # Invalid configuration
                 return False
-            filenameMercier = "mercier.tj" + self.__rank
+            filenameMercier = f"mercier.tj{self._comms.rank}"
             if not os.path.exists(filenameMercier):
                 return False
-            u.logger.info("WORKER(" + self.__rank + "). Configuration VMEC OK")
+            self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration VMEC OK")
             return True
         except Exception as e:
-            u.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
+            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when running VMEC. " + str(e))
             return False
 
@@ -822,7 +810,7 @@ class VMECProcess(object):
     """
 
     def run_x_grid(self):
-        fullpath = self.__rank + "/" + self.__filename
+        fullpath = f"{self._comms.rank}/{self.__filename}"
         with open(fullpath, 'r') as fileinput:
             line = fileinput.readline()
             line = fileinput.readline()
@@ -836,14 +824,14 @@ class VMECProcess(object):
 
         if runxgrid:
             if not os.path.exists('../external/mgrid.tj0'):
-                u.logger.error("File Mgrid.tj0 doesn't exist")
+                self._runtime.logger.error("File Mgrid.tj0 doesn't exist")
                 return False
 
-            shutil.copy2("../external/mgrid.tj0", "mgrid.tj" + self.__rank)
-            if not os.path.exists('mgrid.tj' + self.__rank):
+            shutil.copy2("../external/mgrid.tj0", f"mgrid.tj{self._comms.rank}")
+            if not os.path.exists(f"mgrid.tj{self._comms.rank}"):
                 try:
-                    fcmd_xgrid = open('cmd_xgrid.tj' + self.__rank, 'w')
-                    fcmd_xgrid.write('tj' + self.__rank + '\n')
+                    fcmd_xgrid = open(f"cmd_xgrid.tj{self._comms.rank}", 'w')
+                    fcmd_xgrid.write(f"tj{self._comms.rank}\n")
                     fcmd_xgrid.write('y\n')
                     fcmd_xgrid.write('1.08\n')
                     fcmd_xgrid.write('1.92\n')
@@ -852,16 +840,14 @@ class VMECProcess(object):
                     fcmd_xgrid.write('64')
                     fcmd_xgrid.close()
                     if not os.path.exists("../external/coils"):
-                        u.logger.error("File coils doesn't exist")
+                        self._runtime.logger.error("File coils doesn't exist")
                         return False
-                    if not os.path.exists('coils.tj' + self.__rank):
-                        shutil.copy2("../external/coils", "coils.tj" +
-                                     self.__rank)
-                    subprocess.call(["./xgrid", "< cmd_xgrid.tj" +
-                                    self.__rank])
+                    if not os.path.exists(f"coils.tj{self._comms.rank}"):
+                        shutil.copy2("../external/coils", f"coils.tj{self._comms.rank}")
+                    subprocess.call(["./xgrid", f"< cmd_xgrid.tj{self._comms.rank}"])
                     return True
                 except:
-                    u.logger.error("VMECProcess(" +
+                    self._runtime.logger.error("VMECProcess(" +
                                    str(sys.exc_info()[2].tb_lineno) +
                                    "). Error during the generation of " +
                                    "the matrix file")

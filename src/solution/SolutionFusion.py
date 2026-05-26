@@ -28,43 +28,42 @@ HISTORY
     Version 2.0 (23-05-2026):   Refactoring and modernization
 """
 
-from SolutionBase import SolutionBase
+from solution.SolutionBase import SolutionBase
 from VMECData import VMECData
-import Utils as u
 
 # Range for polynomial derivative check
 DERIVATIVE_CHECK_RANGE = range(-100, 100)
 
 
 class SolutionFusion(SolutionBase):
-    def __init__(self, infile):
-        super().__init__(infile)
-        self.__data = VMECData()
-        self.__data.initialize(infile)
+    def __init__(self,runtime):
+        super().__init__(runtime)
+        self._data = VMECData(runtime)
+        self._data.initialize(runtime.input_file)
 
     def initialize(self, data):
         """Initialize with external data object."""
-        self.__data = data
+        self._data = data
 
     def prepare(self, filename):
         """Create input file for VMEC."""
-        self.__data.create_input_file(filename)
+        self._data.create_input_file(filename)
 
     def get_number_of_params(self):
         """Return the number of parameters."""
-        return self.__data.getNumParams()
+        return self._data.getNumParams()
 
     def getMaxNumberofValues(self):
         """Return the maximum range of parameter values."""
-        return self.__data.getMaxRange()
+        return self._data.getMaxRange()
 
     def getParameters(self):
         """Return the parameters."""
-        return self.__data.getParameters()
+        return self._data.getParameters()
 
     def getParametersValues(self):
         """Return the current values of all parameters."""
-        return self.__data.getValsOfParameters()
+        return self._data.getValsOfParameters()
 
     def setParametersValues(self, buff):
         """Set parameter values from a float array.
@@ -72,8 +71,8 @@ class SolutionFusion(SolutionBase):
         Args:
             buff: Array of float values for parameters
         """
-        u.logger.debug("SolutionFusion. Setting parameters")
-        self.__data.setValsOfParameters(buff)
+        self._runtime.logger.debug("SolutionFusion. Setting parameters")
+        self._data.setValsOfParameters(buff)
 
     def setParameters(self, params):
         """Update parameters from a list of parameter objects.
@@ -82,11 +81,11 @@ class SolutionFusion(SolutionBase):
             params: List of parameter objects with at least index and value
         """
         for p in params:
-            self.__data.assign_parameter(p)
+            self._data.assign_parameter(p)
 
     def getData(self):
         """Return the underlying VMEC data object."""
-        return self.__data
+        return self._data
 
     def checkPressureDerivative(self):
         """Check if pressure derivative is non-positive across range.
@@ -106,3 +105,10 @@ class SolutionFusion(SolutionBase):
             if derivative > 0.0:
                 return False
         return True
+    
+    def print(self):
+        pass
+
+    def getNumberofParams(self):
+        """Return the number of parameters."""
+        return self._data.getNumParams()

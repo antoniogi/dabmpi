@@ -24,49 +24,51 @@ __version__ = ' REVISION:   1.0  -  15-01-2014'
 
 """
 HISTORY
-    Version 0.1 (12-04-2013):   Creation of the file.
+    Version 0.1 (17-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.1 (15-11-2024):   Minor change
 """
 
-"""
-Class that implements the DAB solver. It has to:
-  - Create the different bees.
-  - Solve is the main method that actually implements the algorithm
-  - Once the algorithm has finish, we have to call the finish method if
-  there is something else to be done.
-"""
+from solution.SolutionBase import SolutionBase
+from CristinaData import CristinaData
 
 
-import sys
-import random
-import shutil
-import time
-import configparser
-from mpi4py import MPI
-from array import array
+class SolutionCristina (SolutionBase):
+    def __init__(self, runtime):
+        SolutionBase.__init__(self, runtime)
+        #TODO: Implemement how data is initialized
+        self._data = CristinaData(runtime)
+        self._data.initialize(runtime.input_file)
+        return
 
-from SolverBase import SolverBase
-from ProblemFusion import ProblemFusion
-from ProblemNonSeparable import ProblemNonSeparable
-from SolutionFusion import SolutionFusion
-from SolutionNonSeparable import SolutionNonSeparable
-import Utils as u
-import SolutionsQueue as solQueue
+    def initialize(self, data):
+        self._data = data
+        return
 
+    def prepare(self, filename):
+        return
+#        self._data.create_input_file(filename)
 
-class SolverSA (SolverBase):
-    def readConfigFile(self, configfile):
-        config = configparser.ConfigParser()
-        config.read(configfile)
-        if (not config.has_section("SA")):
-            u.logger.critical("SA section not specified in the ini file")
-            sys.exit(-1)
+    def getNumberofParams(self):
+        return self._data.getNumParams()
 
-    def __init__(self, problem_type, infile, configfile):
-        u.logger.info("SolverSA init")
-        self.readConfigFile(configfile)
-        u.starttime = time.time()
-        u.comm = MPI.COMM_WORLD
-        u.rank = u.comm.Get_rank()
-        u.size = u.comm.Get_size()
-        random.seed()
+    def getMaxNumberofValues(self):
+        return self._data.getMaxRange()
+
+    def getParameters(self):
+        return self._data.getParameters()
+
+    def getParametersValues(self):
+        return self._data.getValsOfParameters()
+
+    def setParametersValues(self, buff):
+        self._data.setValsOfParameters(buff)
+
+    def setParameters(self, params):
+        self._data.setParameters(params)
+
+    def getData(self):
+        return self._data
+
+    def print(self):
+        self._data.printData()
