@@ -102,7 +102,122 @@ def is_valid_file(parser, arg):
     return str(path)
 
 
-def init(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
+def parse_arguments(argv=None):
+    """Parse command-line arguments and update runtime configuration."""
+    parser = argparse.ArgumentParser(
+        prog='disop.py',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='Distributed Solver for Global Optimization.',
+        epilog=textwrap.dedent(__author__)
+    )
+
+    parser.add_argument(
+        '-p', '--problem',
+        required=True,
+        type=str,
+        choices=list(PROBLEM_MAP.keys()),
+        help='Problem type'
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        required=False,
+        type=int,
+        default=2,
+        choices=[1, 2, 3],
+        help='Verbosity level'
+    )
+    parser.add_argument(
+        '-s', '--solver',
+        required=True,
+        type=str,
+        choices=list(CLI_SOLVER_MAP.keys()),
+        help='Solver type'
+    )
+    parser.add_argument(
+        '-i', '--ifile',
+        required=True,
+        help='input parameters file (an XML file)',
+        type=lambda x: is_valid_file(parser, x)
+    )
+    parser.add_argument(
+        '-c', '--cfile',
+        required=True,
+        help='configuration INI file',
+        type=lambda x: is_valid_file(parser, x)
+    )
+    parser.add_argument(
+        '-t', '--time',
+        required=False,
+        type=int,
+        default=3600,
+        help='max execution time (in seconds)'
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s ' + __version__
+    )
+
+    return parser.parse_args(argv)
+
+
+def configure_runtime(runtime: GlobalRuntime, args):
+    """Apply parsed CLI values to runtime and initialize config."""
+    problem_type = PROBLEM_MAP[args.problem]
+    solver_type = CLI_SOLVER_MAP[args.solver]
+
+    bootstrap_runtime(args.cfile, runtime, args.verbose)
+
+    runtime.problem_type = problem_type
+    runtime.solver_type = solver_type
+    runtime.config_file = args.cfile
+    runtime.input_file = args.ifile
+    runtime.max_execution_time = args.time
+
+    if runtime.logger is not None:
+        runtime.logger.setLevel(LOG_LEVELS[args.verbose])
+
+    return problem_type, solver_type
+
+
+def create_mpi_comms():
+    """Create the MPI communicator wrapper used by the runtime."""
+    comm = MPI.COMM_WORLD
+    return GlobalComms(comm.Get_rank(), comm.Get_size(), comm)
+
+
+def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms):
+    """Run the driver-side MPI execution path."""
+    runtime.logger.info("DRIVER - BEGIN OF THE EXECUTION")
+    solver = create_solver(runtime, global_comms)
+    solver.initialize()
+    solver.solve()
+    runtime.logger.info("DRIVER has finished solve")
+    solver.finish()
+    runtime.logger.info("DRIVER - END OF THE EXECUTION")
+
+
+def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, problem_type: ProblemType, inputfile: str, configfile: str):
+    """Run the worker-side MPI execution path."""
+    runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
+    worker = Worker(global_comms.comm, problem_type, runtime)
+    worker.run(inputfile, configfile)
+    worker.finish()
+    runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")
+
+
+def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms):
+    """Run the ALL2ALL execution path."""
+    runtime.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
+    solver = create_solver(runtime, global_comms)
+    solver.initialize()
+    solver.solve()
+    runtime.logger.debug(f"Rank {global_comms.rank} has finished solve")
+    solver.finish()
+    runtime.logger.info(f"RANK {global_comms.rank} - END OF THE EXECUTION")
+
+
+def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
     """
     Initialize the global configuration and logging system.
     
@@ -156,138 +271,57 @@ def init(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
         logger.warning(f"Error parsing configuration file: {e}. Using defaults.")
 
 # Main function
-def main(runtime):
+def main(runtime, argv=None):
+    args = parse_arguments(argv)
     try:
-        parser = argparse.ArgumentParser(
-            prog='disop.py',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description='Distributed Solver for Global Optimization.',
-            epilog=textwrap.dedent(__author__))
-
-        parser.add_argument(
-            '-p', '--problem',
-            required=True,
-            type=str,
-            choices=list(PROBLEM_MAP.keys()),
-            help='Problem type')
-        parser.add_argument(
-            '-v', '--verbose',
-            required=False,
-            type=int,
-            default=2,
-            choices=[1, 2, 3],
-            help='Verbosity level')
-        parser.add_argument(
-            '-s', '--solver',
-            required=True,
-            type=str,
-            choices=list(CLI_SOLVER_MAP.keys()),
-            help='Solver type')
-        parser.add_argument(
-            '-i', '--ifile',
-            required=True,
-            help='input parameters file (an XML file)',
-            type=lambda x: is_valid_file(parser, x))
-        parser.add_argument(
-            '-c', '--cfile',
-            required=True,
-            help='configuration INI file',
-            type=lambda x: is_valid_file(parser, x))
-        parser.add_argument(
-            '-t', '--time',
-            required=False,
-            type=int,
-            default=3600,
-            help='max execution time (in seconds)')
-        parser.add_argument(
-            '--version',
-            action='version',
-            version='%(prog)s ' + __version__)
-
-        args = parser.parse_args()
-
-        # Extract types using map dictionaries
-        problem_type = PROBLEM_MAP[args.problem]
-        solver_type = CLI_SOLVER_MAP[args.solver]  # Get enum
-        solver = SOLVER_MAP[solver_type]     # Get class
+        problem_type, _ = configure_runtime(runtime, args)
         inputfile = args.ifile
         configfile = args.cfile
 
-        # Initialize configuration
-        init(configfile, runtime, args.verbose)
-        runtime.problem_type = problem_type  # Set problem type in runtime
-        runtime.solver_type = solver_type  # Set solver type in runtime
-        runtime.config_file = configfile  # Set config file in runtime
-        runtime.input_file = inputfile  # Set input file in runtime
-        runtime.max_execution_time = args.time  # Set max execution time in runtime
+        global_comms = create_mpi_comms()
 
-        #init MPI
-        rank = MPI.COMM_WORLD.Get_rank()
-        size = MPI.COMM_WORLD.Get_size()
-        comm = MPI.COMM_WORLD
-        global_comms = GlobalComms(rank, size, comm)
-
-        #set the verbosity level
-        if rank == 0:
+        if global_comms.rank == 0:
             runtime.logger.info(f"Verbosity level: {args.verbose}")
-        runtime.logger.setLevel(LOG_LEVELS[args.verbose])
 
         if runtime.comm_model == CommModelType.DRIVERWORKER:
-            if rank == 0:
-                #create driver task
-                runtime.logger.info("DRIVER - BEGIN OF THE EXECUTION")
-                #create the solver
-                solver = create_solver(runtime, global_comms)
-                #initialize the solver
-                solver.initialize()
-                #execute the solver
-                solver.solve()
-                runtime.logger.info("DRIVER has finished solve")
-                #clean everything
-                solver.finish()
-                runtime.logger.info("DRIVER - END OF THE EXECUTION")
+            if global_comms.rank == 0:
+                run_driver(runtime, global_comms)
             else:
-                #create worker task
-                runtime.logger.info(f"WORKER {rank} - BEGIN OF THE EXECUTION")
-                worker = Worker(comm, problem_type, runtime)
-                worker.run(inputfile, configfile)
-                worker.finish()
-                runtime.logger.info(f"WORKER {rank} - END OF THE EXECUTION")
+                run_worker(runtime, global_comms, problem_type, inputfile, configfile)
         else:
-            runtime.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
-            #create the solver
-            solver = create_solver(runtime.solver_type, runtime.problem_type, runtime.input_file, runtime.config_file)
-            #initialize the solver
-            solver.initialize()
-            #execute the solver
-            solver.solve()
-            runtime.logger.debug(f"Rank {rank} has finished solve")
-            #clean everything
-            solver.finish()
-            runtime.logger.info(f"RANK {rank} - END OF THE EXECUTION")
+            run_all2all(runtime, global_comms)
 
         dump = array('i', [0]) * 1
         global_comms.comm.Bcast(dump)
     except Exception as e:
         # Extract the last frame of the traceback (where the error actually happened)
         tb = e.__traceback__
-    
-        # extract_tb returns a list of FrameSummary objects
-        summary = traceback.extract_tb(tb)[-1]
-    
-        filename = summary.filename
-        line_number = summary.lineno
-        runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+        if tb is not None:
+            summary = traceback.extract_tb(tb)[-1]
+            filename = summary.filename
+            line_number = summary.lineno
+        else:
+            filename = "unknown"
+            line_number = 0
+
+        if getattr(runtime, "logger", None):
+            runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+        else:
+            print(f"Exception in file {filename} at line {line_number}: {e}")
 
 if __name__ == "__main__":
     runtime = GlobalRuntime()
     try:
         main(runtime)
     except Exception as e:
+        runtime.logger.exception(f"Fatal error in main execution: {e}")
+        """
         import traceback
-        if runtime.logger:
+        if getattr(runtime, "logger", None):
             runtime.logger.error(f"Fatal error: {e}")
             runtime.logger.error(traceback.format_exc())
         else:
             print("Fatal error:", e)
+            traceback.print_exc()
+        """
         sys.exit(1)
