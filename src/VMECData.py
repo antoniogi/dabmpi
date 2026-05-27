@@ -1065,10 +1065,12 @@ class VMECData (object):
             offset = index - 151
             target = "rbc" if offset % 2 == 0 else "zbc"
             return self._assign_to_list(target, offset // 2, parameter)
-
-        self._runtime.logger.warning(
-            f"Unassigned element with index: {index}"
-        )
+        # If we reach this point, the parameter index is unrecognized.
+        # Only log a warning if the parameter is meant to be displayed, otherwise silently ignore it.
+        if parameter.get_display():
+            self._runtime.logger.warning(
+                f"Unassigned element with index: {index}"
+            )
         return -1
 
 

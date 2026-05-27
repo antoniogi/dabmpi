@@ -174,7 +174,7 @@ def main(runtime):
             '-v', '--verbose',
             required=False,
             type=int,
-            default=3,
+            default=2,
             choices=[1, 2, 3],
             help='Verbosity level')
         parser.add_argument(
