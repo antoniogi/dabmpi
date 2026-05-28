@@ -42,6 +42,7 @@ from core.runtime import GlobalRuntime
 from core.comms import GlobalComms
 from core.enums import Tags
 from core.matrix import Matrix
+from data.Parameter import ParamType
 
 _author_ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
@@ -145,42 +146,71 @@ class BeeBase ():
     """
     def createRandomSolution(self, pendingSolutions=None, finishedSolutions=None):
         self._runtime.logger.info('create new candidate scout')
-        while (True):
-            solution = self.getBestLocalSolution()
-            params = solution.getParameters()
-            self._runtime.logger.debug('number of parameters: ' + str(len(params)))
-            for i in range(len(params)):
-                ptype = params[i].get_type()
-                newVal = None
-                if ptype in ['double', 'float']:
-                    minVal = params[i].get_min_value()
-                    maxVal = params[i].get_max_value()
-                    if minVal == maxVal:
-                        newVal = minVal
-                    else:
-                        if minVal > maxVal:
-                            minVal, maxVal = maxVal, minVal
-                        if params[i].get_gap() == 0.0:
-                            newVal = random.uniform(minVal, maxVal)
+        max_attempts = 1000
+        solution = None
+        params = []
+
+        try:
+           for _ in range(max_attempts):
+                solution = self.getBestLocalSolution()
+                params = solution.getParameters()
+
+                self._runtime.logger.debug(
+                    f'number of parameters: {len(params)}'
+                )
+
+                for param in params:
+                    ptype = param.get_type()
+                    newVal = None
+
+                    if ptype == ParamType.STRING:
+                        # Intentionally unchanged
+                        pass
+
+                    elif ptype == ParamType.FLOAT:
+                        minVal = param.get_min_value()
+                        maxVal = param.get_max_value()
+
+                        minVal, maxVal = sorted((minVal, maxVal))
+
+                        if minVal == maxVal:
+                            newVal = minVal
                         else:
-                            newVal = self.randrange_float(minVal, maxVal, params[i].get_gap())
-                elif ptype == "bool":
-                    val = random.randint(0, 1)
-                    newVal = val == 0
-                else:
-                    minVal = params[i].get_min_value()
-                    maxVal = params[i].get_max_value()
-                    if minVal == maxVal:
-                        newVal = minVal
-                    else:
-                        if minVal > maxVal:
-                            minVal, maxVal = maxVal, minVal
-                        newVal = random.randint(minVal, maxVal)
-                params[i].set_value(newVal)
-            if self.is_new(solution, pendingSolutions, finishedSolutions):
-                break
+                            gap = param.get_gap()
+
+                            if gap == 0.0:
+                                newVal = random.uniform(minVal, maxVal)
+                            else:
+                                newVal = self.randrange_float(minVal, maxVal, gap)
+
+                    elif ptype == ParamType.BOOL:
+                        newVal = random.choice([True, False])
+
+                    else:  # ParamType.INT
+                        minVal = param.get_min_value()
+                        maxVal = param.get_max_value()
+
+                        minVal, maxVal = sorted((minVal, maxVal))
+
+                        if minVal == maxVal:
+                            newVal = minVal
+                        else:
+                            newVal = random.randint(minVal, maxVal)
+
+                    param.set_value(newVal)
+
+                if self.is_new(solution, pendingSolutions, finishedSolutions):
+                    break
+
+        except Exception as e:
+            self._runtime.logger.exception(
+                f"SolverDAB exception: {e}"
+            )
+            raise
+
         solution.setParameters(params)
         solution.print()
+
         return solution
 
     """
@@ -284,7 +314,9 @@ class Employed (BeeBase):
                         continue
                     ptype = parameters[i].get_type()
                     newVal = None
-                    if ptype in ['double', 'float']:
+                    if ptype == ParamType.STRING:
+                        pass
+                    if ptype == ParamType.FLOAT:
                         currentVal = parameters[i].get_value()
                         minVal = currentVal - 10.0 * abs(parameters[i].get_gap())
                         maxVal = currentVal + 10.0 * abs(parameters[i].get_gap())
@@ -299,10 +331,10 @@ class Employed (BeeBase):
                                 newVal = random.uniform(minVal, maxVal)
                             else:
                                 newVal = self.randrange_float(minVal, maxVal, parameters[i].get_gap())
-                    elif ptype == "bool":
+                    elif ptype == ParamType.BOOL:
                         val = random.randint(0, 1)
                         newVal = val == 0
-                    else:
+                    else: #it's ParamType.INT
                         currentVal = parameters[i].get_value()
                         if random.randint(0, 10) == 0:
                             minVal = currentVal - 10 * abs(parameters[i].get_gap())
@@ -339,7 +371,6 @@ Scout bees
 class Scout (BeeBase):
     def __init__(self, runtime, comms, matrix):
         super().__init__(runtime, comms, matrix)
-        #BeeBase.__init__(self, problem_type, infile)
         return
 
     """
@@ -355,8 +386,6 @@ class Scout (BeeBase):
             solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
         except Exception as e:
             self._runtime.logger.exception(f"SolverDAB exception on line {e.__traceback__.tb_lineno}: {str(e)}")
-            #self._runtime.logger.exception(f"SolverDAB exception:{str(e)}")
-            #self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
             raise
 
         return solution, -1
@@ -391,7 +420,9 @@ class Onlooker (BeeBase):
                     isNew = True
                     ptype = p.get_type()
                     newVal = None
-                    if ptype in ['double', 'float']:
+                    if ptype == ParamType.STRING:
+                        pass
+                    if ptype == ParamType.FLOAT:
                         minVal = p.get_min_value()
                         maxVal = p.get_max_value()
                         currentVal = p.get_value()
@@ -408,10 +439,10 @@ class Onlooker (BeeBase):
                                 newVal = random.uniform(minVal, maxVal)
                             else:
                                 newVal = self.randrange_float(minVal, maxVal, p.get_gap())
-                    elif ptype == "bool":
+                    elif ptype == ParamType.BOOL:
                         val = random.randint(0, 1)
                         newVal = val == 0
-                    else:
+                    else: #it's ParamType.INT
                         minVal = p.get_min_value()
                         maxVal = p.get_max_value()
                         currentVal = p.get_value()
@@ -445,9 +476,6 @@ Solver DAB main class
 
 class SolverDAB (SolverBase):
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
-        #Decorator
-        #self._runtime: GlobalRuntime
-        #self._comms: GlobalComms
         super().__init__(runtime, comms)
         self._runtime.logger.info("SolverDAB init")
 
@@ -473,11 +501,6 @@ class SolverDAB (SolverBase):
         
         try:
             self._runtime.logger.info("SolverDAB init")
-            #runtime.start_time = time.time()
-            #u.comm = MPI.COMM_WORLD
-            #u.rank = u.comm.Get_rank()
-            #u.size = u.comm.Get_size()
-
             origin = -1
 
             self._totalSumGoodSolutions = 0.0
