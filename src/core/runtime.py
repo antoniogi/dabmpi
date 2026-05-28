@@ -54,6 +54,7 @@ class GlobalRuntime:
     solver_type: e.SolverType = field(default=e.SolverType.DAB)
     # Logger instance
     logger: Optional[Logger] = field(default_factory=lambda: get_logger())
+    max_valid_solution_value: float = field(default=1e6)
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
@@ -70,6 +71,12 @@ class GlobalRuntime:
         
         if self.start_time < 0:
             raise ValueError(f"start_time must be >= 0, got {self.start_time}")
+        
+        if self.max_execution_time < 0:
+            raise ValueError(f"max_execution_time must be >= 0, got {self.max_execution_time}")
+        
+        if self.max_valid_solution_value <= 0:
+            raise ValueError(f"max_valid_solution_value must be > 0, got {self.max_valid_solution_value}")
 
     def log_configuration(self) -> None:
         """Log current configuration for debugging."""
