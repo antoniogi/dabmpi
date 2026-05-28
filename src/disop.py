@@ -34,7 +34,7 @@ from core.enums import ProblemType, SolverType, CommModelType, ObjectiveType
 from core.comms import GlobalComms
 from solvers.SolverDAB import SolverDAB
 from solvers.SolverSA import SolverSA
-from Worker import Worker
+from runtime.Worker import Worker
 
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'

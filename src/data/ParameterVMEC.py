@@ -19,7 +19,7 @@
 
 
 import logging
-from Parameter import INFINITY, ParamType, Parameter
+from .Parameter import INFINITY, ParamType, Parameter
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 

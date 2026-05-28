@@ -19,7 +19,7 @@
 
 import traceback
 from problems.ProblemBase import ProblemBase
-from VMECProcess import VMECProcess
+from data.VMECProcess import VMECProcess
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 

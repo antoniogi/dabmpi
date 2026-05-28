@@ -30,7 +30,7 @@ HISTORY
 """
 
 from solution.SolutionBase import SolutionBase
-from CristinaData import CristinaData
+from data.CristinaData import CristinaData
 
 
 class SolutionCristina (SolutionBase):

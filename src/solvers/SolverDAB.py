@@ -354,7 +354,9 @@ class Scout (BeeBase):
             self._runtime.logger.info('create new candidate scout')
             solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
         except Exception as e:
-            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+            self._runtime.logger.exception(f"SolverDAB exception on line {e.__traceback__.tb_lineno}: {str(e)}")
+            #self._runtime.logger.exception(f"SolverDAB exception:{str(e)}")
+            #self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
             raise
 
         return solution, -1

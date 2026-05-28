@@ -33,8 +33,8 @@ import sys
 import math
 import traceback
 from xml.dom import minidom
-from ParameterVMEC import ParameterVMEC
-from Parameter import ParamType
+from .ParameterVMEC import ParameterVMEC
+from .Parameter import ParamType
 from array import array
 
 import subprocess

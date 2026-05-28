@@ -29,7 +29,7 @@ HISTORY
 """
 
 from solution.SolutionBase import SolutionBase
-from VMECData import VMECData
+from data.VMECData import VMECData
 
 # Range for polynomial derivative check
 DERIVATIVE_CHECK_RANGE = range(-100, 100)

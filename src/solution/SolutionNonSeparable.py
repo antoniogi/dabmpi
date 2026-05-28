@@ -29,7 +29,7 @@ HISTORY
 """
 
 from solution.SolutionBase import SolutionBase
-from NonSeparableData import NonSeparableData
+from data.NonSeparableData import NonSeparableData
 
 
 class SolutionNonSeparable (SolutionBase):

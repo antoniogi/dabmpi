@@ -23,7 +23,7 @@ import os
 from solution.SolutionFusion import SolutionFusion
 from solution.SolutionCristina import SolutionCristina
 from solution.SolutionNonSeparable import SolutionNonSeparable
-from Parameter import Parameter
+from data.Parameter import Parameter
 from core.runtime import GlobalRuntime
 from core.enums import SolutionType, ObjectiveType
 import math

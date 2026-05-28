@@ -21,7 +21,7 @@ import os
 import sys
 from array import array
 from xml.dom import minidom
-from Parameter import Parameter
+from .Parameter import Parameter
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
@@ -34,7 +34,7 @@ HISTORY
 """
 
 
-class CristinaData (object):
+class NonSeparableData (object):
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
@@ -46,7 +46,7 @@ class CristinaData (object):
         self.__maxRange = 0
         self.__fInput = None
         self.__params = []
-        self.__runtime = runtime
+        self.__logger = runtime.logger
         return
 
     def __del__(self):
@@ -58,10 +58,6 @@ class CristinaData (object):
     #returns the number of parameters that can be actually modified
     def getNumParams(self):
         return self.__numParams
-
-    def printData(self):
-        for i in range(self.__numParams):
-            self.__runtime.logger.info("CristinaData. Param(" + str(i) +") - Value: " + str(self.__params[i].get_value()))
 
     """
     Returns a list of doubles with the values of the modificable parameters
@@ -80,7 +76,7 @@ class CristinaData (object):
     """
 
     def setValsOfParameters(self, buff):
-        self.__runtime.logger.debug("CristinaData. Setting parameters (number: "
+        self.__logger.debug("NonSeparableData. Setting parameters (number: "
                          + str(len(buff)) + ")")
         for i in range(len(buff)):
             self.__params[i].set_value(buff[i])
@@ -145,14 +141,14 @@ class CristinaData (object):
                                 c.get_min_value()) / c.get_gap()))
                         self.__maxRange = max(values, self.__maxRange)
                     except ValueError as e:
-                        self.__runtime.logger.warning("Problem calculating max range: " + 
+                        self.__logger.warning("Problem calculating max range: " + 
                                          str(e) + " . Fileno: " + str(sys.exc_info()[2].tb_lineno))
                         pass
-            self.__runtime.logger.debug("Number of parameters " +
+            self.__logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")
         except Exception as e:
-            self.__runtime.logger.error("CristinaData (" +
+            self.__logger.error("NonSeparableData (" +
                             str(sys.exc_info()[2].tb_lineno) +
                             "). Problem reading input xml file: " + str(e))
             sys.exit(111)
