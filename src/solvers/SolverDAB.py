@@ -90,17 +90,17 @@ class BeeBase ():
 
         if self._runtime.problem_type == ProblemType.FUSION:
             self._problem = ProblemFusion(self._runtime, self._comms)
-            self._solution = SolutionFusion(self._runtime)
-            self._bestLocalSolution = SolutionFusion(self._runtime)
-            self._bestGlobalSolution = SolutionFusion(self._runtime)
+            self._solution = SolutionFusion(self._runtime, self._comms)
+            self._bestLocalSolution = SolutionFusion(self._runtime, self._comms)
+            self._bestGlobalSolution = SolutionFusion(self._runtime, self._comms)
         elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
             self._problem = ProblemNonSeparable(self._runtime, self._comms)
-            self._bestLocalSolution = SolutionNonSeparable(self._runtime)
-            self._bestGlobalSolution = SolutionNonSeparable(self._runtime)
+            self._bestLocalSolution = SolutionNonSeparable(self._runtime, self._comms)
+            self._bestGlobalSolution = SolutionNonSeparable(self._runtime, self._comms)
         elif self._runtime.problem_type == ProblemType.CRISTINA:
             self._problem = ProblemCristina(self._runtime, self._comms)
-            self._bestLocalSolution = SolutionCristina(self._runtime)
-            self._bestGlobalSolution = SolutionCristina(self._runtime)
+            self._bestLocalSolution = SolutionCristina(self._runtime, self._comms)
+            self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
 
         if self._runtime.objective == ObjectiveType.MAXIMIZE:
             self._bestLocalSolution.setValue(-math.inf)
@@ -647,16 +647,16 @@ class SolverDAB (SolverBase):
 
             if self._runtime.problem_type == ProblemType.FUSION:
                 self._problem = ProblemFusion(self._runtime, self._comms)
-                self._bestSolution = SolutionFusion(self._runtime)
-                self._bestGlobalSolution = SolutionFusion(self._runtime)
+                self._bestSolution = SolutionFusion(self._runtime, self._comms)
+                self._bestGlobalSolution = SolutionFusion(self._runtime, self._comms)
             elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
                 self._problem = ProblemNonSeparable(self._runtime, self._comms)
-                self._bestSolution = SolutionNonSeparable(self._runtime)
-                self._bestGlobalSolution = SolutionNonSeparable(self._runtime)
+                self._bestSolution = SolutionNonSeparable(self._runtime, self._comms)
+                self._bestGlobalSolution = SolutionNonSeparable(self._runtime, self._comms)
             elif self._runtime.problem_type == ProblemType.CRISTINA:
                 self._problem = ProblemCristina(self._runtime, self._comms)
-                self._bestSolution = SolutionCristina(self._runtime.input_file)
-                self._bestGlobalSolution = SolutionCristina(self._runtime.input_file)
+                self._bestSolution = SolutionCristina(self._runtime, self._comms)
+                self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
             else:
                 self._runtime.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
                                   "). Unknown problem type " + str(self._runtime.problem_type))
@@ -917,11 +917,11 @@ class SolverDAB (SolverBase):
                 solutionTemp = None
                 try:
                     if self._runtime.problem_type == ProblemType.FUSION:
-                        solutionTemp = SolutionFusion(self._runtime)
+                        solutionTemp = SolutionFusion(self._runtime, self._comms)
                     elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                        solutionTemp = SolutionNonSeparable(self._runtime)
+                        solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
                     elif self._runtime.problem_type == ProblemType.CRISTINA:
-                        solutionTemp = SolutionCristina(self._runtime)
+                        solutionTemp = SolutionCristina(self._runtime, self._comms)
 
                     if solutionTemp is None:
                         self._runtime.logger.error(f"Solution is None after creation (type {self._runtime.problem_type})")
@@ -976,11 +976,11 @@ class SolverDAB (SolverBase):
             try:
                 solutionTemp = None
                 if self._runtime.problem_type is ProblemType.FUSION:
-                    solutionTemp = SolutionFusion(self._runtime)
+                    solutionTemp = SolutionFusion(self._runtime, self._comms)
                 elif self._runtime.problem_type is ProblemType.NONSEPARABLE:
-                    solutionTemp = SolutionNonSeparable(self._runtime)
+                    solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
                 elif self._runtime.problem_type is ProblemType.CRISTINA:
-                    solutionTemp = SolutionCristina(self._runtime)
+                    solutionTemp = SolutionCristina(self._runtime, self._comms)
                 else:
                     raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
 

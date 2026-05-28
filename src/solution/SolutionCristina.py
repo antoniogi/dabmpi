@@ -34,8 +34,8 @@ from data.CristinaData import CristinaData
 
 
 class SolutionCristina (SolutionBase):
-    def __init__(self, runtime):
-        SolutionBase.__init__(self, runtime)
+    def __init__(self, runtime, comms):
+        SolutionBase.__init__(self, runtime, comms)
         #TODO: Implemement how data is initialized
         self._data = CristinaData(runtime)
         self._data.initialize(runtime.input_file)

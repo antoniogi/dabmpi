@@ -33,8 +33,8 @@ from data.NonSeparableData import NonSeparableData
 
 
 class SolutionNonSeparable (SolutionBase):
-    def __init__(self, runtime):
-        SolutionBase.__init__(self, runtime)
+    def __init__(self, runtime, comms):
+        SolutionBase.__init__(self, runtime, comms)
         self._data = NonSeparableData(runtime)
         self._data.initialize(runtime.input_file)
         return

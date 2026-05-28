@@ -36,9 +36,9 @@ DERIVATIVE_CHECK_RANGE = range(-100, 100)
 
 
 class SolutionFusion(SolutionBase):
-    def __init__(self,runtime):
-        super().__init__(runtime)
-        self._data = VMECData(runtime)
+    def __init__(self,runtime, comms):
+        super().__init__(runtime, comms)
+        self._data = VMECData(runtime, comms)
         self._data.initialize(runtime.input_file)
 
     def initialize(self, data):

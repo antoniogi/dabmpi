@@ -25,6 +25,7 @@ from solution.SolutionCristina import SolutionCristina
 from solution.SolutionNonSeparable import SolutionNonSeparable
 from data.Parameter import Parameter
 from core.runtime import GlobalRuntime
+from core.comms import GlobalComms
 from core.enums import SolutionType, ObjectiveType
 import math
 
@@ -46,7 +47,7 @@ The format of the elements in the queue is as follows:
     ,..., param_index:param_val - solutionVal
 """
 class SolutionsQueue (object):
-    def __init__(self, runtime: GlobalRuntime, solutions_file: str, writeToFile: bool, isPriority: bool=False):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, solutions_file: str, writeToFile: bool, isPriority: bool=False):
         try:
             self._queue = []
             self._filename = solutions_file
@@ -56,16 +57,17 @@ class SolutionsQueue (object):
             self._writeToFile = writeToFile
             self._maxSize = math.inf
             self._runtime = runtime
+            self._comms = comms
             if self._solType == SolutionType.FUSION:
-                self._solutionBase = SolutionFusion(self._runtime)
+                self._solutionBase = SolutionFusion(self._runtime, self._comms)
                 self._runtime.logger.info("QUEUE: Initialised fusion queue (" +
                                 self._filename + ")" + self._infile)
             elif self._solType == SolutionType.CRISTINA:
-                self._solutionBase = SolutionCristina(self._runtime)
+                self._solutionBase = SolutionCristina(self._runtime, self._comms)
                 self._runtime.logger.info("QUEUE: Initialised Cristina queue (" +
                                 self._filename + ")" + self._infile)
             else:
-                self._solutionBase = SolutionNonSeparable(self._runtime)
+                self._solutionBase = SolutionNonSeparable(self._runtime, self._comms)
                 self._runtime.logger.info("QUEUE: Initialised non separable queue (" +
                                 self._filename + ")" + self._infile)
             self._numParams = self._solutionBase.getNumberofParams()

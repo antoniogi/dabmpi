@@ -40,7 +40,7 @@ class SolutionBase(ABC):
     - MAXIMIZE: starts at -infinity (any real value improves it)
     """
 
-    def __init__(self, runtime):
+    def __init__(self, runtime, comms):
         """Initialize solution with appropriate initial value.
         
         Args:
@@ -57,6 +57,7 @@ class SolutionBase(ABC):
 
         self._isValid = True
         self._runtime = runtime
+        self._comms = comms
 
     def getValue(self) -> float:
         """Return the current solution value."""

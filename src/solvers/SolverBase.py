@@ -20,12 +20,13 @@
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   2.0  -  28-05-2026'
 
 """
 HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.0 (15-01-2014):   First stable version.
+    Version 2.0 (28-05-2026):   Refactor to use GlobalRuntime and GlobalComms, and to define the lifecycle protocol for solvers.
 """
 
 from abc import ABC, abstractmethod
@@ -35,14 +36,22 @@ from solution.SolutionsQueue import SolutionsQueue
 
 
 class SolverBase(ABC):
-
+    """
+    Abstract base class defining the lifecycle protocol for processing 
+    distributed solutions via communication queues.
+    """
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         self._runtime = runtime
         self._comms = comms
-        self._finishedSolutions = SolutionsQueue(runtime, "finished.queue", True, True)
-        self._pendingSolutions = SolutionsQueue(runtime, "pending.queue", False)
-        self._topSolutions = SolutionsQueue(runtime, "top.queue", False, True)
-        return
+        self._finishedSolutions = SolutionsQueue(
+            runtime, comms, "finished.queue", writeToFile=True, isPriority=True
+            )
+        self._pendingSolutions = SolutionsQueue(
+            runtime, comms, "pending.queue", writeToFile=False
+            )
+        self._topSolutions = SolutionsQueue(
+            runtime, comms, "top.queue", writeToFile=False, isPriority=True
+            )
 
     @abstractmethod
     def initialize(self):
