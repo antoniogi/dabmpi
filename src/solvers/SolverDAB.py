@@ -134,8 +134,8 @@ class BeeBase ():
                                    new candidate)")
 
     def is_new(self, solution, pending_solutions: SolutionsQueue, finished_solutions: SolutionsQueue):
-        pending = set(pending_solutions.getAllSolutions())
-        finished = set(finished_solutions.getAllSolutions())
+        pending = set(pending_solutions.get_all_solutions())
+        finished = set(finished_solutions.get_all_solutions())
         return solution not in pending and solution not in finished
 
 
@@ -464,7 +464,7 @@ class Onlooker (BeeBase):
 
         val = random.uniform(0.0, totalSumGoodSolutions)
 
-        solutionTuple = topSolutions.GetTupleOnPriorityByValue(val)
+        solutionTuple = topSolutions.get_tuple_on_priority_by_value(val)
         solution = solutionTuple[0]
 
         if solution is None:
@@ -669,7 +669,7 @@ class SolverDAB (SolverBase):
             #if top solutions is not empty, that means we have a best solution from the previous execution
             try:
                 if self._topSolutions.qSize() != 0:
-                    self._bestSolution, value, origin = self._topSolutions.GetSolutionTuple(False)
+                    self._bestSolution, value, origin = self._topSolutions.get_solution_tuple(False)
                     self._bestSolution.setValue(value)
             except Exception as e:
                 self._runtime.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_info()[2].tb_lineno))
@@ -803,7 +803,7 @@ class SolverDAB (SolverBase):
                     self._requestsInput[i] = self._comms.comm.comm.Irecv(self._dump, source=i, tag=Tags.REQINPUT)
 
                 while (self._pendingSolutions.qSize() < self._pendingSize):
-                    self._pendingSolutions.PutSolution(
+                    self._pendingSolutions.put_solution(
                                     self._scout.createNewCandidate(self._pendingSolutions, self._finishedSolutions, self._topSolutions)[0], -1.0, -1)
             self._runtime.logger.debug('created initial set of solutions')
         except Exception as e:
@@ -825,9 +825,9 @@ class SolverDAB (SolverBase):
                         beeIdx = bee
                     if newSolution is None:
                         newSolution = self._scout.createNewCandidate(self._probMatrix)[0]
-                        self._pendingSolutions.PutSolution(newSolution, -1.0, -1)
+                        self._pendingSolutions.put_solution(newSolution, -1.0, -1)
                     else:
-                        self._pendingSolutions.PutSolution(newSolution, -1.0, beeIdx)
+                        self._pendingSolutions.put_solution(newSolution, -1.0, beeIdx)
 
                 #Check if there are abandoned solutions
                 for bee in range(self._nEmployed):
@@ -837,7 +837,7 @@ class SolverDAB (SolverBase):
                         self._bees[bee].setIter(0)
                         self._bees[bee].setSolution(solution)
                         self._runtime.logger.debug("Scout bee putting solution on pending queue")
-                        self._pendingSolutions.PutSolution(solution, -1.0, bee)
+                        self._pendingSolutions.put_solution(solution, -1.0, bee)
             except Exception as e:
                 self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
@@ -859,13 +859,13 @@ class SolverDAB (SolverBase):
                 try:
                     self._runtime.logger.debug('DRIVER. Worker ' + str(destination) + ' was waiting for a solution')
                     #Sends the front of the pending Solutions queue
-                    solTuple = self._pendingSolutions.GetSolutionList()
+                    solTuple = self._pendingSolutions.get_solution_list()
                     if self._pendingSolutions.qSize() == 0:
                         self.checkPendingSolutionsQueue()
                     while len(solTuple) < 3:
-                        solTuple = self._pendingSolutions.GetSolutionList()
+                        solTuple = self._pendingSolutions.get_solution_list()
                         if (self._pendingSolutions.qSize() < 1):
-                            self._pendingSolutions.PutSolution(self._scout.createNewCandidate(self._matrix)[0], -1.0, -1)
+                            self._pendingSolutions.put_solution(self._scout.createNewCandidate(self._matrix)[0], -1.0, -1)
 
                     beeIdx = array('i', [0]) * 1
                     buff = array('f', [0]) * self._numParams
@@ -963,8 +963,8 @@ class SolverDAB (SolverBase):
                             self._probMatrix.setitem(i, idx, val + 0.5)
                 except Exception as e:
                     self._runtime.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
-                self._topSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0], self._nEmployed)
-                self._totalSumGoodSolutions = self._topSolutions.GetTotalSolutionsValues()
+                self._topSolutions.put_solution(solutionTemp, solVal[0], beeIdx[0], self._nEmployed)
+                self._totalSumGoodSolutions = self._topSolutions.get_total_solutions_values()
 
                 if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solVal[0]) > float(self._bestSolution.getValue())) or
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solVal[0]) < float(self._bestSolution.getValue()))):
@@ -1009,7 +1009,7 @@ class SolverDAB (SolverBase):
                 else:
                     solutionTemp.setParametersValues(buff)
 
-                    self._finishedSolutions.PutSolution(solutionTemp, solVal[0], beeIdx[0])
+                    self._finishedSolutions.put_solution(solutionTemp, solVal[0], beeIdx[0])
                     self._runtime.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
                                   ") added to the list of finished solutions")
                     if (float(solVal[0]) >= 0.0 and float(solVal[0])<(math.inf/100.0)):
@@ -1115,7 +1115,7 @@ class SolverDAB (SolverBase):
                     or solutionValue >= self._runtime.max_valid_solution_value
                 ):
                     continue
-                self._totalSumGoodSolutions = self._topSolutions.GetTotalSolutionsValues()
+                self._totalSumGoodSolutions = self._topSolutions.get_total_solutions_values()
                 if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestSolution.getValue())) or
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestSolution.getValue()))):
 
@@ -1233,5 +1233,5 @@ class SolverDAB (SolverBase):
             return True
 
     def finish(self):
-        self._pendingSolutions.writeAllSolutions()
+        self._pendingSolutions.write_all_solutions()
         self._runtime.logger.info('DAB Driver finished')
