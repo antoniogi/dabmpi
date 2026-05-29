@@ -17,19 +17,19 @@
 #   limitations under the License.                                          #
 #############################################################################
 
-import traceback
 from problems.ProblemBase import ProblemBase
 from data.VMECProcess import VMECProcess
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   2.0  -  29-05-2026'
 
 """
 HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
     Version 1.0 (15-01-2014):   Fist stable version.
+    Version 2.0 (29-05-2026):   Refactor to align with new architecture and coding standards.
 
 Objects of this class will represent an instance of the problem we want to
 solve. In the case of fusion, it contains the information regarding one
@@ -40,51 +40,46 @@ The solve method will use the information to actually solve the instance
 """
 
 
-class ProblemFusion (ProblemBase):
+class ProblemFusion(ProblemBase):
 
     def __init__(self, runtime, comms):
         try:
             super().__init__(runtime, comms)
-            self.__vmec = VMECProcess(runtime, comms)
+            self._vmec: VMECProcess = VMECProcess(runtime, comms)
 
-        except Exception as e:
-            tb = traceback.extract_tb(e.__traceback__)
-            line = tb[-1].lineno
+        except Exception:
+            self._runtime.logger.exception("ProblemFusion init failed")
+            raise
 
-            self._runtime.logger.error(
-                f"ProblemFusion ({line}) {e}"
-            )
-
-    #Creates a input.tj input file for vmec
-    def create_input_file(self, solution):
+    def create_input_file(self, solution) -> bool:
         try:
-            if not self.__vmec.create_input_file(solution):
-                return False
-        except Exception as e:
-            self._runtime.logger.error("ProblemFusion, when creating input file: " +
-                            str(e))
+            return self._vmec.create_input_file(solution)
+        except Exception:
+            self._runtime.logger.exception(
+                "ProblemFusion: error creating input file"
+            )
             return False
-        return True
 
-    #Main method responsible for calling vmec and all of the other
-    #applications required based on the configuration specified by the user
     def execute_configuration(self):
-        return self.__vmec.execute_configuration()
+        return self._vmec.execute_configuration()
 
     def extractSolution(self) -> tuple[float, float]:
         self._runtime.logger.debug("Extract solution fusion")
-        #This function actually only needs to send back the values we need
-        return self.__vmec.get_beta(), self.__vmec.get_bgradbval()
+        return self._vmec.get_beta(), self._vmec.get_bgradbval()
 
     def solve(self, solution) -> None:
         try:
-            self._runtime.logger.debug("Solve Problem Fusion")
+            self._runtime.logger.debug("Start solving Fusion problem")
+
             self.create_input_file(solution)
             value = self.execute_configuration()
+
             solution.setValue(value)
-            self._runtime.logger.debug("Solve Problem Fusion")
-        except Exception as e:
-            self._runtime.logger.error(f"Error solving Problem Fusion: {e}")
+
+            self._runtime.logger.debug("Finished solving Fusion problem")
+
+        except Exception:
+            self._runtime.logger.exception("Error solving Problem Fusion")
 
     def finish(self) -> None:
         self._runtime.logger.debug("Finish Problem Fusion")
