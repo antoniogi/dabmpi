@@ -250,6 +250,7 @@ Employed bees
 
 class Employed (BeeBase):
     def __init__(self, runtime, comms, matrix, change, useMatrix):
+        runtime.logger.info("Creating employed bee")
         super().__init__(runtime, comms, matrix)
         #list of neighbours of the current best local solution. This list is
         #used to create new solutions
@@ -419,6 +420,7 @@ Scout bees
 
 class Scout (BeeBase):
     def __init__(self, runtime, comms, matrix):
+        runtime.logger.info("Creating scout bee")
         super().__init__(runtime, comms, matrix)
         return
 
@@ -444,6 +446,7 @@ Onlooker bees
 """
 class Onlooker (BeeBase):
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix, modFactor, probChange):
+        runtime.logger.info("Creating onlooker bee")
         super().__init__(runtime, comms, matrix)
         self._modFactor = modFactor
         #BeeBase._init_(self, runtime)
@@ -761,9 +764,25 @@ class SolverDAB (SolverBase):
                 """
                 self._scout = Scout(self._runtime, self._comms, self._probMatrix)
                 self._runtime.logger.debug("Created 1 scout bee")
+                self.print_configuration()
         except Exception as e:
             self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
             raise
+
+    def print_configuration(self):
+        self._runtime.logger.info("SolverDAB configuration:")
+        self._runtime.logger.info(f"Number of scout bees: 1")
+        self._runtime.logger.info(f"Number of employed bees: {self._nEmployed}")
+        self._runtime.logger.info(f"Number of onlooker bees: {self._nOnlooker}")
+        self._runtime.logger.info(f"Onlooker modification factor: {self._onlookerModFactor}")
+        self._runtime.logger.info(f"Iterations before abandoning a solution: {self._iterAbandoned}")
+        self._runtime.logger.info(f"Probability of change for employed bees: {self._probEmployedChange}")
+        self._runtime.logger.info(f"Probability of change for onlooker bees: {self._probOnlookerChange}")
+        self._runtime.logger.info(f"Use probability matrix: {self._useMatrix}")
+        self._runtime.logger.info(f"Execution time (seconds): {self._exectime}")
+        self._runtime.logger.info(f"Pending solutions queue size: {self._pendingSize}")
+        self._runtime.logger.info(f"Maximum number of top solutions stored: {self._maxNumTopSolutions}")
+
 
     """
     Initializer method (if needed)
