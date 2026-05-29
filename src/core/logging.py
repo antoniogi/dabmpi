@@ -25,47 +25,48 @@ __author__ = "Antonio Gomez"
 __version__ = "2.0"
 
 import logging
-from typing import Optional
 
 class LoggerConfig:
     """Logger configuration with sensible defaults."""
-    
+
     LOG_FILE = "dabmpi.log"
     LOG_LEVEL_FILE = logging.DEBUG
     LOG_LEVEL_CONSOLE = logging.WARNING
     CUSTOM_LEVEL = 100
-    
+
     @staticmethod
     def create_logger(
         name: str = "dabmpi",
-        log_file: Optional[str] = None,
+        log_file: str | None = None,
         console_level: int = logging.WARNING,
         file_level: int = logging.DEBUG,
     ) -> logging.Logger:
-        """Create and configure logger with file and console handlers."""
+
         logger = logging.getLogger(name)
+
+        if logger.handlers:
+            return logger
+
         logger.setLevel(logging.DEBUG)
-        
+        logger.propagate = False
+
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
-        
-        # File handler
+
         if log_file:
             fh = logging.FileHandler(log_file)
             fh.setLevel(file_level)
             fh.setFormatter(formatter)
             logger.addHandler(fh)
-        
-        # Console handler
+
         ch = logging.StreamHandler()
         ch.setLevel(console_level)
         ch.setFormatter(formatter)
         logger.addHandler(ch)
-        
-        # Add custom log level
+
         logging.addLevelName(LoggerConfig.CUSTOM_LEVEL, "BEST")
-        
+
         return logger
 
 
