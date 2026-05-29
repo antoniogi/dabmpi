@@ -617,12 +617,12 @@ class SolverDAB (SolverBase):
         we increase the probability of the current value of each parameter
         """
         self._useMatrix = False
-        self._probMatrix:Matrix = None
+        self._probMatrix:Matrix | None = None
         #default values
         self._nEmployed = 0
         self._nOnlooker = 0
         self._bees = []
-        self._scout = None
+        self._scout:BeeBase | None = None
         self._exectime = 0
         self._pendingSize = 10
         self._iterAbandoned = 10
@@ -632,7 +632,6 @@ class SolverDAB (SolverBase):
         self._maxNumTopSolutions = 100
         
         try:
-            self._runtime.logger.info("SolverDAB init")
             origin = -1
 
             self._totalSumGoodSolutions = 0.0
@@ -645,8 +644,8 @@ class SolverDAB (SolverBase):
 
             self._dump = array('i', [0]) * 1
 
-            self._bestSolution = None
-            self._bestGlobalSolution = None
+            self._bestSolution: SolutionBase
+            self._bestGlobalSolution: SolutionBase
 
             if self._runtime.problem_type == ProblemType.FUSION:
                 self._problem = ProblemFusion(self._runtime, self._comms)
@@ -661,9 +660,9 @@ class SolverDAB (SolverBase):
                 self._bestSolution = SolutionCristina(self._runtime, self._comms)
                 self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
             else:
-                self._runtime.logger.critical("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
-                                  "). Unknown problem type " + str(self._runtime.problem_type))
-                sys.exit(-1)
+               raise ValueError(
+                    f"Unknown problem type: {self._runtime.problem_type}"
+                )
             self._numParams = self._bestSolution.getNumberofParams()
             
             #if top solutions is not empty, that means we have a best solution from the previous execution
@@ -672,7 +671,7 @@ class SolverDAB (SolverBase):
                     self._bestSolution, value, origin = self._topSolutions.get_solution_tuple(False)
                     self._bestSolution.setValue(value)
             except Exception as e:
-                self._runtime.logger.warning("SolverDAB. " + str(e) + ". line " + str(sys.exc_info()[2].tb_lineno))
+                self._runtime.logger.exception(f"SolverDAB. {e}")
 
             if self._comms.rank == 0:
                 #parse arguments from the ini file
@@ -1061,7 +1060,7 @@ class SolverDAB (SolverBase):
     def solve(self):
         self._runtime.logger.info('DAB solver started')
 
-        if (self._runtime.comm_model == CommModelType.DRIVERWORKER):
+        if self._runtime.comm_model == CommModelType.DRIVERWORKER:
             while (not self.check_finish()):
                 try:
                     #check if it has to create solutions
@@ -1072,16 +1071,14 @@ class SolverDAB (SolverBase):
                     self.receiveSolutions()
 
                     elapsedTime = time.time() - self._runtime.start_time
-                    self._runtime.logger.debug("DRIVER. Elapsed time " + str(elapsedTime) +
-                                    " - Remaining " + str(self._runtime.max_execution_time - elapsedTime))
+                    self._runtime.logger.debug(
+                        "DRIVER. Elapsed time %.2f - Remaining %.2f",
+                        elapsedTime,
+                        self._runtime.max_execution_time - elapsedTime,
+                    )
                 except Exception as e:
-                    # Extract the last frame of the traceback (where the error actually happened)
-                    tb = e.__traceback__
-                    # extract_tb returns a list of FrameSummary objects
-                    summary = traceback.extract_tb(tb)[-1]
-                    filename = summary.filename
-                    line_number = summary.lineno
-                    self._runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+                    self._runtime.logger.exception(f"SolverDAB exception: {e}")
+                    time.sleep(1)
         else:
             self.runDistributed()
 
@@ -1131,18 +1128,24 @@ class SolverDAB (SolverBase):
                     buff = self._bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
-                    if (self._runtime.problem_type == ProblemType.FUSION):
-                        filenametime = "0"
+                    if self._runtime.problem_type == ProblemType.FUSION:
+                        filenametime = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+
+                        self._bestSolution.prepare(f"input.best.{filenametime}")
+                        shutil.copy2(
+                            f"{beeIdx}/threed1.tj{beeIdx}",
+                            f"threed1.best.{filenametime}",
+                        )
+                        shutil.copy2(
+                            f"{beeIdx}/wout_tj{beeIdx}.txt",
+                            f"wout.best.{filenametime}",
+                        )
                         try:
-                            filenametime = datetime.now().isoformat(timespec="milliseconds")
-                        except:
-                            pass
-                        self._bestSolution.prepare("input.best." + filenametime)
-                        shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
-                        shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
-                        try:
-                            shutil.copyfile(str(beeIdx) + '/OUTPUT/results.av', 'results.best.' + filenametime)
-                        except:
+                            shutil.copy2(
+                                f"{beeIdx}/OUTPUT/results.av",
+                                f"results.best.{filenametime}",
+                            )
+                        except OSError:
                             pass
 
             #Check if there are abandoned solutions
@@ -1180,20 +1183,27 @@ class SolverDAB (SolverBase):
                         buff = self._bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 
-                        if (self._runtime.problem_type == ProblemType.FUSION):
-                            filenametime = "0"
-                            try:
-                                filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
-                            except:
-                                pass
+                        if self._runtime.problem_type == ProblemType.FUSION:
+                            filenametime = datetime.now().strftime('%Y-%m-%d-%H%M%S-%f')[:-3]
+
                             self._bestSolution.prepare("input.best." + filenametime)
-                            shutil.copyfile(str(beeIdx) + '/threed1.tj' + str(beeIdx), 'threed1.best.' + filenametime)
-                            shutil.copyfile(str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt", 'wout.best.' + filenametime)
+
+                            shutil.copy2(
+                                str(beeIdx) + '/threed1.tj' + str(beeIdx),
+                                'threed1.best.' + filenametime,
+                            )
+
+                            shutil.copy2(
+                                str(beeIdx) + '/wout_tj' + str(beeIdx) + ".txt",
+                                'wout.best.' + filenametime,
+                            )
+
                             try:
-                                shutil.copyfile(str(beeIdx) +
-                                                '/OUTPUT/results.av',
-                                                'results.best.' + filenametime)
-                            except:
+                                shutil.copy2(
+                                    str(beeIdx) + '/OUTPUT/results.av',
+                                    'results.best.' + filenametime,
+                                )
+                            except OSError:
                                 pass
                     self._runtime.logger.debug("Scout bee putting solution on pending queue")
         return
@@ -1202,34 +1212,24 @@ class SolverDAB (SolverBase):
         try:
             #first check if it's too early to finish
             elapsedTime = time.time() - self._runtime.start_time
-            if (elapsedTime + (60 * 5) < self._runtime.max_execution_time):
+            if elapsedTime + 300 < self._runtime.max_execution_time:
                 return False
-            allNull = True
-            for i in range(len(self._requestsEnd)):
-                if (self._requestsEnd[i] != MPI.REQUEST_NULL):
-                    allNull = False
-                    break
-            if (allNull):
-                self._runtime.logger.info("DRIVER. All workers have finished")
+            all_null = all(
+                request == MPI.REQUEST_NULL
+                for request in self._requestsEnd
+            )
+            if (all_null):
+                self._runtime.logger.info("SolverDAB[Driver]. All workers have finished")
                 return True
             status = MPI.Status()
             idx, flag = MPI.Request.Testany(self._requestsEnd, status)
             if (flag and idx >= 0):
                 source = status.source
                 self._requestsEnd[source] = MPI.REQUEST_NULL
-                self._runtime.logger.info('SolverDAB. Received a termination request from worker' +
-                               str(source))
+                self._runtime.logger.info(f'SolverDAB. Received a termination request from worker {source}')
             return False
         except Exception as e:
-            # Extract the last frame of the traceback (where the error actually happened)
-            tb = e.__traceback__
-        
-            # extract_tb returns a list of FrameSummary objects
-            summary = traceback.extract_tb(tb)[-1]
-        
-            filename = summary.filename
-            line_number = summary.lineno
-            self._runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+            self._runtime.logger.exception(f"SolverDAB exception: {e}")
             return True
 
     def finish(self):
