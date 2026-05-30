@@ -34,7 +34,7 @@ from core.enums import ProblemType, SolverType, CommModelType, ObjectiveType
 from core.comms import GlobalComms
 from solvers.SolverDAB import SolverDAB
 from solvers.SolverSA import SolverSA
-from runtime.Worker import Worker
+from runtime.Worker import EvaluationWorker
 
 
 __author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
@@ -200,7 +200,7 @@ def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms):
 def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, inputfile: str, configfile: str):
     """Run the worker-side MPI execution path."""
     runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
-    worker = Worker(runtime, global_comms)
+    worker = EvaluationWorker(runtime, global_comms)
     worker.run()
     worker.finish()
     runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")

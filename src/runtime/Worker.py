@@ -48,7 +48,7 @@ problem.
 Once the problem has been solved, the worker sends the result back to the
 driver and waits for a new input message.
 """
-class Worker:
+class EvaluationWorker:
     def __init__(self, runtime: GlobalRuntime, comm: GlobalComms):
         try:
             self._comm = comm
