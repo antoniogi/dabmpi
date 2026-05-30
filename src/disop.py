@@ -197,11 +197,11 @@ def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms):
     runtime.logger.info("DRIVER - END OF THE EXECUTION")
 
 
-def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, problem_type: ProblemType, inputfile: str, configfile: str):
+def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, inputfile: str, configfile: str):
     """Run the worker-side MPI execution path."""
     runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
-    worker = Worker(global_comms.comm, problem_type, runtime)
-    worker.run(inputfile, configfile)
+    worker = Worker(runtime, global_comms)
+    worker.run()
     worker.finish()
     runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")
 
@@ -287,7 +287,7 @@ def main(runtime, argv=None):
             if global_comms.rank == 0:
                 run_driver(runtime, global_comms)
             else:
-                run_worker(runtime, global_comms, problem_type, inputfile, configfile)
+                run_worker(runtime, global_comms, inputfile, configfile)
         else:
             run_all2all(runtime, global_comms)
 
