@@ -60,8 +60,8 @@ class SolutionNonSeparable (SolutionBase):
     def getMaxNumberofValues(self):
         return self._data.getMaxRange()
 
-    def prepare(self, filename):
-        return
-    
+    def prepare(self, filename) -> bool:
+        return True
+
     def print(self):
         pass

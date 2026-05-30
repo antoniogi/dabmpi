@@ -145,7 +145,7 @@ class SolutionBase(ABC):
             f"{self._class__.__name__} must implement initialize()")
 
     @abstractmethod
-    def prepare(self, filename: str) -> None:
+    def prepare(self, filename: str) -> bool:
         """Prepare input file for solver.
         
         Args:

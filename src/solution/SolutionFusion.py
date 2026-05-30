@@ -45,9 +45,9 @@ class SolutionFusion(SolutionBase):
         """Initialize with external data object."""
         self._data = data
 
-    def prepare(self, filename):
+    def prepare(self, filename) -> bool:
         """Create input file for VMEC."""
-        self._data.create_input_file(filename)
+        return self._data.create_input_file(filename)
 
     def get_number_of_params(self):
         """Return the number of parameters."""

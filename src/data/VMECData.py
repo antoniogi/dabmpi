@@ -750,7 +750,7 @@ class VMECData():
     Main method for creating the input file
     """
 
-    def create_input_file(self, filename):
+    def create_input_file(self, filename) -> bool:
         try:
             self._runtime.logger.debug(
                 f"Worker {self._comms.rank} creating file {filename}"

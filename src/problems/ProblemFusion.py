@@ -43,9 +43,10 @@ The solve method will use the information to actually solve the instance
 class ProblemFusion(ProblemBase):
 
     def __init__(self, runtime, comms):
+        self._vmec: VMECProcess | None = None
         try:
             super().__init__(runtime, comms)
-            self._vmec: VMECProcess = VMECProcess(runtime, comms)
+            self._vmec = VMECProcess(runtime, comms)
 
         except Exception:
             self._runtime.logger.exception("ProblemFusion init failed")

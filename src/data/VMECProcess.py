@@ -205,15 +205,24 @@ class VMECProcess(object):
     This method just calls to the solution.prepare function
     to write the input file
     """
-    def create_input_file(self, solution):
+    def create_input_file(self, solution) -> bool:
         self._runtime.logger.debug("Creating input file")
+
+        input_file = f"input.tj{self._comms.rank}"
+
         try:
-            if os.path.exists(f"input.tj{self._comms.rank}"):
-                os.remove(f"input.tj{self._comms.rank}")
-        except:
+            os.remove(input_file)
+        except FileNotFoundError:
             pass
-        solution.prepare(f"{self._comms.rank}/{self._filename}")
-        return
+        except OSError:
+            self._runtime.logger.exception(
+                "VMECProcess: error removing old input file"
+            )
+            return False
+
+        return solution.prepare(
+            f"{self._comms.rank}/{self._filename}"
+        )
 
     def clean_folder(self):
         files = [
