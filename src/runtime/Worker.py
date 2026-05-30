@@ -23,7 +23,6 @@ from time import time
 from core.runtime import GlobalRuntime
 from core.comms import GlobalComms
 from core.enums import ProblemType, Tags
-import sys
 from mpi4py import MPI
 from solution.SolutionCristina import SolutionCristina
 from solution.SolutionFusion import SolutionFusion
@@ -32,15 +31,16 @@ from problems.ProblemCristina import ProblemCristina
 from problems.ProblemFusion import ProblemFusion
 from problems.ProblemNonSeparable import ProblemNonSeparable
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
+__author__ = ' AUTHORS:     Antonio Gomez'
 
 
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+__version__ = ' REVISION:   2.0  -  29-05-2026'
 
 """
 HISTORY
     Version 0.1 (23-08-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
+    Version 1.0 (15-01-2014):   First stable version.
+    Version 2.0 (29-05-2026):   Refactoring and modernization.
 
 Objects of this class will represent a worker.
 Workers wait for an input message, build a problem instance, and solve the
@@ -81,8 +81,14 @@ class EvaluationWorker:
 
             #Send the finish message 10 minutes before the end time to allow
             #the jobs that are still running to finish on time
-            while (elapsed_time + (60 * 5)) < float(self._runtime.max_execution_time):
-                #solution = SolutionFusion()
+            while True:
+                elapsed_time = time() - start_time
+
+                if elapsed_time + 300 >= float(self._runtime.max_execution_time):
+                    break
+                self._runtime.logger.debug("WORKER (" + str(self._rank) + ") elapsed " +
+                    str(elapsed_time) + " - Runtime " +
+                    str(self._runtime))
                 #Send a request for data
                 status = MPI.Status()
                 if self._runtime.problem_type == ProblemType.FUSION:
@@ -112,9 +118,7 @@ class EvaluationWorker:
                 req = self._comm.comm.Irecv(agent_idx, 0, Tags.RECVFROMDRIVER)
                 req.wait(status)
 
-                self._runtime.logger.info("WORKER (" + str(self._rank) +
-                               ") has received a solution to evaluate from bee " +
-                               str(agent_idx[0]))
+                self._runtime.logger.info(f"WORKER ( {self._rank} ) has received a solution to evaluate from bee {agent_idx[0]}")
                 solution.setParametersValues(buff)
 
                 #Evalute the solution
@@ -129,24 +133,15 @@ class EvaluationWorker:
                     )
                 req.Wait(status)
 
-                self._runtime.logger.debug("WORKER (" + str(self._rank) +
-                               "). Buffer size: " + str(len(buff)))
-                self._runtime.logger.debug("WORKER (" + str(self._rank) +
-                               "- " + str(agent_idx) + ") found solution with value " 
-                               + str(solution_value[0]))
+                self._runtime.logger.debug(f"WORKER ( {self._rank} ) Buffer size: {len(buff)}")
+                self._runtime.logger.debug(f"WORKER ( {self._rank} ) found solution with value {solution_value[0]}")
 
                 self._comm.comm.Send(buff, 0, Tags.COMMSOLUTION)
                 self._comm.comm.Send(solution_value, 0, Tags.COMMSOLUTION)
                 self._comm.comm.Send(agent_idx, 0, Tags.COMMSOLUTION)
 
-                elapsed_time = time() - start_time
                 solutions_evaluated += 1
-                self._runtime.logger.debug("WORKER (" + str(self._rank) + ") elapsed " +
-                                str(elapsed_time) + " - Runtime " +
-                                str(self._runtime))
-            self._runtime.logger.info("WORKER (" + str(self._rank) +
-                          ") configurations evaluated: " +
-                           str(solutions_evaluated))
+            self._runtime.logger.info(f"WORKER ( {self._rank} ) configurations evaluated: {solutions_evaluated}")
         except Exception:
             self._runtime.logger.exception("Worker run failed")
             raise
@@ -157,5 +152,4 @@ class EvaluationWorker:
     def finish(self):
         end = array('i', [0]) * 1
         self._comm.comm.Send([end, MPI.INT], 0, Tags.ENDSIM)
-        self._runtime.logger.info("WORKER (" + str(self._rank) +
-                      "). Sent end request to driver")
+        self._runtime.logger.info(f"WORKER ( {self._rank} ) Sent end request to driver")
