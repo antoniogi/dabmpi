@@ -56,29 +56,29 @@ class VMECProcess(object):
         try:
             self._runtime = runtime
             self._comms = comms
-            self.__currentPath = os.getcwd()
+            self._currentPath = os.getcwd()
 
-            self.__execPath = f"{self.__currentPath}/{self._comms.rank}"
+            self._execPath = f"{self._currentPath}/{self._comms.rank}"
             self._filename = "input.tj" + str(self._comms.rank)
 
-            self.__beta = -INFINITY
-            self.__bgradbval = -INFINITY
-            self.__bootstrap = INFINITY
-            self.__is_mercier_stable = True
-            self.__is_ballooning_stable = True
+            self._beta = -INFINITY
+            self._bgradbval = -INFINITY
+            self._bootstrap = INFINITY
+            self._is_mercier_stable = True
+            self._is_ballooning_stable = True
 
-            self.__dkes = False
-            self.__extra_threed1 = False
-            self.__check_mercier = False
-            self.__min_mercier_radius = 0.8
-            self.__bgradb = False
-            self.__check_ballooning = False
-            self.__get_beta = False
-            self.__min_beta = -INFINITY
-            self.__max_beta = INFINITY
-            self.__save_configs = False
+            self._dkes = False
+            self._extra_threed1 = False
+            self._check_mercier = False
+            self._min_mercier_radius = 0.8
+            self._bgradb = False
+            self._check_ballooning = False
+            self._get_beta = False
+            self._min_beta = -INFINITY
+            self._max_beta = INFINITY
+            self._save_configs = False
 
-            self.__netcdf = ""
+            self._netcdf = ""
 
             #read the configuration from the INI file
             self.read_ini_config_file(self._runtime.config_file)
@@ -91,9 +91,9 @@ class VMECProcess(object):
                 os.makedirs(str(self._comms.rank))
             if not os.path.exists(f"{self._comms.rank}/finished"):
                 os.makedirs(f"{self._comms.rank}/finished")
-            os.chdir(self.__execPath)
+            os.chdir(self._execPath)
             try:
-                if self.__check_ballooning and not os.path.lexists("xcobravmec"):
+                if self._check_ballooning and not os.path.lexists("xcobravmec"):
                     subprocess.call(["ln", "-s", "../../external/xcobravmec",
                                       "xcobravmec"])
                 if not os.path.lexists("xgrid") and os.path.exists("../../external/xgrid"):
@@ -109,7 +109,7 @@ class VMECProcess(object):
 
             else:
                 try:
-                    if self.__check_ballooning and not os.path.lexists("xcobravmec"):
+                    if self._check_ballooning and not os.path.lexists("xcobravmec"):
                         process = subprocess.Popen(["ln", "-s",
                                                    "../../external/xcobravmec",
                                                    "xcobravmec"])
@@ -132,13 +132,13 @@ class VMECProcess(object):
         except Exception as e:
             self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            ") " + str(e))
-        os.chdir(self.__currentPath)
+        os.chdir(self._currentPath)
 
     def get_beta(self):
-        return self.__beta
+        return self._beta
 
     def get_bgradbval(self):
-        return self.__bgradbval
+        return self._bgradbval
 
     def read_ini_config_file(self, cfile):
         config = configparser.ConfigParser()
@@ -150,53 +150,53 @@ class VMECProcess(object):
             if config.has_option("Fusion", "bgradb"):
                 val = config.getboolean("Fusion", "bgradb")
                 if val is not None:
-                    self.__bgradb = val
+                    self._bgradb = val
             if config.has_option("Fusion", "mercier"):
                 val = config.getboolean("Fusion", "mercier")
                 if val is not None:
-                    self.__check_mercier = val
+                    self._check_mercier = val
             if config.has_option("Fusion", "min_mercier_radius"):
                 val = config.get("Fusion", "min_mercier_radius")
                 if val is not None:
-                    self.__min_mercier_radius = float(val)
+                    self._min_mercier_radius = float(val)
             if config.has_option("Fusion", "ballooning"):
                 val = config.getboolean("Fusion", "ballooning")
                 if val is not None:
-                    self.__check_ballooning = val
+                    self._check_ballooning = val
             if config.has_option("Fusion", "threed1"):
                 val = config.getboolean("Fusion", "threed1")
                 if val is not None:
-                    self.__extra_threed1 = val
+                    self._extra_threed1 = val
             if config.has_option("Fusion", "get_beta"):
                 val = config.getboolean("Fusion", "get_beta")
                 if val is not None:
-                    self.__get_beta = val
+                    self._get_beta = val
             if config.has_option("Fusion", "min_beta"):
                 val = config.get("Fusion", "min_beta")
                 if val is not None:
-                    self.__min_beta = float(val)
+                    self._min_beta = float(val)
             if config.has_option("Fusion", "max_beta"):
                 val = config.get("Fusion", "max_beta")
                 if val is not None:
-                    self.__max_beta = float(val)
+                    self._max_beta = float(val)
             if config.has_option("Fusion", "dkes"):
                 val = config.getboolean("Fusion", "dkes")
                 if val is not None:
-                    self.__dkes = val
+                    self._dkes = val
             if config.has_option("Fusion", "save_configurations"):
                 val = config.getboolean("Fusion", "save_configurations")
                 if val is not None:
-                    self.__save_configs = val
+                    self._save_configs = val
             if config.has_option("General", "netcdf"):
                 val = config.get("General", "netcdf")
                 if val is not None:
-                    self.__netcdf = val
-            self._runtime.logger.debug("bgradb " + str(self.__bgradb) + " - mercier " +
-                            str(self.__check_mercier) + " - min_radius " +
-                            str(self.__min_mercier_radius) + " - ballooning " +
-                            str(self.__check_ballooning) + " - threed1 " +
-                            str(self.__extra_threed1) + " - beta " +
-                            str(self.__get_beta))
+                    self._netcdf = val
+            self._runtime.logger.debug("bgradb " + str(self._bgradb) + " - mercier " +
+                            str(self._check_mercier) + " - min_radius " +
+                            str(self._min_mercier_radius) + " - ballooning " +
+                            str(self._check_ballooning) + " - threed1 " +
+                            str(self._extra_threed1) + " - beta " +
+                            str(self._get_beta))
         except Exception as e:
             self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                            "). " + str(e))
@@ -250,7 +250,7 @@ class VMECProcess(object):
 
     def execute_configuration(self):
         #move to the execution folder of this process
-        os.chdir(self.__execPath)
+        os.chdir(self._execPath)
         self.clean_folder()
 
         if self._runtime.objective == ObjectiveType.MINIMIZE:
@@ -259,50 +259,50 @@ class VMECProcess(object):
             val = -INFINITY
         try:
             if not self.run_vmec():
-                os.chdir(self.__currentPath)
+                os.chdir(self._currentPath)
                 if self._runtime.objective == ObjectiveType.MAXIMIZE:
                     return -INFINITY
                 return INFINITY
 
             if not self.run_mercier():
-                os.chdir(self.__currentPath)
+                os.chdir(self._currentPath)
                 if self._runtime.objective == ObjectiveType.MAXIMIZE:
                     return -INFINITY
                 return INFINITY
 
             if not self.run_threed():
-                os.chdir(self.__currentPath)
+                os.chdir(self._currentPath)
                 if self._runtime.objective == ObjectiveType.MAXIMIZE:
                     return -INFINITY
                 return INFINITY
             else:
-                val = self.__beta
+                val = self._beta
 
             if not self.run_ballooning():
-                os.chdir(self.__currentPath)
+                os.chdir(self._currentPath)
                 if self._runtime.objective == ObjectiveType.MAXIMIZE:
                     return -INFINITY
                 return INFINITY
 
-            if self.__bgradb:
+            if self._bgradb:
                 if not self.run_b_grad_b():
-                    os.chdir(self.__currentPath)
+                    os.chdir(self._currentPath)
                     if self._runtime.objective == ObjectiveType.MAXIMIZE:
                         return -INFINITY
                     return INFINITY
                 else:
-                    val = self.__bgradbval
+                    val = self._bgradbval
 
-            if self.__dkes:
+            if self._dkes:
                 if not self.run_dkes():
-                    os.chdir(self.__currentPath)
+                    os.chdir(self._currentPath)
                     if self._runtime.objective == ObjectiveType.MAXIMIZE:
                         return -INFINITY
                     return INFINITY
                 else:
-                    val = self.__bootstrap
+                    val = self._bootstrap
 
-            if not self.__is_mercier_stable:
+            if not self._is_mercier_stable:
                 self._runtime.logger.info("Unstable mercier")
                 if self._runtime.objective == ObjectiveType.MAXIMIZE:
                     return -INFINITY
@@ -311,16 +311,16 @@ class VMECProcess(object):
             self._runtime.logger.info(f"VALID configuration({self._comms.rank}). Val: {val}")
 
         except Exception as e:
-            os.chdir(self.__currentPath)
+            os.chdir(self._currentPath)
             self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Error when executing the configuration. {e}")
             return val
         #Always restore the working directory to the original path
-        os.chdir(self.__currentPath)
+        os.chdir(self._currentPath)
         return val
 
     def save_configuration(self):
         try:
-            if not self.__save_configs:
+            if not self._save_configs:
                 return
             filenametime = time.strftime("%Y%m%d-%H%M%S", time.localtime())
             for fileIn in glob.glob('input*'):
@@ -503,7 +503,7 @@ class VMECProcess(object):
     """
 
     def run_dkes(self):
-        if not self.__dkes:
+        if not self._dkes:
             return True
         try:
             try:
@@ -523,7 +523,7 @@ class VMECProcess(object):
             except:
                 pass
             os.environ["LD_LIBRARY_PATH"] = (os.environ["LD_LIBRARY_PATH"] +
-                                             ":" + str(self.__netcdf))
+                                             ":" + str(self._netcdf))
             subprocess.call(["cp", "-rf", "../../external/DKES", "."])
             subprocess.call(["cp", "-f", "wout*", "INPUT/wout_DAB_0.0.txt"])
             subprocess.call(["cp", "-f", "threed1*", "INPUT/threed1.DAB_0.0"])
@@ -553,9 +553,9 @@ class VMECProcess(object):
                             rho = math.sqrt(float(parts[0]))
                             sum += d31*rho
                         except:
-                            self.__bootstrap = INFINITY
+                            self._bootstrap = INFINITY
                             return False
-                self.__bootstrap = sum
+                self._bootstrap = sum
             except:
                 return False
             #last = u.Tail("OUTPUT/results.av")
@@ -564,9 +564,9 @@ class VMECProcess(object):
             #    runtime.logger.info("VMECProcess. Invalid number of values " +
             #                  " in the results file")
             #    return False
-            #self.__bootstrap = abs(float(parts[4]))
+            #self._bootstrap = abs(float(parts[4]))
             try:
-                self._runtime.logger.info(f"({self._comms.rank}) DKES VALUE: {self.__bootstrap}")
+                self._runtime.logger.info(f"({self._comms.rank}) DKES VALUE: {self._bootstrap}")
             except:
                 pass
 
@@ -581,15 +581,15 @@ class VMECProcess(object):
     """
 
     def run_b_grad_b(self):
-        if not self.__bgradb:
+        if not self._bgradb:
             return True
         try:
             if not os.path.exists(f"wout_tj{self._comms.rank}.txt"):
                 return False
             if not self.process_wout(f"wout_tj{self._comms.rank}.txt", f"wout_post{self._comms.rank}.txt"):
                 return False
-            self.__bgradbval = self.calculate_fitness_bgradb(f"wout_post{self._comms.rank}.txt")
-            self._runtime.logger.info(f"({self._comms.rank}) The BxgradB value is {self.__bgradbval}")
+            self._bgradbval = self.calculate_fitness_bgradb(f"wout_post{self._comms.rank}.txt")
+            self._runtime.logger.info(f"({self._comms.rank}) The BxgradB value is {self._bgradbval}")
             if os.path.exists(f"wout_post{self._comms.rank}.txt"):
                 os.remove(f"wout_post{self._comms.rank}.txt")
             return True
@@ -604,7 +604,7 @@ class VMECProcess(object):
     """
 
     def run_ballooning(self):
-        if not self.__check_ballooning:
+        if not self._check_ballooning:
             return True
         files = glob.glob('./wout*')
         for f in files:
@@ -621,19 +621,19 @@ class VMECProcess(object):
                 return False
             file_cobra = open(f'./cobra_grate.{self._comms.rank}', 'r')
             i = 0
-            self.__is_ballooning_stable = True
+            self._is_ballooning_stable = True
             for line in file_cobra.readlines():
                 if i >= first_line_to_analyze:
                     parts = line.split()
 #                    parts = map(string.strip, string.split(line))
                     if float(parts[2]) > 0:
-                        self.__is_ballooning_stable = False
+                        self._is_ballooning_stable = False
                         break
                 i += 1
             file_cobra.close()
-            if self.__is_ballooning_stable:
+            if self._is_ballooning_stable:
                 self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration ballooning stable")
-            return self.__is_ballooning_stable
+            return self._is_ballooning_stable
         except Exception as e:
             self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error when processing ballooning. " + str(e))
@@ -644,7 +644,7 @@ class VMECProcess(object):
     """
 
     def run_mercier(self):
-        if not self.__check_mercier:
+        if not self._check_mercier:
             return True
         try:
             filename = f"mercier.tj{self._comms.rank}"
@@ -661,7 +661,7 @@ class VMECProcess(object):
             i = 0
             window_size = 0
             sign_change = False
-            self.__is_mercier_stable = True
+            self._is_mercier_stable = True
             while line:
                 linestrip = line.strip()
                 new_line = linestrip.replace('  ', ' ')
@@ -669,14 +669,14 @@ class VMECProcess(object):
 #                parts = map(string.strip, string.split(new_line, ' '))
                 Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
 
-                if float(Si) >= self.__min_mercier_radius:
+                if float(Si) >= self._min_mercier_radius:
                     if float(DMerci) > 0:
                         window_size = window_size + 1
                         if sign_change:
                             if window_size >= 5:
                                 f.close()
                                 #There is a sing change in mercier
-                                self.__is_mercier_stable = False
+                                self._is_mercier_stable = False
                                 return False
                         else:
                             sign_change = True
@@ -689,10 +689,10 @@ class VMECProcess(object):
         except Exception as e:
             self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
                             "). Error while processing mercier. " + str(e))
-            self.__is_mercier_stable = False
+            self._is_mercier_stable = False
             return False
         self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration mercier stable")
-        self.__is_mercier_stable = True
+        self._is_mercier_stable = True
         return True
 
     """
@@ -702,8 +702,8 @@ class VMECProcess(object):
 
     def extract_beta(self):
         try:
-            self.__beta = -INFINITY
-            if not self.__get_beta:
+            self._beta = -INFINITY
+            if not self._get_beta:
                 return True
             file_threed = open('./threed1.tj' + self._comms.rank, 'r')
             found = False
@@ -717,13 +717,13 @@ class VMECProcess(object):
                 return False
             parts = line.split('=')
 #            parts = map(string.strip, string.split(line, '='))
-            self.__beta = float(parts[1])
-            self._runtime.logger.info(f"Worker {self._comms.rank}. Beta found {self.__beta}")
-            if self.__beta > self.__max_beta:
-                self.__beta = -INFINITY
+            self._beta = float(parts[1])
+            self._runtime.logger.info(f"Worker {self._comms.rank}. Beta found {self._beta}")
+            if self._beta > self._max_beta:
+                self._beta = -INFINITY
                 return False
-            if self.__beta <= self.__min_beta:
-                self.__beta = -INFINITY
+            if self._beta <= self._min_beta:
+                self._beta = -INFINITY
                 return False
             return True
         except Exception as e:
@@ -733,9 +733,9 @@ class VMECProcess(object):
 
     def run_threed(self):
         try:
-            if self.__get_beta:
+            if self._get_beta:
                 self.extract_beta()
-            if not self.__extra_threed1:
+            if not self._extra_threed1:
                 return True
 
             file_threed = open(f'./threed1.tj{self._comms.rank}', 'r')
@@ -819,7 +819,7 @@ class VMECProcess(object):
     """
 
     def run_x_grid(self):
-        fullpath = f"{self._comms.rank}/{self.__filename}"
+        fullpath = f"{self._comms.rank}/{self._filename}"
         with open(fullpath, 'r') as fileinput:
             line = fileinput.readline()
             line = fileinput.readline()

@@ -39,19 +39,8 @@ Class that implements the DAB solver. It has to:
 
 import sys
 import random
-import shutil
-import time
 import configparser
-from mpi4py import MPI
-from array import array
-
 from solvers.SolverBase import SolverBase
-from problems.ProblemFusion import ProblemFusion
-from problems.ProblemNonSeparable import ProblemNonSeparable
-from solution.SolutionFusion import SolutionFusion
-from solution.SolutionNonSeparable import SolutionNonSeparable
-import solution.SolutionsQueue as solQueue
-
 
 class SolverSA (SolverBase):
     def readConfigFile(self, runtime):
