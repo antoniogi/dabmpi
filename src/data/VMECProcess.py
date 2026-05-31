@@ -788,6 +788,9 @@ class VMECProcess(object):
         try:
             if not os.path.exists(f"input.tj{self._comms.rank}"):
                 return False
+            if not os.path.exists("/home/fraguas/bin/xvmec2000nc"):
+                self._runtime.logger.error(f"VMECProcess({self._comms.rank}). xvmec2000nc executable doesn't exist")
+                return False
             proc = subprocess.Popen(["/home/fraguas/bin/xvmec2000nc", f"tj{self._comms.rank}"],
                                     stdout=subprocess.PIPE)
             output = proc.stdout.read()
@@ -810,8 +813,7 @@ class VMECProcess(object):
             self._runtime.logger.info(f"WORKER({self._comms.rank}). Configuration VMEC OK")
             return True
         except Exception as e:
-            self._runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                            "). Error when running VMEC. " + str(e))
+            self._runtime.logger.error(f"VMECProcess({self._comms.rank}). Error when running VMEC. {e}")
             return False
 
     """
@@ -856,10 +858,5 @@ class VMECProcess(object):
                     subprocess.call(["./xgrid", f"< cmd_xgrid.tj{self._comms.rank}"])
                     return True
                 except:
-                    self._runtime.logger.error("VMECProcess(" +
-                                   str(sys.exc_info()[2].tb_lineno) +
-                                   "). Error during the generation of " +
-                                   "the matrix file")
-                    return False
-            return False
+                    self._runtime.logger.exception("VMECProcess. Error executing xgrid")
         return False

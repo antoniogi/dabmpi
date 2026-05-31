@@ -45,6 +45,7 @@ class SolverBase(ABC):
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         self._runtime: GlobalRuntime = runtime
         self._comms: GlobalComms = comms
+
         self._finishedSolutions: SolutionsQueue = SolutionsQueue(
             runtime, comms, "finished.queue", writeToFile=True, isPriority=True
             )
