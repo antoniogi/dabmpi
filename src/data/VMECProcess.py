@@ -26,6 +26,7 @@ import time
 import glob
 import subprocess
 import numpy as np
+import random
 from pathlib import Path
 from core.file_utils import tail
 from core.comms import GlobalComms
@@ -248,75 +249,71 @@ class VMECProcess(object):
     or won't call the precompiled executables
     """
 
-    def execute_configuration(self):
-        #move to the execution folder of this process
-        os.chdir(self._execPath)
-        self.clean_folder()
+    def execute_configuration(self) -> float:
+        """
+        Execute the current configuration and return its objective value.
 
-        if self._runtime.objective == ObjectiveType.MINIMIZE:
-            val = INFINITY
-        else:
-            val = -INFINITY
+        Returns:
+            Objective value on success.
+            +/-INFINITY on invalid configurations.
+        """
+        if self._runtime.mock:
+            return random.uniform(0.0, 1.0)
+
+        failure_value = (
+            -INFINITY
+            if self._runtime.objective == ObjectiveType.MAXIMIZE
+            else INFINITY
+        )
+
+        value = failure_value
+
         try:
+            os.chdir(self._execPath)
+            self.clean_folder()
+
             if not self.run_vmec():
-                os.chdir(self._currentPath)
-                if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                    return -INFINITY
-                return INFINITY
+                return failure_value
 
             if not self.run_mercier():
-                os.chdir(self._currentPath)
-                if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                    return -INFINITY
-                return INFINITY
+                return failure_value
 
             if not self.run_threed():
-                os.chdir(self._currentPath)
-                if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                    return -INFINITY
-                return INFINITY
-            else:
-                val = self._beta
+                return failure_value
+
+            value = self._beta
 
             if not self.run_ballooning():
-                os.chdir(self._currentPath)
-                if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                    return -INFINITY
-                return INFINITY
+                return failure_value
 
             if self._bgradb:
                 if not self.run_b_grad_b():
-                    os.chdir(self._currentPath)
-                    if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                        return -INFINITY
-                    return INFINITY
-                else:
-                    val = self._bgradbval
+                    return failure_value
+                value = self._bgradbval
 
             if self._dkes:
                 if not self.run_dkes():
-                    os.chdir(self._currentPath)
-                    if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                        return -INFINITY
-                    return INFINITY
-                else:
-                    val = self._bootstrap
+                    return failure_value
+                value = self._bootstrap
 
             if not self._is_mercier_stable:
                 self._runtime.logger.info("Unstable mercier")
-                if self._runtime.objective == ObjectiveType.MAXIMIZE:
-                    return -INFINITY
-                return INFINITY
-            self.save_configuration()
-            self._runtime.logger.info(f"VALID configuration({self._comms.rank}). Val: {val}")
+                return failure_value
 
-        except Exception as e:
+            self.save_configuration()
+
+            self._runtime.logger.info(
+                f"VALID configuration({self._comms.rank}). Val: {value}"
+            )
+
+            return value
+
+        except:
+            self._runtime.logger.exception("VMECProcess: error executing configuration")
+            return failure_value
+
+        finally:
             os.chdir(self._currentPath)
-            self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Error when executing the configuration. {e}")
-            return val
-        #Always restore the working directory to the original path
-        os.chdir(self._currentPath)
-        return val
 
     def save_configuration(self):
         try:
@@ -335,10 +332,8 @@ class VMECProcess(object):
                                     filenametime)
                 except:
                     pass
-        except Exception as e:
-            runtime.logger.error("VMECProcess(" + str(sys.exc_info()[2].tb_lineno) +
-                            "). Error when saving the configuration. " +
-                            str(e))
+        except:
+            self._runtime.logger.error("VMECProcess: error saving configuration")
 
     """
     Method that processes the output file created by vmec.

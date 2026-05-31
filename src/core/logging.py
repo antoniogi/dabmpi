@@ -26,6 +26,30 @@ __version__ = "2.0"
 
 import logging
 
+class ColoredFormatter(logging.Formatter):
+    COLORS = {
+        logging.DEBUG: "\033[36m",      # Cyan
+        logging.INFO: "\033[32m",       # Green
+        logging.WARNING: "\033[33m",    # Yellow
+        logging.ERROR: "\033[31m",      # Red
+        logging.CRITICAL: "\033[35m",   # Magenta
+        100: "\033[1;32m",             # Bright Green (BEST)
+    }
+
+    RESET = "\033[0m"
+
+    def format(self, record):
+        original = record.levelname
+
+        color = self.COLORS.get(record.levelno)
+        if color:
+            record.levelname = f"{color}{original}{self.RESET}"
+
+        try:
+            return super().format(record)
+        finally:
+            record.levelname = original
+
 class LoggerConfig:
     """Logger configuration with sensible defaults."""
 
@@ -54,15 +78,19 @@ class LoggerConfig:
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
 
+        console_formatter = ColoredFormatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+
         if log_file:
             fh = logging.FileHandler(log_file)
             fh.setLevel(file_level)
-            fh.setFormatter(formatter)
+            fh.setFormatter(formatter)  # plain text
             logger.addHandler(fh)
 
         ch = logging.StreamHandler()
         ch.setLevel(console_level)
-        ch.setFormatter(formatter)
+        ch.setFormatter(console_formatter)  # colored
         logger.addHandler(ch)
 
         logging.addLevelName(LoggerConfig.CUSTOM_LEVEL, "BEST")

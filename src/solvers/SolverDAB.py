@@ -49,6 +49,8 @@ _author_ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 _version_ = ' REVISION:   1.0  -  15-01-2014'
 
+EXTRA_LOG=100
+
 """
 HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
@@ -1020,7 +1022,7 @@ class SolverDAB (SolverBase):
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solVal[0]) < float(self._bestSolution.getValue()))):
 
                     isNewBest = True
-                    self._runtime.logger.log(self._runtime.extraLog, "New best solution found. Value " + str(solVal[0]) +
+                    self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(solVal[0]) +
                                     " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx[0]))
 
                     self._bestSolution.setValue(solVal[0])
@@ -1177,7 +1179,7 @@ class SolverDAB (SolverBase):
                 if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestSolution.getValue())) or
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestSolution.getValue()))):
 
-                    self._runtime.logger.log(self._runtime.extraLog, "New best solution found. Value " + str(newSolution) +
+                    self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(newSolution) +
                                    " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
 
                     self._bestSolution = newSolution
@@ -1238,7 +1240,7 @@ class SolverDAB (SolverBase):
                         float(solutionValue) < float(self._bestSolution.getValue()))):
 
 
-                        self._runtime.logger.log(self._runtime.extraLog, "New best solution found. Value " + str(newSolution) +
+                        self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(newSolution) +
                                        " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
 
                         self._bestSolution = newSolution

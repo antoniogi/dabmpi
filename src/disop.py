@@ -153,6 +153,13 @@ def parse_arguments(argv=None):
         help='max execution time (in seconds)'
     )
     parser.add_argument(
+        '-m', '--mock',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Run in mock mode without executing actual problem evaluations'
+    )
+    parser.add_argument(
         '--version',
         action='version',
         version='%(prog)s ' + __version__
@@ -173,6 +180,7 @@ def configure_runtime(runtime: GlobalRuntime, args):
     runtime.config_file = args.cfile
     runtime.input_file = args.ifile
     runtime.max_execution_time = args.time
+    runtime.mock = args.mock
 
     if runtime.logger is not None:
         runtime.logger.setLevel(LOG_LEVELS[args.verbose])

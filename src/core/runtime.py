@@ -55,6 +55,7 @@ class GlobalRuntime:
     # Logger instance
     logger: Optional[Logger] = field(default_factory=lambda: get_logger())
     max_valid_solution_value: float = field(default=1e6)
+    mock: bool = field(default=False)  # For testing without actual problem execution
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""
