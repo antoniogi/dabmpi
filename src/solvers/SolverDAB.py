@@ -322,7 +322,7 @@ class Employed (BeeBase):
 
         try:
             # this is the one that has to use the probMatrix
-            self._runtime.logger.info('create new candidate employed')
+            self._runtime.logger.debug('Create new candidate employed')
 
             if not self.bestLocalInitialised():
                 solution = self.createRandomSolution(
@@ -463,7 +463,7 @@ class Scout (BeeBase):
         ):
         solution = None
         try:
-            self._runtime.logger.info('create new candidate scout')
+            self._runtime.logger.debug('Create new candidate scout')
             solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
             return solution, -1
         except Exception as e:
@@ -491,7 +491,7 @@ class Onlooker (BeeBase):
         topSolutions: SolutionsQueue,
         totalSumGoodSolutions: float
     ):
-        self._runtime.logger.info('create new candidate onlooker')
+        self._runtime.logger.debug('Create new candidate onlooker')
 
         val = random.uniform(0.0, totalSumGoodSolutions)
 
@@ -955,6 +955,7 @@ class SolverDAB (SolverBase):
     def receiveSolutions(self):
         status = MPI.Status()
         sourceIdx, flag = MPI.Request.Testany(self._requestSolution, status)
+        origin = -1
 
         while (flag and sourceIdx >= 0):
             source = status.source
@@ -972,9 +973,9 @@ class SolverDAB (SolverBase):
                 self._comms.comm.Recv(buff, origin, Tags.COMMSOLUTION)
                 self._comms.comm.Recv(solVal, origin, Tags.COMMSOLUTION)
                 self._comms.comm.Recv(beeIdx, origin, Tags.COMMSOLUTION)
-            except Exception as e:
-                self._runtime.logger.error("DRIVER (comm). " + str(e) + " line: " +
-                           str(sys.exc_info()[2].tb_lineno))
+            except Exception:
+                self._runtime.logger.exception("DRIVER. Exception receiving solution from worker " + str(origin))
+                raise
             try:
                 self._runtime.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
                 if (
@@ -993,11 +994,16 @@ class SolverDAB (SolverBase):
                         solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
                     elif self._runtime.problem_type == ProblemType.CRISTINA:
                         solutionTemp = SolutionCristina(self._runtime, self._comms)
+                    else:
+                        raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
 
                     if solutionTemp is None:
-                        self._runtime.logger.error(f"Solution is None after creation (type {self._runtime.problem_type})")
-                    else:
-                        solutionTemp.setParametersValues(buff)
+                        raise RuntimeError(
+                            f"Failed to create solution for type "
+                            f"{self._runtime.problem_type}"
+                        )
+
+                    solutionTemp.setParametersValues(buff)
                     if self._useMatrix:
                         for i in range(self._probMatrix.getNumRows()):
                             for j in range(self._probMatrix.getNumCols()):
@@ -1007,14 +1013,16 @@ class SolverDAB (SolverBase):
 
                         parameters = solutionTemp.getParameters()
                         for i in range(len(parameters)):
-                            idx = (parameters[i].get_value() - parameters[i].get_min_value())
-                            idx = idx / parameters[i].get_gap()
-                            idx = round(idx)
-                            idx = int(idx)
+                            idx = round(
+                                ( parameters[i].get_value() - parameters[i].get_min_value() )
+                                / parameters[i].get_gap()
+                            )
                             val = self._probMatrix.getitem(i, idx)
                             self._probMatrix.setitem(i, idx, val + 0.5)
-                except Exception as e:
-                    self._runtime.logger.error("SolverDAB. " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
+                except Exception:
+                    self._runtime.logger.exception(
+                        "SolverDAB exception creating solution"
+                    )
                 self._topSolutions.put_solution(solutionTemp, solVal[0], beeIdx[0], self._nEmployed)
                 self._totalSumGoodSolutions = self._topSolutions.get_total_solutions_values()
 
@@ -1028,22 +1036,19 @@ class SolverDAB (SolverBase):
                     self._bestSolution.setValue(solVal[0])
 
                     self._bestSolution.setParametersValues(buff)
-                    if self._runtime.solution_type == SolutionType.FUSION:
-                        filenametime = "0"
-                        try:
+                    if not self._runtime.mock:
+                        if self._runtime.solution_type == SolutionType.FUSION:
                             filenametime = datetime.now().strftime('%Y-%m-%d-%H:%M:%S:%f')[:-3]
-                        except:
-                            pass
-                        self._bestSolution.prepare("input.best." + filenametime)
-                        shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
-                        shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
-                        try:
-                            shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
-                        except:
-                            pass
-            except Exception as e:
-                self._runtime.logger.error("DRIVER (comm). " + str(e) + " line: " + str(sys.exc_info()[2].tb_lineno))
-
+                            self._bestSolution.prepare("input.best." + filenametime)
+                            shutil.copyfile(str(origin) + '/threed1.tj' + str(origin), 'threed1.best.' + filenametime)
+                            shutil.copyfile(str(origin) + '/wout_tj' + str(origin) + ".txt", 'wout.best.' + filenametime)
+                            try:
+                                shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
+                            except Exxception:
+                                self._runtime.logger.exception("DRIVER. Exception copying results for best solution")
+            except Exception:
+                self._runtime.logger.exception("SolverDAB exception while processing received solution")
+                raise
             try:
                 solutionTemp = None
                 if self._runtime.problem_type is ProblemType.FUSION:
