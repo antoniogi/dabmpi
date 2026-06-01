@@ -26,14 +26,17 @@ __version__ = "2.0"
 
 import logging
 
+
 class ColoredFormatter(logging.Formatter):
+    """Formatter that colors only the log level name."""
+
     COLORS = {
-        logging.DEBUG: "\033[36m",      # Cyan
-        logging.INFO: "\033[32m",       # Green
-        logging.WARNING: "\033[33m",    # Yellow
-        logging.ERROR: "\033[31m",      # Red
-        logging.CRITICAL: "\033[35m",   # Magenta
-        100: "\033[1;37;44m"            # White text on blue background
+        "DEBUG": "\033[36m",       # Cyan
+        "INFO": "\033[32m",        # Green
+        "WARNING": "\033[33m",     # Yellow
+        "ERROR": "\033[31m",       # Red
+        "CRITICAL": "\033[35m",    # Magenta
+        "BEST": "\033[1;37;44m",   # White on blue background
     }
 
     RESET = "\033[0m"
@@ -41,7 +44,7 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         original = record.levelname
 
-        color = self.COLORS.get(record.levelno)
+        color = self.COLORS.get(original)
         if color:
             record.levelname = f"{color}{original}{self.RESET}"
 
@@ -50,13 +53,17 @@ class ColoredFormatter(logging.Formatter):
         finally:
             record.levelname = original
 
+
 class LoggerConfig:
     """Logger configuration with sensible defaults."""
 
     LOG_FILE = "dabmpi.log"
+
     LOG_LEVEL_FILE = logging.DEBUG
     LOG_LEVEL_CONSOLE = logging.WARNING
+
     CUSTOM_LEVEL = 100
+    CUSTOM_LEVEL_NAME = "BEST"
 
     @staticmethod
     def create_logger(
@@ -66,6 +73,22 @@ class LoggerConfig:
         file_level: int = logging.DEBUG,
     ) -> logging.Logger:
 
+        logging.addLevelName(
+            LoggerConfig.CUSTOM_LEVEL,
+            LoggerConfig.CUSTOM_LEVEL_NAME,
+        )
+
+        def best(self, message, *args, **kwargs):
+            self.log(
+                LoggerConfig.CUSTOM_LEVEL,
+                message,
+                *args,
+                **kwargs,
+            )
+
+        if not hasattr(logging.Logger, "best"):
+            logging.Logger.best = best
+
         logger = logging.getLogger(name)
 
         if logger.handlers:
@@ -74,30 +97,40 @@ class LoggerConfig:
         logger.setLevel(logging.DEBUG)
         logger.propagate = False
 
+        log_format = (
+            "%(asctime)s.%(msecs)03d - "
+            "%(name)s - "
+            "%(levelname)s - "
+            "%(message)s"
+        )
+
         formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            log_format,
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
         console_formatter = ColoredFormatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            log_format,
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
         if log_file:
-            fh = logging.FileHandler(log_file)
+            fh = logging.FileHandler(
+                log_file,
+                encoding="utf-8",
+            )
             fh.setLevel(file_level)
-            fh.setFormatter(formatter)  # plain text
+            fh.setFormatter(formatter)
             logger.addHandler(fh)
 
         ch = logging.StreamHandler()
         ch.setLevel(console_level)
-        ch.setFormatter(console_formatter)  # colored
+        ch.setFormatter(console_formatter)
         logger.addHandler(ch)
-
-        logging.addLevelName(LoggerConfig.CUSTOM_LEVEL, "BEST")
 
         return logger
 
 
 def get_logger(name: str = "dabmpi") -> logging.Logger:
-    """Get or create logger by name."""
+    """Get an existing logger by name."""
     return logging.getLogger(name)
