@@ -33,7 +33,7 @@ class ColoredFormatter(logging.Formatter):
         logging.WARNING: "\033[33m",    # Yellow
         logging.ERROR: "\033[31m",      # Red
         logging.CRITICAL: "\033[35m",   # Magenta
-        100: "\033[1;32m",             # Bright Green (BEST)
+        100: "\033[1;37;44m"            # White text on blue background
     }
 
     RESET = "\033[0m"
