@@ -2,7 +2,8 @@
 # vim: set fileencoding=utf-8 :
 
 import logging
-from .Parameter import INFINITY, ParamType, Parameter
+
+from .Parameter import INFINITY, Parameter, ParamType
 
 
 class ParameterVMEC(Parameter):

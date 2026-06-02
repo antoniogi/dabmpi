@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-import os
-from solution.SolutionBase import SolutionBase
-from solution.SolutionFusion import SolutionFusion
-from solution.SolutionCristina import SolutionCristina
-from solution.SolutionNonSeparable import SolutionNonSeparable
-from core.runtime import GlobalRuntime
-from core.comms import GlobalComms
-from core.enums import SolutionType, ObjectiveType
 import math
+import os
+
+from core.comms import GlobalComms
+from core.enums import ObjectiveType, SolutionType
+from core.runtime import GlobalRuntime
+from solution.SolutionBase import SolutionBase
+from solution.SolutionCristina import SolutionCristina
+from solution.SolutionFusion import SolutionFusion
+from solution.SolutionNonSeparable import SolutionNonSeparable
 
 
 class SolutionsQueue:

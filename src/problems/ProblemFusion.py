@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-from problems.ProblemBase import ProblemBase
 from data.VMECProcess import VMECProcess
+from problems.ProblemBase import ProblemBase
 
 
 class ProblemFusion(ProblemBase):

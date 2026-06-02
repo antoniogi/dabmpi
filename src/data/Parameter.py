@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
+import math
 from enum import IntEnum
 from typing import Any, Optional
-import math
 
 INFINITY = math.inf
 

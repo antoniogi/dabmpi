@@ -2,8 +2,8 @@
 # vim: set fileencoding=utf-8 :
 
 
-from solution.SolutionBase import SolutionBase
 from data.CristinaData import CristinaData
+from solution.SolutionBase import SolutionBase
 
 
 class SolutionCristina (SolutionBase):

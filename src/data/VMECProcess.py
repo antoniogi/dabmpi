@@ -1,21 +1,23 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-import math
 import configparser
-import os
-import shutil
-import time
 import glob
-import subprocess
-import numpy as np
+import math
+import os
 import random
+import shutil
+import subprocess
+import time
 from pathlib import Path
-from core.file_utils import tail
+
+import numpy as np
+
 from core.comms import GlobalComms
-from core.runtime import GlobalRuntime
 from core.enums import ObjectiveType
+from core.file_utils import tail
 from core.matrix import Matrix
+from core.runtime import GlobalRuntime
 
 INFINITY = math.inf
 

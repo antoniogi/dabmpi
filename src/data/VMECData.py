@@ -4,10 +4,11 @@
 
 import os
 import sys
-from xml.dom import minidom
-from .ParameterVMEC import ParameterVMEC
-from .Parameter import ParamType
 from array import array
+from xml.dom import minidom
+
+from .Parameter import ParamType
+from .ParameterVMEC import ParameterVMEC
 
 
 class VMECData():

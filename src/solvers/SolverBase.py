@@ -3,6 +3,7 @@
 
 
 from abc import ABC, abstractmethod
+
 from core.comms import GlobalComms
 from core.runtime import GlobalRuntime
 from solution.SolutionsQueue import SolutionsQueue

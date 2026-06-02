@@ -3,16 +3,18 @@
 
 from array import array
 from time import time
-from core.runtime import GlobalRuntime
+
+from mpi4py import MPI
+
 from core.comms import GlobalComms
 from core.enums import ProblemType, Tags
-from mpi4py import MPI
-from solution.SolutionCristina import SolutionCristina
-from solution.SolutionFusion import SolutionFusion
-from solution.SolutionNonSeparable import SolutionNonSeparable
+from core.runtime import GlobalRuntime
 from problems.ProblemCristina import ProblemCristina
 from problems.ProblemFusion import ProblemFusion
 from problems.ProblemNonSeparable import ProblemNonSeparable
+from solution.SolutionCristina import SolutionCristina
+from solution.SolutionFusion import SolutionFusion
+from solution.SolutionNonSeparable import SolutionNonSeparable
 
 
 class EvaluationWorker:

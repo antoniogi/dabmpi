@@ -6,6 +6,7 @@ import math
 
 from problems.ProblemBase import ProblemBase
 
+
 class ProblemNonSeparable(ProblemBase):
 
     def __init__(self, runtime, comms):

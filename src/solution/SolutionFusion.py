@@ -2,8 +2,8 @@
 # vim: set fileencoding=utf-8 :
 
 
-from solution.SolutionBase import SolutionBase
 from data.VMECData import VMECData
+from solution.SolutionBase import SolutionBase
 
 # Range for polynomial derivative check
 DERIVATIVE_CHECK_RANGE = range(-100, 100)

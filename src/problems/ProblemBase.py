@@ -4,6 +4,7 @@
 
 from abc import ABC, abstractmethod
 
+
 class ProblemBase(ABC):
     def __init__(self, runtime, comms):
         self._runtime = runtime

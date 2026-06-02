@@ -18,7 +18,6 @@ by disop.py during startup.
 from dataclasses import dataclass, field
 from typing import Any
 
-
 # ============================================================================
 # Global variables - initialized by disop.py
 # ============================================================================

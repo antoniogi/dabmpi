@@ -1,23 +1,25 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
+import argparse
+import configparser
 import logging
 import sys
-from pathlib import Path
 import time
 from array import array
-import configparser
-import argparse
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
+from pathlib import Path
+
 from mpi4py import MPI
-from importlib.metadata import PackageNotFoundError, version as package_version
+
+from core.comms import GlobalComms
+from core.enums import CommModelType, ObjectiveType, ProblemType, SolverType
 from core.logging import LoggerConfig
 from core.runtime import GlobalRuntime
-from core.enums import ProblemType, SolverType, CommModelType, ObjectiveType
-from core.comms import GlobalComms
+from runtime.EvaluationWorker import EvaluationWorker
 from solvers.SolverDAB import SolverDAB
 from solvers.SolverSA import SolverSA
-from runtime.EvaluationWorker import EvaluationWorker
-
 
 PROBLEM_MAP = {
     'FUSION': ProblemType.FUSION,

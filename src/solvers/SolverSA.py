@@ -9,10 +9,12 @@ Class that implements the DAB solver. It has to:
   there is something else to be done.
 """
 
-import sys
-import random
 import configparser
+import random
+import sys
+
 from solvers.SolverBase import SolverBase
+
 
 class SolverSA (SolverBase):
     def readConfigFile(self, runtime):

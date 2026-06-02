@@ -4,7 +4,9 @@
 
 import math
 from abc import ABC, abstractmethod
+
 from core.enums import ObjectiveType
+
 
 class SolutionBase(ABC):
     """Abstract base class for optimization solutions.

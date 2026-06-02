@@ -2,15 +2,21 @@
 # vim: set fileencoding=utf-8 :
 
 
-from mpi4py import MPI
+import configparser
 import math
 import random
 import shutil
 import time
-from datetime import datetime
-from core.enums import ProblemType, SolutionType, ObjectiveType, CommModelType
 from array import array
-from solvers.SolverBase import SolverBase
+from datetime import datetime
+
+from mpi4py import MPI
+
+from core.comms import GlobalComms
+from core.enums import CommModelType, ObjectiveType, ProblemType, SolutionType, Tags
+from core.matrix import Matrix
+from core.runtime import GlobalRuntime
+from data.Parameter import ParamType
 from problems.ProblemCristina import ProblemCristina
 from problems.ProblemFusion import ProblemFusion
 from problems.ProblemNonSeparable import ProblemNonSeparable
@@ -19,13 +25,7 @@ from solution.SolutionCristina import SolutionCristina
 from solution.SolutionFusion import SolutionFusion
 from solution.SolutionNonSeparable import SolutionNonSeparable
 from solution.SolutionsQueue import SolutionsQueue
-import configparser
-from core.runtime import GlobalRuntime
-from core.comms import GlobalComms
-from core.enums import Tags
-from core.matrix import Matrix
-from data.Parameter import ParamType
-
+from solvers.SolverBase import SolverBase
 
 """
 Class that implements the DAB solver. It has to:
