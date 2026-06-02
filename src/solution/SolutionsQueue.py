@@ -12,7 +12,7 @@ from core.enums import SolutionType, ObjectiveType
 import math
 
 
-class SolutionsQueue (object):
+class SolutionsQueue:
     def __init__(
         self,
         runtime: GlobalRuntime,

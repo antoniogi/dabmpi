@@ -47,7 +47,7 @@ that created that solution and set the value for that solution in the bee
 """
 
 
-class BeeBase ():
+class BeeBase:
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix):
         random.seed()
         self._problem = None
