@@ -27,71 +27,71 @@ class VMECProcess:
     It is responsible for callling VMEC and analising its result.
     """
 
-def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
-    self._runtime = runtime
-    self._comms = comms
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
+        self._runtime = runtime
+        self._comms = comms
 
-    self._currentPath = os.getcwd()
-    self._execPath = os.path.join(
-        self._currentPath,
-        str(self._comms.rank),
-    )
+        self._currentPath = os.getcwd()
+        self._execPath = os.path.join(
+            self._currentPath,
+            str(self._comms.rank),
+        )
 
-    self._filename = f"input.tj{self._comms.rank}"
+        self._filename = f"input.tj{self._comms.rank}"
 
-    self._beta = -INFINITY
-    self._bgradbval = -INFINITY
-    self._bootstrap = INFINITY
+        self._beta = -INFINITY
+        self._bgradbval = -INFINITY
+        self._bootstrap = INFINITY
 
-    self._is_mercier_stable = True
-    self._is_ballooning_stable = True
+        self._is_mercier_stable = True
+        self._is_ballooning_stable = True
 
-    self._dkes = False
-    self._extra_threed1 = False
-    self._check_mercier = False
-    self._min_mercier_radius = 0.8
-    self._bgradb = False
-    self._check_ballooning = False
-    self._get_beta = False
-    self._min_beta = -INFINITY
-    self._max_beta = INFINITY
-    self._save_configs = False
+        self._dkes = False
+        self._extra_threed1 = False
+        self._check_mercier = False
+        self._min_mercier_radius = 0.8
+        self._bgradb = False
+        self._check_ballooning = False
+        self._get_beta = False
+        self._min_beta = -INFINITY
+        self._max_beta = INFINITY
+        self._save_configs = False
 
-    self._netcdf = ""
+        self._netcdf = ""
 
-    self.read_ini_config_file(self._runtime.config_file)
+        self.read_ini_config_file(self._runtime.config_file)
 
-    if self._comms.rank == 0:
-        return
+        if self._comms.rank == 0:
+            return
 
-    os.makedirs(self._execPath, exist_ok=True)
-    os.makedirs(
-        os.path.join(self._execPath, "finished"),
-        exist_ok=True,
-    )
+        os.makedirs(self._execPath, exist_ok=True)
+        os.makedirs(
+            os.path.join(self._execPath, "finished"),
+            exist_ok=True,
+        )
 
-    try:
-        os.chdir(self._execPath)
+        try:
+            os.chdir(self._execPath)
 
-        if self._check_ballooning and not os.path.lexists("xcobravmec"):
-            os.symlink(
-                "../../external/xcobravmec",
-                "xcobravmec",
-            )
+            if self._check_ballooning and not os.path.lexists("xcobravmec"):
+                os.symlink(
+                    "../../external/xcobravmec",
+                    "xcobravmec",
+                )
 
-        if not os.path.lexists("xgrid"):
-            os.symlink(
-                "../../external/xgrid",
-                "xgrid",
-            )
+            if not os.path.lexists("xgrid"):
+                os.symlink(
+                    "../../external/xgrid",
+                    "xgrid",
+                )
 
-        if not os.path.lexists("xvmec2000"):
-            os.symlink(
-                "/home/fraguas/bin/xvmec2000nc",
-                "xvmec2000",
-            )
-    finally:
-        os.chdir(self._currentPath)
+            if not os.path.lexists("xvmec2000"):
+                os.symlink(
+                    "/home/fraguas/bin/xvmec2000nc",
+                    "xvmec2000",
+                )
+        finally:
+            os.chdir(self._currentPath)
 
     def get_beta(self):
         return self._beta
