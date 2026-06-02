@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8 :
 
 """Global runtime configuration and state management.
 
@@ -33,7 +32,7 @@ class GlobalRuntime:
     solution_type: e.SolutionType = field(default=e.SolutionType.FUSION)
     solver_type: e.SolverType = field(default=e.SolverType.DAB)
     # Logger instance
-    logger: Optional[Logger] = field(default_factory=lambda: get_logger())
+    logger: Logger | None = field(default_factory=lambda: get_logger())
     max_valid_solution_value: float = field(default=1e6)
     mock: bool = field(default=False)  # For testing without actual problem execution
 
@@ -74,7 +73,7 @@ class GlobalRuntime:
         self.comm_model = e.CommModelType.DRIVERWORKER
 
 # Global singleton instance (thread-safe)
-_runtime: Optional[GlobalRuntime] = None
+_runtime: GlobalRuntime | None = None
 _runtime_lock = threading.Lock()
 
 def get_runtime() -> GlobalRuntime:

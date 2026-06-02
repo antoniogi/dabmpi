@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
 
 
 import os
@@ -11,7 +10,7 @@ from .Parameter import ParamType
 from .ParameterVMEC import ParameterVMEC
 
 
-class VMECData():
+class VMECData:
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
 
 import math
 import os
@@ -196,7 +195,7 @@ class SolutionsQueue:
     """
 
     def load_queue(self):
-        with open(self._filename, 'r', encoding="utf-8") as file:
+        with open(self._filename, encoding="utf-8") as file:
             for line in file:
                 sol_tuple = line.strip().split('#')
                 if not self._isPriority:

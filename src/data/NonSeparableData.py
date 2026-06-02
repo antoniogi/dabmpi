@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
 
 import os
 import sys
@@ -9,7 +8,7 @@ from xml.dom import minidom
 from .Parameter import Parameter
 
 
-class NonSeparableData (object):
+class NonSeparableData :
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each

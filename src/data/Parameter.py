@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8 :
 
 from __future__ import annotations
 
@@ -26,12 +25,12 @@ class Parameter:
 
     def __init__(
         self,
-        runtime: Optional[Any] = None,
+        runtime: Any | None = None,
         name: str = "",
-        index: Optional[int] = None,
+        index: int | None = None,
         type: ParamType = ParamType.STRING,
         value: Any = None,
-        gap: Optional[float] = None,
+        gap: float | None = None,
         min_value: Any = -INFINITY,
         max_value: Any = INFINITY,
     ) -> None:
@@ -81,7 +80,7 @@ class Parameter:
 
         raise TypeError(f"Unsupported parameter type: {self._type}")
 
-    def get_index(self) -> Optional[int]:
+    def get_index(self) -> int | None:
         return self._index
 
     def set_index(self, index: Any) -> None:
@@ -166,7 +165,7 @@ class Parameter:
     def set_gap(self, gap: Any) -> None:
         self._gap = float(gap)
 
-    def get_gap(self) -> Optional[float]:
+    def get_gap(self) -> float | None:
         return self._gap
 
     def is_numeric(self) -> bool:
@@ -201,7 +200,7 @@ class Parameter:
         self.set_name(name)
 
     @property
-    def index(self) -> Optional[int]:
+    def index(self) -> int | None:
         return self._index
 
     @index.setter

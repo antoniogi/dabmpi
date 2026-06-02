@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: set fileencoding=utf-8 :
 
 """
 Distributed optimization utility module.
@@ -49,7 +48,7 @@ def tail(filepath: str) -> str:
         Returns:
             Last line without trailing newline.
         """
-        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+        with open(filepath, encoding="utf-8", errors="replace") as f:
             lines = deque(f, maxlen=1)
 
         return lines[0].rstrip("\n") if lines else ""

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
 
 import configparser
 import glob
@@ -409,7 +408,7 @@ class VMECProcess:
     def calculate_fitness_bgradb(self, filepath):
         fitness = 0.0 #-INFINITY
         try:
-            with open(filepath, 'r') as file_out:
+            with open(filepath) as file_out:
                 file_out.readline()
                 lineRPhiZ = file_out.readline()
                 while len(lineRPhiZ) > 4:
@@ -622,7 +621,7 @@ class VMECProcess:
             if not os.path.exists(filename):
                 self._runtime.logger.error(f"VMECProcess({self._comms.rank}): File {filename} doesn't exist")
                 return False
-            with open(filename, 'r') as f:
+            with open(filename) as f:
                 line = f.readline()
                 while line.find('DMerc') == -1:
                     line = f.readline()
@@ -672,7 +671,7 @@ class VMECProcess:
             self._beta = -INFINITY
             if not self._get_beta:
                 return True
-            with open (f'./threed1.tj{self._comms.rank}', 'r') as file_threed:
+            with open (f'./threed1.tj{self._comms.rank}') as file_threed:
                 found = False
                 line = ""
                 for line in file_threed.readlines():
@@ -778,7 +777,7 @@ class VMECProcess:
 
     def run_x_grid(self):
         fullpath = f"{self._comms.rank}/{self._filename}"
-        with open(fullpath, 'r') as fileinput:
+        with open(fullpath) as fileinput:
             line = fileinput.readline()
             line = fileinput.readline()
             """
