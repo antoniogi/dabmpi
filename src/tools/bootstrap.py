@@ -1,52 +1,33 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-#############################################################################
-#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
-#                                                                           #
-#   Licensed under the Apache License, Version 2.0 (the "License");         #
-#   you may not use this file except in compliance with the License.        #
-#   You may obtain a copy of the License at                                 #
-#                                                                           #
-#       http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                           #
-#   Unless required by applicable law or agreed to in writing, software     #
-#   distributed under the License is distributed on an "AS IS" BASIS,       #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-#   See the License for the specific language governing permissions and     #
-#   limitations under the License.                                          #
-#############################################################################
-
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
-
-
-__version__ = '0.1 - 06-12-2013'
-
-"""
-HISTORY
-    Version 0.1 (06-12-2013): Creation of the file.
-"""
 
 """
 To run this file just type in python -i bootstrap.py finished.queue
 """
 
+from multiprocessing import util
 import sys
 import os
 import os.path
 import subprocess
 import getopt
 import logging
+from typing_extensions import runtime
 
 sys.path.append('../')
-from SolutionFusion import SolutionFusion
-import Utils as util
+from solution.SolutionFusion import SolutionFusion
+from core.logging import LoggerConfig
 
 
 def init():
     # create logger with 'dab_mpi'
-    util.logger = logging.getLogger('bootstrap')
-    util.logger.setLevel(logging.DEBUG)
+    logger = LoggerConfig.create_logger(
+        log_file="bootstrap.log",
+        console_level=logging.DEBUG  # Map verbosity to log level
+    )
+  
+    logger.setLevel(logging.DEBUG)
 
     # create file handler which logs even debug messages
     fh = logging.FileHandler('bootstrap.log')
@@ -60,9 +41,8 @@ def init():
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
     # add the handlers to the logger
-    util.logger.addHandler(fh)
-    util.logger.addHandler(ch)
-    util.rank = 0
+    logger.addHandler(fh)
+    logger.addHandler(ch)
 
 
 def create_bootstrap_folder(index):
@@ -144,7 +124,8 @@ def main(argv):
             i += 1
         f.close()
 
-    except Exception as e:
+    except Exception:
+        
         print("bootstrap " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
 
 if __name__ == "__main__":

@@ -1,25 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-#############################################################################
-#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
-#                                                                           #
-#   Licensed under the Apache License, Version 2.0 (the "License");         #
-#   you may not use this file except in compliance with the License.        #
-#   You may obtain a copy of the License at                                 #
-#                                                                           #
-#       http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                           #
-#   Unless required by applicable law or agreed to in writing, software     #
-#   distributed under the License is distributed on an "AS IS" BASIS,       #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-#   See the License for the specific language governing permissions and     #
-#   limitations under the License.                                          #
-#############################################################################
-
-import sys
 import os
-
 from solution.SolutionFusion import SolutionFusion
 from solution.SolutionCristina import SolutionCristina
 from solution.SolutionNonSeparable import SolutionNonSeparable
@@ -30,22 +12,6 @@ from core.enums import SolutionType, ObjectiveType
 import math
 
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
-
-__version__ = ' REVISION:   1.0  -  15-01-2014'
-
-"""
-HISTORY
-    Version 0.1 (23-08-2013):   Creation of the file.
-    Version 1.0 (15-01-2014):   Fist stable version.
-
-This class implements a queue of solutions. It is used to create a queue of
-solutions already evaluated and another queue of solutions that need to be
-submitted.
-The format of the elements in the queue is as follows:
-    param_index:param_val, param_index:param_val,...,
-    ,..., param_index:param_val - solutionVal
-"""
 class SolutionsQueue (object):
     def __init__(
         self,
@@ -292,46 +258,6 @@ class SolutionsQueue (object):
             raise
 
     """
-    Extracts a solution from the queue
-    Returns a solution object, so the information in the queue needs to
-    be extracted an converted into a solution object.
-    For that, it just goes through the sequence idx:val,..., idx:val
-    and creates a parameter (VMEC, or any other type) and assigns
-    the index and value previously extracted. Once created, pass the
-    parameter to the solution class that will put the updated value into its
-    parameters
-
-    if remove is true, it behaves as a regular queue, where the front of the
-    queue is removed. If false, it just checks the front of the queue, but
-    doesn't remove anything
-    """
-    """
-
-    def GetSolution(self, remove=True):
-        solution = None
-        if len(self._queue) == 0:
-            return solution
-        solution = self._solutionBase
-        if remove:
-            sol_tuple = self._queue.pop(0)
-        else:
-            sol_tuple = self._queue[0]
-        #split to get each idx:val
-        parameters = sol_tuple[0].split(',')
-        params = []
-        #iterate through the elements in the list
-        for p in parameters:
-            param = Parameter()
-            param.set_index(p.split(':')[0])
-            param.set_type("double")
-            param.set_value(p.split(':')[1])
-            params.append(param)
-        solution.setParameters(params)
-
-        return solution
-    """
-
-    """
     if remove is true, it behaves as a regular queue, where the front of the
     queue is removed. If false, it just checks the front of the queue, but
     doesn't remove anything
@@ -392,9 +318,9 @@ class SolutionsQueue (object):
             for p in parameters:
                 self._runtime.logger.debug("Appending: " + str(p.split(':')[1]))
                 solution.append(float(p.split(':')[1]))
-        except Exception as e:
-            self._runtime.logger.error("QUEUE (" + str(sys.exc_info()[2].tb_lineno) +
-                                "). " + str(e))
+        except Exception:
+            self._runtime.logger.exception( "QUEUE. Error getting solution list" )
+            raise
         return val, agent_idx, solution
 
     """

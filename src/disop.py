@@ -1,22 +1,6 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-#############################################################################
-#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
-#                                                                           #
-#   Licensed under the Apache License, Version 2.0 (the "License");         #
-#   you may not use this file except in compliance with the License.        #
-#   You may obtain a copy of the License at                                 #
-#                                                                           #
-#       http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                           #
-#   Unless required by applicable law or agreed to in writing, software     #
-#   distributed under the License is distributed on an "AS IS" BASIS,       #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-#   See the License for the specific language governing permissions and     #
-#   limitations under the License.                                          #
-#############################################################################
-
 import logging
 import sys
 from pathlib import Path
@@ -25,29 +9,15 @@ from array import array
 import configparser
 import argparse
 from mpi4py import MPI
-import textwrap
+from importlib.metadata import PackageNotFoundError, version as package_version
 from core.logging import LoggerConfig
 from core.runtime import GlobalRuntime
 from core.enums import ProblemType, SolverType, CommModelType, ObjectiveType
 from core.comms import GlobalComms
 from solvers.SolverDAB import SolverDAB
 from solvers.SolverSA import SolverSA
-from runtime.Worker import EvaluationWorker
+from runtime.EvaluationWorker import EvaluationWorker
 
-
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
-__version__ = ' REVISION:   2.0  -  25-05-2026'
-
-"""
-HISTORY
-    Version 0.1 (12-04-2013): Creation of the file.
-    Version 0.11(17-10-2013): Assign default values if there are problems
-                              reading the command arguments.
-    Version 1.0 (15-01-2014): First stable version.
-
-To run this file just type in mpirun -np X python disop.py
-where X is the number of processes to be used
-"""
 
 PROBLEM_MAP = {
     'FUSION': ProblemType.FUSION,
@@ -97,13 +67,21 @@ def is_valid_file(parser, arg) -> str:
     return str(path)
 
 
+
+
+def get_package_version():
+    try:
+        return package_version('dabmpi')
+    except PackageNotFoundError:
+        return 'unknown'
+
 def parse_arguments(argv=None) -> argparse.Namespace:
     """Parse command-line arguments and return the namespace."""
     parser = argparse.ArgumentParser(
         prog='disop.py',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='Distributed Solver for Global Optimization.',
-        epilog=textwrap.dedent(__author__)
+        epilog='Distributed Solver for Global Optimization.'
     )
 
     parser.add_argument(
@@ -157,7 +135,7 @@ def parse_arguments(argv=None) -> argparse.Namespace:
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s ' + __version__
+        version='%(prog)s ' + get_package_version()
     )
 
     return parser.parse_args(argv)
