@@ -4,7 +4,7 @@ import pytest
 
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from Utils import tail
+from core.file_utils import tail
 
 
 def test_tail_empty_file(tmp_path):
@@ -67,10 +67,10 @@ def test_tail_unicode(tmp_path):
 
 
 def test_tail_large_file_path(tmp_path, monkeypatch):
-    import Utils
+    import core.file_utils as file_utils
 
     monkeypatch.setattr(
-        Utils,
+        file_utils,
         "SMALL_FILE_THRESHOLD",
         1,
     )

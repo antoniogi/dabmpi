@@ -4,7 +4,7 @@ from pathlib import Path
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from Utils import (
+from core.enums import (
     ProblemType,
     SolutionType,
     SolverType,

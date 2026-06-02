@@ -5,7 +5,7 @@ import pytest
 
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from Utils import Matrix
+from core.matrix import Matrix
 
 
 def test_matrix_creation():

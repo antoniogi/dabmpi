@@ -1,7 +1,7 @@
 import pytest
 
-from ParameterVMEC import ParameterVMEC
-from Parameter import ParamType
+from data.ParameterVMEC import ParameterVMEC
+from data.Parameter import ParamType
 
 import sys
 from pathlib import Path
@@ -26,8 +26,6 @@ def mock_logger(monkeypatch):
     """
     Replaces Utils.logger with a test-friendly logger.
     """
-    from ParameterVMEC import ParameterVMEC
-
     logger = MockLogger()
     monkeypatch.setattr(ParameterVMEC, "_logger", lambda self: logger)
 
@@ -182,3 +180,34 @@ class TestGetValueAndIndex:
         p.set_value("abc")
 
         assert p.get_value_and_index() == "abc"
+
+    def test_display_and_fixed_string_input(self):
+        p = ParameterVMEC()
+
+        p.set_display("yes")
+        p.set_fixed("false")
+
+        assert p.get_display() is True
+        assert p.get_fixed() is False
+        assert p.to_be_modified() is True
+
+    def test_index_none_resets_values(self):
+        p = ParameterVMEC()
+
+        p.set_x_index(5)
+        p.set_y_index(6)
+        p.set_x_index(None)
+        p.set_y_index(None)
+
+        assert p.get_x_index() is None
+        assert p.get_y_index() is None
+
+    def test_bool_value_and_index_output(self, mock_logger):
+        p = ParameterVMEC()
+        p.set_type(ParamType.BOOL)
+        p.set_name("flag")
+        p.set_value(True)
+
+        assert p.get_value_and_index() == "True"
+        p.print_value()
+        assert "TRUE" in mock_logger.messages[0]
