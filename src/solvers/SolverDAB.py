@@ -49,8 +49,6 @@ _author_ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
 
 _version_ = ' REVISION:   1.0  -  15-01-2014'
 
-EXTRA_LOG=100
-
 """
 HISTORY
     Version 0.1 (12-04-2013):   Creation of the file.
@@ -306,8 +304,8 @@ class Employed (BeeBase):
                 value = float(parameters[i].get_min_value()) + float(selectedPos) * float(parameters[i].get_gap())
                 parameters[i].set_value(value)
             solutionCopy.setParameters(parameters)
-        except Exception as e:
-            self._runtime.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+        except Exception:
+            self._runtime.logger.exception("Error creating solution based on matrix")
         return solutionCopy
 
     def createNewCandidate(
@@ -927,9 +925,8 @@ class SolverDAB (SolverBase):
                         for i in range(len(buff)):
                             buff[i] = float(solTuple[2][i])
                             self._runtime.logger.debug("Val param (" + str(i) + "): " + str(buff[i]))
-                    except Exception as e:
-                        self._runtime.logger.error("SolverDAB (" + str(sys.exc_info()[2].tb_lineno) +
-                                "): " + str(e))
+                    except Exception:
+                        self._runtime.logger.exception(f"SolverDAB exception preparing solution to send to worker {destination}")
                         continue
                     #sends the parameters
                     self._comms.comm.Isend([buff, MPI.FLOAT], destination, Tags.RECVFROMDRIVER)
@@ -943,8 +940,7 @@ class SolverDAB (SolverBase):
                     self._requestsInput[destination] = req
                     self._runtime.logger.info("DRIVER. Solution sent to worker " + str(destination))
                 except Exception as e:
-                    self._runtime.logger.error("DRIVER. WaitingForSolutions (" +
-                                    str(sys.exc_info()[2].tb_lineno) + "). " + str(e))
+                    self._runtime.logger.exception(f"SolverDAB exception exchanging solution with worker {destination}")
 
             idx, flag = MPI.Request.Testany(self._requestsInput, status)
 
@@ -960,12 +956,12 @@ class SolverDAB (SolverBase):
         while (flag and sourceIdx >= 0):
             source = status.source
             if (source < 0 or source >= len(self._requestSolution)):
-                self._runtime.logger.critical("DRIVER. Invalid source: " + str(source))
+                self._runtime.logger.critical(f"SolverDAB. Invalid source: {source}")
             self._requestSolution[source] = MPI.REQUEST_NULL
-            self._runtime.logger.debug('DRIVER. Receiving solution (worker ' + str(source) + ')')
+            self._runtime.logger.debug(f"SolverDAB. Receiving solution (worker {source})")
             isNewBest = False
             try:
-                self._runtime.logger.debug("DRIVER. Buffer size: " + str(self._numParams))
+                self._runtime.logger.debug(f"SolverDAB. Buffer size: {self._numParams}")
                 buff = array('f', [0]) * self._numParams
                 solVal = array('f', [0]) * 1
                 beeIdx = array('i', [0]) * 1
@@ -974,10 +970,10 @@ class SolverDAB (SolverBase):
                 self._comms.comm.Recv(solVal, origin, Tags.COMMSOLUTION)
                 self._comms.comm.Recv(beeIdx, origin, Tags.COMMSOLUTION)
             except Exception:
-                self._runtime.logger.exception("DRIVER. Exception receiving solution from worker " + str(origin))
+                self._runtime.logger.exception(f"SolverDAB. Exception receiving solution from worker {origin}")
                 raise
             try:
-                self._runtime.logger.info("SOLVERDAB. Received solution with value " + str(solVal[0]) + " from bee " + str(beeIdx[0]))
+                self._runtime.logger.info(f"SolverDAB. Received solution with value {solVal[0]} from bee {beeIdx[0]}")
                 if (
                         not math.isfinite(float(solVal[0]))
                         or float(solVal[0]) <= 0.0
@@ -1030,9 +1026,7 @@ class SolverDAB (SolverBase):
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solVal[0]) < float(self._bestSolution.getValue()))):
 
                     isNewBest = True
-                    self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(solVal[0]) +
-                                    " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx[0]))
-
+                    self._runtime.logger.best(f"New best solution found by bee {beeIdx[0]} with value {solVal[0]}")
                     self._bestSolution.setValue(solVal[0])
 
                     self._bestSolution.setParametersValues(buff)
@@ -1045,7 +1039,7 @@ class SolverDAB (SolverBase):
                             try:
                                 shutil.copyfile(str(origin) + '/OUTPUT/results.av', 'results.best.' + filenametime)
                             except Exxception:
-                                self._runtime.logger.exception("DRIVER. Exception copying results for best solution")
+                                self._runtime.logger.exception("SolverDAB. Exception copying results for best solution")
             except Exception:
                 self._runtime.logger.exception("SolverDAB exception while processing received solution")
                 raise
@@ -1061,14 +1055,13 @@ class SolverDAB (SolverBase):
                     raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
 
                 if solutionTemp is None:
-                    self._runtime.logger.exception(f"Solution is None after creation (type {self._runtime.problem_type})")
+                    self._runtime.logger.exception(f"SolverDAB. Solution is None after creation (type {self._runtime.problem_type})")
                     raise
                 else:
                     solutionTemp.setParametersValues(buff)
 
                     self._finishedSolutions.put_solution(solutionTemp, solVal[0], beeIdx[0])
-                    self._runtime.logger.info("DRIVER. Solution (value " + str(solVal[0]) +
-                                  ") added to the list of finished solutions")
+                    self._runtime.logger.info(f"SolverDAB. Solution (value {solVal[0]}) added to the list of finished solutions")
                     if (float(solVal[0]) >= 0.0 and float(solVal[0])<(math.inf/100.0)):
                         if isNewBest:
                             parameters = solutionTemp.getParameters()
@@ -1103,12 +1096,12 @@ class SolverDAB (SolverBase):
                                     reset = True
                         if not reset:
                             self._bees[beeIdx[0]].setIter(self._bees[beeIdx[0]].getIter() + 1)
-                            self._runtime.logger.info("Bee " + str(beeIdx[0]) + ". Current iterations " + str(self._bees[beeIdx[0]].getIter()))
+                            self._runtime.logger.info(f"Bee {beeIdx[0]}. Current iterations {self._bees[beeIdx[0]].getIter()}")
             except Exception as e:
-                self._runtime.logger.error("DRIVER (receiveSolutions). " + str(e) +
-                                   " line: " + str(sys.exc_info()[2].tb_lineno))
+                self._runtime.logger.exception(f"SolverDAB. Exception while processing received solution: {e}")
+                raise
 
-            self._runtime.logger.info('DRIVER. Received solution (worker ' + str(source) + ')')
+            self._runtime.logger.info(f"SolverDAB. Received solution (worker {source})")
             sourceIdx, flag = MPI.Request.Testany(self._requestSolution, status)
 
     """
@@ -1130,7 +1123,7 @@ class SolverDAB (SolverBase):
 
                     elapsedTime = time.time() - self._runtime.start_time
                     self._runtime.logger.debug(
-                        "DRIVER. Elapsed time %.2f - Remaining %.2f",
+                        "SolverDAB. Elapsed time %.2f - Remaining %.2f",
                         elapsedTime,
                         self._runtime.max_execution_time - elapsedTime,
                     )
@@ -1154,7 +1147,7 @@ class SolverDAB (SolverBase):
 
         while (not self.check_finish()):
             for bee in range(len(self._bees)):
-                self._runtime.logger.debug("Bee " + str(bee) + " putting solution on pending queue")
+                self._runtime.logger.debug(f"Bee {bee} putting solution on pending queue")
                 newSolution, beeIdx = self._bees[bee].createNewCandidate(
                             self._pendingSolutions,
                             self._finishedSolutions,
@@ -1184,9 +1177,7 @@ class SolverDAB (SolverBase):
                 if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestSolution.getValue())) or
                     (self._runtime.objective == ObjectiveType.MINIMIZE and float(solutionValue) < float(self._bestSolution.getValue()))):
 
-                    self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(newSolution) +
-                                   " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
-
+                    self._runtime.logger.best(f"New best solution found by bee {beeIdx} with value {solutionValue}")
                     self._bestSolution = newSolution
 
                     if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestGlobalSolution.getValue())) or
@@ -1245,9 +1236,7 @@ class SolverDAB (SolverBase):
                         float(solutionValue) < float(self._bestSolution.getValue()))):
 
 
-                        self._runtime.logger.log(EXTRA_LOG, "New best solution found. Value " + str(newSolution) +
-                                       " -- old " + str(self._bestSolution.getValue()) + ". Bee " + str(beeIdx))
-
+                        self._runtime.logger.best(f"New best solution found by bee {bee} with value {solutionValue}")
                         self._bestSolution = newSolution
 
                         if ((self._runtime.objective == ObjectiveType.MAXIMIZE and float(solutionValue) > float(self._bestGlobalSolution.getValue())) or
