@@ -24,9 +24,7 @@ import time
 from array import array
 import configparser
 import argparse
-import traceback
 from mpi4py import MPI
-import math
 import textwrap
 from core.logging import LoggerConfig
 from core.runtime import GlobalRuntime
@@ -79,31 +77,28 @@ CONFIG_SECTION_ALGORITHM = "Algorithm"
 CONFIG_KEY_COMM_MODEL = "commModel"
 CONFIG_KEY_OBJECTIVE = "objective"
 
-# Extra value for logging when a new solution has been found
-EXTRA_LOG: int = 100
-
-# Numerical infinity approximation
-INFINITY: float = math.inf
-
 
 def create_solver(runtime, comms):
     """Factory function to create the appropriate solver instance."""
-    if runtime.solver_type not in SOLVER_MAP:
-        raise ValueError(f"Invalid solver type: {runtime.solver_type}")
-    solver_class = SOLVER_MAP[runtime.solver_type]
+    try:
+        solver_class = SOLVER_MAP[runtime.solver_type]
+    except KeyError as e:
+        raise ValueError(
+            f"Invalid solver type: {runtime.solver_type}"
+        ) from e
     return solver_class(runtime, comms)
 
 
 # This function checks if the file exists
-def is_valid_file(parser, arg):
+def is_valid_file(parser, arg) -> str:
     path = Path(arg)
     if not path.is_file():
         parser.error(f"File does not exist: {arg}")
     return str(path)
 
 
-def parse_arguments(argv=None):
-    """Parse command-line arguments and update runtime configuration."""
+def parse_arguments(argv=None) -> argparse.Namespace:
+    """Parse command-line arguments and return the namespace."""
     parser = argparse.ArgumentParser(
         prog='disop.py',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -168,7 +163,7 @@ def parse_arguments(argv=None):
     return parser.parse_args(argv)
 
 
-def configure_runtime(runtime: GlobalRuntime, args):
+def configure_runtime(runtime: GlobalRuntime, args) -> None:
     """Apply parsed CLI values to runtime and initialize config."""
     problem_type = PROBLEM_MAP[args.problem]
     solver_type = CLI_SOLVER_MAP[args.solver]
@@ -185,16 +180,14 @@ def configure_runtime(runtime: GlobalRuntime, args):
     if runtime.logger is not None:
         runtime.logger.setLevel(LOG_LEVELS[args.verbose])
 
-    return problem_type, solver_type
 
-
-def create_mpi_comms():
+def create_mpi_comms() -> GlobalComms:
     """Create the MPI communicator wrapper used by the runtime."""
     comm = MPI.COMM_WORLD
     return GlobalComms(comm.Get_rank(), comm.Get_size(), comm)
 
 
-def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms):
+def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the driver-side MPI execution path."""
     runtime.logger.info("DRIVER - BEGIN OF THE EXECUTION")
     solver = create_solver(runtime, global_comms)
@@ -205,7 +198,7 @@ def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms):
     runtime.logger.info("DRIVER - END OF THE EXECUTION")
 
 
-def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, inputfile: str, configfile: str):
+def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the worker-side MPI execution path."""
     runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
     worker = EvaluationWorker(runtime, global_comms)
@@ -214,7 +207,7 @@ def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms, inputfile: str
     runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")
 
 
-def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms):
+def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the ALL2ALL execution path."""
     runtime.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
     solver = create_solver(runtime, global_comms)
@@ -282,9 +275,7 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
 def main(runtime, argv=None):
     args = parse_arguments(argv)
     try:
-        problem_type, _ = configure_runtime(runtime, args)
-        inputfile = args.ifile
-        configfile = args.cfile
+        configure_runtime(runtime, args)
 
         global_comms = create_mpi_comms()
 
@@ -295,41 +286,26 @@ def main(runtime, argv=None):
             if global_comms.rank == 0:
                 run_driver(runtime, global_comms)
             else:
-                run_worker(runtime, global_comms, inputfile, configfile)
+                run_worker(runtime, global_comms)
         else:
             run_all2all(runtime, global_comms)
 
         dump = array('i', [0]) * 1
         global_comms.comm.Bcast(dump)
-    except Exception as e:
-        # Extract the last frame of the traceback (where the error actually happened)
-        tb = e.__traceback__
-        if tb is not None:
-            summary = traceback.extract_tb(tb)[-1]
-            filename = summary.filename
-            line_number = summary.lineno
-        else:
-            filename = "unknown"
-            line_number = 0
-
+    except Exception:
         if getattr(runtime, "logger", None):
-            runtime.logger.error(f"Exception in file {filename} at line {line_number}: {e}")
+            runtime.logger.exception("Exception in main execution")
         else:
-            print(f"Exception in file {filename} at line {line_number}: {e}")
+            print("Exception in main execution")
+        raise
 
 if __name__ == "__main__":
     runtime = GlobalRuntime()
     try:
         main(runtime)
-    except Exception as e:
-        runtime.logger.exception(f"Fatal error in main execution: {e}")
-        """
-        import traceback
+    except Exception:
         if getattr(runtime, "logger", None):
-            runtime.logger.error(f"Fatal error: {e}")
-            runtime.logger.error(traceback.format_exc())
+            runtime.logger.exception("Fatal error in main execution")
         else:
-            print("Fatal error:", e)
-            traceback.print_exc()
-        """
+            print("Fatal error in main execution")
         sys.exit(1)
