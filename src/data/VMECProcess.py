@@ -5,7 +5,6 @@ import math
 import configparser
 import os
 import shutil
-import sys
 import time
 import glob
 import subprocess
@@ -14,7 +13,6 @@ import random
 from pathlib import Path
 from core.file_utils import tail
 from core.comms import GlobalComms
-import core.enums as e
 from core.runtime import GlobalRuntime
 from core.enums import ObjectiveType
 from core.matrix import Matrix
@@ -156,7 +154,7 @@ class VMECProcess:
                             str(self._check_ballooning) + " - threed1 " +
                             str(self._extra_threed1) + " - beta " +
                             str(self._get_beta))
-        except Exception as e:
+        except Exception:
             self._runtime.logger.exception("VMECProcess: error reading configuration file.")
             raise
 
@@ -436,9 +434,9 @@ class VMECProcess:
                             abs(tempBr ** 2 + tempBz ** 2 + tempBphi ** 2)))
                         fitness = fitness + temp
                     lineRPhiZ = file_out.readline()
-        except Exception as e:
+        except Exception:
             fitness = -INFINITY
-            self._runtime.logger.error(f"VMECProcess({sys.exc_info()[2].tb_lineno}). Error when calculating the fitness {e}")
+            self._runtime.logger.exception("VMECProcess. Error when calculating the fitness")
             pass
         if fitness < 1.0e+2:
             fitness = -INFINITY
@@ -622,40 +620,38 @@ class VMECProcess:
             if not os.path.exists(filename):
                 self._runtime.logger.error(f"VMECProcess({self._comms.rank}): File {filename} doesn't exist")
                 return False
-            f = open(filename, 'r')
-            line = f.readline()
-            while line.find('DMerc') == -1:
+            with open(filename, 'r') as f:
                 line = f.readline()
+                while line.find('DMerc') == -1:
+                    line = f.readline()
 
-            f.readline()
-            line = f.readline()
-            i = 0
-            window_size = 0
-            sign_change = False
-            self._is_mercier_stable = True
-            while line:
-                linestrip = line.strip()
-                new_line = linestrip.replace('  ', ' ')
-                parts = new_line.split()
-                Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
+                f.readline()
+                line = f.readline()
+                i = 0
+                window_size = 0
+                sign_change = False
+                self._is_mercier_stable = True
+                while line:
+                    linestrip = line.strip()
+                    new_line = linestrip.replace('  ', ' ')
+                    parts = new_line.split()
+                    Si, DMerci, DSheari, DCurri, DWelli, Dgeodi = parts
 
-                if float(Si) >= self._min_mercier_radius:
-                    if float(DMerci) > 0:
-                        window_size = window_size + 1
-                        if sign_change:
-                            if window_size >= 5:
-                                f.close()
-                                #There is a sing change in mercier
-                                self._is_mercier_stable = False
-                                return False
+                    if float(Si) >= self._min_mercier_radius:
+                        if float(DMerci) > 0:
+                            window_size = window_size + 1
+                            if sign_change:
+                                if window_size >= 5:
+                                    #There is a sing change in mercier
+                                    self._is_mercier_stable = False
+                                    return False
+                            else:
+                                sign_change = True
+                                window_size = 1
                         else:
-                            sign_change = True
-                            window_size = 1
-                    else:
-                        sign_change = False
-                i += 1
-                line = f.readline()
-            f.close()
+                            sign_change = False
+                    i += 1
+                    line = f.readline()
         except Exception:
             self._runtime.logger.exception("VMECProcess: error while processing mercier.")
             self._is_mercier_stable = False
@@ -674,14 +670,13 @@ class VMECProcess:
             self._beta = -INFINITY
             if not self._get_beta:
                 return True
-            file_threed = open('./threed1.tj' + self._comms.rank, 'r')
-            found = False
-            line = ""
-            for line in file_threed.readlines():
-                if line.find('beta total') != -1:
-                    found = True
-                    break
-            file_threed.close()
+            with open (f'./threed1.tj{self._comms.rank}', 'r') as file_threed:
+                found = False
+                line = ""
+                for line in file_threed.readlines():
+                    if line.find('beta total') != -1:
+                        found = True
+                        break
             if not found:
                 return False
             parts = line.split('=')
@@ -705,26 +700,24 @@ class VMECProcess:
             if not self._extra_threed1:
                 return True
 
-            file_threed = open(f'./threed1.tj{self._comms.rank}', 'r')
-            cnt = 1
-            for line in file_threed.readlines():
-                line = line.replace(" ", "")
-                if line.find('FSQRFSQZFSQL') != -1:
-                    cnt += 1
-            file_threed.close()
-            i = 0
-            file_threed = open(f'./threed1.tj{self._comms.rank}', 'r')
-            while i < cnt:
-                line = file_threed.readline().replace(" ", "")
-                if line.find('FSQRFSQZFSQL') != -1:
-                    i += 1
-            line = file_threed.readline()
-            line = file_threed.readline()
+            marker = "FSQRFSQZFSQL"
+
+            with open(f"./threed1.tj{self._comms.rank}") as file_threed:
+                lines = file_threed.readlines()
+
+            last_marker = -1
+
+            for idx, line in enumerate(lines):
+                if marker in line.replace(" ", ""):
+                    last_marker = idx
+            line_idx = last_marker + 3
             old_line = ""
-            while len(line) > 10:
-                old_line = line
-                line = file_threed.readline()
-            file_threed.close()
+            while (
+                line_idx < len(lines)
+                and len(lines[line_idx]) > 10
+            ):
+                old_line = lines[line_idx]
+                line_idx += 1
 
 #            parts = map(string.strip, string.split(old_line))
             parts = old_line.split()

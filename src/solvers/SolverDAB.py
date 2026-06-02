@@ -3,7 +3,6 @@
 
 
 from mpi4py import MPI
-import sys
 import math
 import random
 import shutil
@@ -53,7 +52,6 @@ class BeeBase:
         self._problem = None
         self._bestLocalSolution: SolutionBase = None
         self._bestGlobalSolution: SolutionBase = None
-        self._bestLocalInitialised = False
         #Number of iterations since the local solution
         #was created
         self._itersinceLastUpdate = 0
@@ -97,9 +95,6 @@ class BeeBase:
 
     def getBestLocalSolution(self):
         return self._bestLocalSolution
-
-    def bestLocalInitialised(self):
-        return self._bestLocalInitialised
 
     def createNewCandidate(
             self, 
@@ -217,7 +212,6 @@ class BeeBase:
     """
     def setSolution(self, solution):
         self._bestLocalSolution = solution
-        self._bestLocalInitialised = True
 
     """
     This function allows to create a random number between start and
@@ -295,11 +289,8 @@ class Employed (BeeBase):
             # this is the one that has to use the probMatrix
             self._runtime.logger.debug('Create new candidate employed')
 
-            if not self.bestLocalInitialised():
-                solution = self.createRandomSolution(
-                    pendingSolutions,
-                    finishedSolutions
-                )
+            if self._bestLocalSolution is None:
+                solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
                 return solution, -1
 
             solution = self.getBestLocalSolution()
@@ -400,10 +391,8 @@ class Employed (BeeBase):
                 f"after {self._max_attempts} attempts"
             )
 
-        except Exception as e:
-            self._runtime.logger.exception(
-                f"SolverDAB exception: {e}"
-            )
+        except Exception:
+            self._runtime.logger.exception("SolverDAB exception.")
             raise
 
 
@@ -437,8 +426,8 @@ class Scout (BeeBase):
             self._runtime.logger.debug('Create new candidate scout')
             solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
             return solution, -1
-        except Exception as e:
-            self._runtime.logger.exception(f"SolverDAB exception on line {e.__traceback__.tb_lineno}: {str(e)}")
+        except Exception:
+            self._runtime.logger.exception("SolverDAB exception.")
             raise
 
 
@@ -450,7 +439,6 @@ class Onlooker (BeeBase):
         runtime.logger.info("Creating onlooker bee")
         super().__init__(runtime, comms, matrix)
         self._modFactor = modFactor
-        #BeeBase._init_(self, runtime)
         self._probOnlookerChange = probChange
         return
 
@@ -596,10 +584,9 @@ class Onlooker (BeeBase):
                 f"after {self._max_attempts} attempts"
             )
 
-        except Exception as e:
-            self._runtime.logger.exception(
-                f"SolverDAB exception: {e}"
-            )
+        except Exception:
+            self._runtime.logger.exception("SolverDAB exception.")
+            raise
 
         return None, None
 
@@ -672,8 +659,8 @@ class SolverDAB (SolverBase):
                 if self._topSolutions.qSize() != 0:
                     self._bestSolution, value, origin = self._topSolutions.get_solution_tuple(False)
                     self._bestSolution.setValue(value)
-            except Exception as e:
-                self._runtime.logger.exception(f"SolverDAB. {e}")
+            except Exception:
+                self._runtime.logger.exception("SolverDAB. Problem getting best solution from top solutions queue")
 
             if self._comms.rank == 0:
                 #parse arguments from the ini file
@@ -766,8 +753,8 @@ class SolverDAB (SolverBase):
                 self._scout = Scout(self._runtime, self._comms, self._probMatrix)
                 self._runtime.logger.debug("Created 1 scout bee")
                 self.print_configuration()
-        except Exception as e:
-            self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+        except Exception:
+            self._runtime.logger.exception("SolverDAB exception during initialization")
             raise
 
     def print_configuration(self):
@@ -857,8 +844,8 @@ class SolverDAB (SolverBase):
                         self._bees[bee].setSolution(solution)
                         self._runtime.logger.debug("Scout bee putting solution on pending queue")
                         self._pendingSolutions.put_solution(solution, -1.0, bee)
-            except Exception as e:
-                self._runtime.logger.error("SolverDAB " + str(sys.exc_info()[2].tb_lineno) + " " + str(e))
+            except Exception:
+                self._runtime.logger.exception("SolverDAB exception while checking pending solutions queue")
 
     """
     This function checks if there are workers waiting for solutions to be evaluated.
@@ -912,7 +899,7 @@ class SolverDAB (SolverBase):
                     req = self._comms.comm.Irecv(self._dump, source=destination, tag=Tags.REQINPUT)
                     self._requestsInput[destination] = req
                     self._runtime.logger.info("DRIVER. Solution sent to worker " + str(destination))
-                except Exception as e:
+                except Exception:
                     self._runtime.logger.exception(f"SolverDAB exception exchanging solution with worker {destination}")
 
             idx, flag = MPI.Request.Testany(self._requestsInput, status)
@@ -1052,9 +1039,8 @@ class SolverDAB (SolverBase):
                                         idx = int(idx)
                                         val = self._probMatrix.getitem(i, idx)
                                         self._probMatrix.setitem(i, idx, val + 5.0)
-                                except Exception as e:
-                                    self._runtime.logger.warning("DRIVER (fill matrix). " + str(e) +
-                                       " line: " + str(sys.exc_traceback.tb_lineno))
+                                except Exception:
+                                    self._runtime.logger.exception("SolverDAB. Exception updating probability matrix for new best solution")
                         #Update the best local solution in the bees
                         reset = False
                         if (int(beeIdx[0]) >= 0 and int(beeIdx[0]) < len(self._bees)):
@@ -1070,8 +1056,8 @@ class SolverDAB (SolverBase):
                         if not reset:
                             self._bees[beeIdx[0]].setIter(self._bees[beeIdx[0]].getIter() + 1)
                             self._runtime.logger.info(f"Bee {beeIdx[0]}. Current iterations {self._bees[beeIdx[0]].getIter()}")
-            except Exception as e:
-                self._runtime.logger.exception(f"SolverDAB. Exception while processing received solution: {e}")
+            except Exception:
+                self._runtime.logger.exception("SolverDAB. Exception while processing received solution")
                 raise
 
             self._runtime.logger.info(f"SolverDAB. Received solution (worker {source})")
@@ -1100,9 +1086,9 @@ class SolverDAB (SolverBase):
                         elapsedTime,
                         self._runtime.max_execution_time - elapsedTime,
                     )
-                except Exception as e:
-                    self._runtime.logger.exception(f"SolverDAB exception: {e}")
-                    time.sleep(1)
+                except Exception:
+                    self._runtime.logger.exception("SolveDAB exception in main loop")
+                    raise
         else:
             self.runDistributed()
 
@@ -1264,8 +1250,8 @@ class SolverDAB (SolverBase):
                 self._requestsEnd[source] = MPI.REQUEST_NULL
                 self._runtime.logger.info(f'SolverDAB. Received a termination request from worker {source}')
             return False
-        except Exception as e:
-            self._runtime.logger.exception(f"SolverDAB exception: {e}")
+        except Exception:
+            self._runtime.logger.exception("SolverDAB exception in finish check")
             return True
 
     def finish(self):

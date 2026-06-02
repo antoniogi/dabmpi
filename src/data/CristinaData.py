@@ -125,9 +125,7 @@ class CristinaData (object):
             self.__runtime.logger.debug("Number of parameters " +
                            str(self.__numParams) + "(" +
                            str(len(self.__params)) + ")")
-        except Exception as e:
-            self.__runtime.logger.error("CristinaData (" +
-                            str(sys.exc_info()[2].tb_lineno) +
-                            "). Problem reading input xml file: " + str(e))
+        except Exception:
+            self.__runtime.logger.exception("CristinaData. Exception while initializing from XML file")
             sys.exit(111)
         return

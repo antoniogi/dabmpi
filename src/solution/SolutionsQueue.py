@@ -2,10 +2,10 @@
 # vim: set fileencoding=utf-8 :
 
 import os
+from solution.SolutionBase import SolutionBase
 from solution.SolutionFusion import SolutionFusion
 from solution.SolutionCristina import SolutionCristina
 from solution.SolutionNonSeparable import SolutionNonSeparable
-from data.Parameter import Parameter
 from core.runtime import GlobalRuntime
 from core.comms import GlobalComms
 from core.enums import SolutionType, ObjectiveType
@@ -263,12 +263,13 @@ class SolutionsQueue:
     doesn't remove anything
     """
 
-    def get_solution_tuple(self, remove=True):
+    def get_solution_tuple(self, remove=True) -> tuple[SolutionBase, float, int]:
         solution = None
         val = -1.0
         agent_idx = -1
         if self.qSize() == 0:
-            return solution, val, agent_idx
+            raise IndexError("Queue is empty")
+            #return solution, val, agent_idx
         solution = self._solutionBase
         if remove:
             sol_tuple = self._queue.pop(0)
@@ -286,7 +287,6 @@ class SolutionsQueue:
 
         #this method expects a list of parameters
         self._solutionBase.setParametersValues(params)
-        #self._solutionBase.setParameters (params)
 
         return self._solutionBase, float(val), int(agent_idx)
 

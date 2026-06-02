@@ -3,7 +3,6 @@
 
 
 import math
-import traceback
 
 from problems.ProblemBase import ProblemBase
 
@@ -23,13 +22,8 @@ class ProblemNonSeparable(ProblemBase):
                               math.pow(parameters[i] + 1, 2))
             solution.setValue(val)
             self._runtime.logger.debug("Solve Problem NonSeparable")
-        except Exception as e:
-            tb = traceback.extract_tb(e.__traceback__)
-            line = tb[-1].lineno
-
-            self._runtime.logger.error(
-                f"ProblemNonSeparable ({line}) {e}"
-            )
+        except Exception:
+            self._runtime.logger.exception("ProblemNonSeparable. Exception while solving")
 
     def extractSolution(self) -> tuple[float, float]:
         raise NotImplementedError("Extract solution abstract problem")

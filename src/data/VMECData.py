@@ -4,7 +4,6 @@
 
 import os
 import sys
-import traceback
 from xml.dom import minidom
 from .ParameterVMEC import ParameterVMEC
 from .Parameter import ParamType
@@ -426,13 +425,11 @@ class VMECData():
                                     self._numParams += 1
                                     values = 1 + int(round((c.get_max_value() - c.get_min_value()) / c.get_gap()))
                                     self._maxRange = max(values, self._maxRange)
-                            except Exception as e:
-                                traceback.print_tb(sys.exc_info()[2])
-                                self._runtime.logger.warning("Problem calculating max range: " + str(e))
-                                pass
-        except Exception as e:
-            self._runtime.logger.error("VMECData (" + str(sys.exc_info()[2].tb_lineno) + "). Problem reading input xml file: " + str(e))
-            traceback.print_tb(sys.exc_info()[2])
+                            except Exception:
+                                self._runtime.logger.exception(f"VMECData. Exception assigning parameter with index {c.get_index()} and name {c.get_name()}")
+                                raise
+        except Exception:
+            self._runtime.logger.exception("VMECData. Exception while initializing from XML file")
             sys.exit(111)
         return
 

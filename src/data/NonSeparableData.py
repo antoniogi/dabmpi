@@ -16,30 +16,30 @@ class NonSeparableData (object):
     It can also create an XML output file with the data it contains
     """
     def __init__(self, runtime):
-        self.__numParams = 0
-        self.__maxRange = 0
-        self.__fInput = None
-        self.__params = []
-        self.__logger = runtime.logger
+        self._numParams = 0
+        self._maxRange = 0
+        self._fInput = None
+        self._params = []
+        self._logger = runtime.logger
         return
 
     def __del__(self):
         try:
-            del self.__params[:]
+            del self._params[:]
         except:
             pass
 
     #returns the number of parameters that can be actually modified
     def getNumParams(self):
-        return self.__numParams
+        return self._numParams
 
     """
     Returns a list of doubles with the values of the modificable parameters
     """
     def getValsOfParameters(self):
-        buff = array('f', [0]) * self.__numParams
-        for i in range(self.__numParams):
-            buff[i] = float(self.__params[i].get_value())
+        buff = array('f', [0]) * self._numParams
+        for i in range(self._numParams):
+            buff[i] = float(self._params[i].get_value())
         return buff
 
     """
@@ -50,10 +50,10 @@ class NonSeparableData (object):
     """
 
     def setValsOfParameters(self, buff):
-        self.__logger.debug("NonSeparableData. Setting parameters (number: "
+        self._logger.debug("NonSeparableData. Setting parameters (number: "
                          + str(len(buff)) + ")")
         for i in range(len(buff)):
-            self.__params[i].set_value(buff[i])
+            self._params[i].set_value(buff[i])
 
     def setParameters(self, parameters):
         for param in parameters:
@@ -62,7 +62,7 @@ class NonSeparableData (object):
     Return a list with all the parameters (list of Parameter objects)
     """
     def getParameters(self):
-        return self.__params
+        return self._params
 
     """
     Assign a parameter with a new value to an older version of the
@@ -70,11 +70,11 @@ class NonSeparableData (object):
     """
     def assign_parameter(self, parameter):
         index = parameter.get_index()
-        if index >= len(self.__params):
-            self.__params.append(parameter)
+        if index >= len(self._params):
+            self._params.append(parameter)
 
     def getMaxRange(self):
-        return self.__maxRange
+        return self._maxRange
 
     """
     Method that reads the xml input file. Puts into memory all the data
@@ -110,20 +110,17 @@ class NonSeparableData (object):
                                 c.set_gap(node_param.firstChild.data)
                     try:
                         self.assign_parameter(c)
-                        self.__numParams += 1
+                        self._numParams += 1
                         values = 1 + int(round((c.get_max_value() -
                                 c.get_min_value()) / c.get_gap()))
-                        self.__maxRange = max(values, self.__maxRange)
-                    except ValueError as e:
-                        self.__logger.warning("Problem calculating max range: " + 
-                                         str(e) + " . Fileno: " + str(sys.exc_info()[2].tb_lineno))
-                        pass
-            self.__logger.debug("Number of parameters " +
-                           str(self.__numParams) + "(" +
-                           str(len(self.__params)) + ")")
-        except Exception as e:
-            self.__logger.error("NonSeparableData (" +
-                            str(sys.exc_info()[2].tb_lineno) +
-                            "). Problem reading input xml file: " + str(e))
+                        self._maxRange = max(values, self._maxRange)
+                    except Exception:
+                        self._logger.exception("Problem calculating max range for parameter with index " + str(c.get_index()) + " and name " + str(c.get_name()))
+                        raise
+            self._logger.debug("Number of parameters " +
+                           str(self._numParams) + "(" +
+                           str(len(self._params)) + ")")
+        except Exception:
+            self._logger.exception("NonSeparableData. Exception while initializing from XML file")
             sys.exit(111)
         return
