@@ -20,24 +20,89 @@ class VMECData:
 
     # We define the strict order of parameters here to eliminate boilerplate in getters/setters.
     _CONFIG_PARAMS = [
-        'mgrid_file', 'lfreeb', 'loldout', 'lwouttxt', 'ldiagno', 'loptim'
+        "mgrid_file",
+        "lfreeb",
+        "loldout",
+        "lwouttxt",
+        "ldiagno",
+        "loptim",
     ]
 
     _NUMERIC_PARAMS = [
-        'delt', 'tcon0', 'nfp', 'ncurr', 'mpol', 'ntor', 'nzeta', 'ns',
-        'niter', 'nstep', 'nvacskip', 'gamma', 'ftol', 'bloat', 'phiedge',
-        'extcur', 'curtor', 'spres_ped', 'pres_scale', 'am', 'ai', 'ac',
-        'raxis', 'zaxis', 'rbc', 'zbc', 'epsfcn', 'niter_opt', 'lreset_opt',
-        'lprof_opt', 'lbmn', 'lfix_ntor', 'lsurf_mask', 'target_aspectratio',
-        'target_beta', 'target_maxcurrent', 'target_rmax', 'target_rmin',
-        'target_iota', 'target_well', 'sigma_aspect', 'sigma_curv',
-        'sigma_beta', 'sigma_kink', 'sigma_maxcurrent', 'sigma_rmax',
-        'sigma_rmin', 'sigma_iota', 'sigma_vp', 'sigma_bmin', 'sigma_bmax',
-        'sigma_ripple', 'sigma_jstar0', 'sigma_jstar1', 'sigma_jstar2',
-        'sigma_jstar3', 'sigma_balloon', 'sigma_pgrad', 'sigma_pedge',
-        'lballon_test', 'bal_zeta0', 'bal_theta0', 'bal_xmax', 'bal_np0',
-        'bal_kth', 'bal_x0', 'nrh', 'mbuse', 'nbuse', 'zeff1', 'damp',
-        'isymm0', 'ate', 'ati'
+        "delt",
+        "tcon0",
+        "nfp",
+        "ncurr",
+        "mpol",
+        "ntor",
+        "nzeta",
+        "ns",
+        "niter",
+        "nstep",
+        "nvacskip",
+        "gamma",
+        "ftol",
+        "bloat",
+        "phiedge",
+        "extcur",
+        "curtor",
+        "spres_ped",
+        "pres_scale",
+        "am",
+        "ai",
+        "ac",
+        "raxis",
+        "zaxis",
+        "rbc",
+        "zbc",
+        "epsfcn",
+        "niter_opt",
+        "lreset_opt",
+        "lprof_opt",
+        "lbmn",
+        "lfix_ntor",
+        "lsurf_mask",
+        "target_aspectratio",
+        "target_beta",
+        "target_maxcurrent",
+        "target_rmax",
+        "target_rmin",
+        "target_iota",
+        "target_well",
+        "sigma_aspect",
+        "sigma_curv",
+        "sigma_beta",
+        "sigma_kink",
+        "sigma_maxcurrent",
+        "sigma_rmax",
+        "sigma_rmin",
+        "sigma_iota",
+        "sigma_vp",
+        "sigma_bmin",
+        "sigma_bmax",
+        "sigma_ripple",
+        "sigma_jstar0",
+        "sigma_jstar1",
+        "sigma_jstar2",
+        "sigma_jstar3",
+        "sigma_balloon",
+        "sigma_pgrad",
+        "sigma_pedge",
+        "lballon_test",
+        "bal_zeta0",
+        "bal_theta0",
+        "bal_xmax",
+        "bal_np0",
+        "bal_kth",
+        "bal_x0",
+        "nrh",
+        "mbuse",
+        "nbuse",
+        "zeff1",
+        "damp",
+        "isymm0",
+        "ate",
+        "ati",
     ]
 
     def __init__(self, runtime, comms):
@@ -50,7 +115,7 @@ class VMECData:
         self._show_bootin = True
         self._fInput = None
 
-        # Keeping explicit definitions prevents breaking any code 
+        # Keeping explicit definitions prevents breaking any code
         # that relies on instance attribute access, and keeps IDE auto-complete happy.
         self.mgrid_file = None
         self.loldout = None
@@ -81,7 +146,7 @@ class VMECData:
         self.am = []
         self.piota = None
         self.ai = []
-        self.pcurr = None        
+        self.pcurr = None
         self.ac = []
         self.raxis = []
         self.zaxis = []
@@ -151,7 +216,7 @@ class VMECData:
             del self.ftol[:]
         except:
             pass
-        
+
     def getNumParams(self):
         """Returns the number of parameters that can be actually modified"""
         return self._numParams
@@ -171,13 +236,17 @@ class VMECData:
         Helper generator that dynamically yields parameter objects in the correct order.
         Handles both individual parameters and lists of parameters.
         """
-        names = self._CONFIG_PARAMS + self._NUMERIC_PARAMS if include_config else self._NUMERIC_PARAMS
-        
+        names = (
+            self._CONFIG_PARAMS + self._NUMERIC_PARAMS
+            if include_config
+            else self._NUMERIC_PARAMS
+        )
+
         for name in names:
             val = getattr(self, name, None)
             if val is None:
                 continue
-            
+
             if isinstance(val, list):
                 for item in val:
                     yield item
@@ -186,14 +255,14 @@ class VMECData:
 
     def getValsOfParameters(self):
         """Returns a list of doubles with the values of the modifiable parameters"""
-        buff = array('f', [0]) * self._numParams
+        buff = array("f", [0]) * self._numParams
         idx = 0
-        
+
         for param in self._iter_params(include_config=False):
             if param.to_be_modified():
                 buff[idx] = float(param.get_value())
                 idx += 1
-                
+
         return buff
 
     def setValsOfParameters(self, buff):
@@ -201,9 +270,11 @@ class VMECData:
         Receives as parameter (buff) a list of values corresponding to the values
         that the parameters that can be modified must take.
         """
-        self._runtime.logger.debug("VMECData. Setting parameters (number: " + str(len(buff)) + ")")
+        self._runtime.logger.debug(
+            "VMECData. Setting parameters (number: " + str(len(buff)) + ")"
+        )
         idx = 0
-        
+
         for param in self._iter_params(include_config=False):
             if param.to_be_modified():
                 param.set_value(buff[idx])
@@ -212,11 +283,11 @@ class VMECData:
     def getParameters(self):
         """Return a list with all the parameters (list of Parameter objects)"""
         parameters = []
-        
+
         for param in self._iter_params(include_config=True):
             if param.to_be_modified():
                 parameters.append(param)
-                
+
         return parameters
 
     """
@@ -337,11 +408,8 @@ class VMECData:
         # If we reach this point, the parameter index is unrecognized.
         # Only log a warning if the parameter is meant to be displayed, otherwise silently ignore it.
         if parameter.get_display():
-            self._runtime.logger.warning(
-                f"Unassigned element with index: {index}"
-            )
+            self._runtime.logger.warning(f"Unassigned element with index: {index}")
         return -1
-
 
     """
     Method that reads the xml input file. Puts into memory all the data
@@ -352,84 +420,93 @@ class VMECData:
 
     def initialize(self, filepath):
         try:
-            if (not os.path.exists(filepath)):
+            if not os.path.exists(filepath):
                 filepath = "../" + filepath
             xmldoc = minidom.parse(filepath)
             pNode = xmldoc.childNodes[0]
             for namelists in pNode.childNodes:
                 if namelists.nodeType == namelists.ELEMENT_NODE:
-                    if (namelists.attributes["display"].value == "False"):
-                        if (namelists.localName == "indata"):
+                    if namelists.attributes["display"].value == "False":
+                        if namelists.localName == "indata":
                             self._show_indata = False
-                        if (namelists.localName == "optimum"):
+                        if namelists.localName == "optimum":
                             self._show_optimum = False
-                        if (namelists.localName == "bootin"):
+                        if namelists.localName == "bootin":
                             self._show_bootin = False
                     for node in namelists.childNodes:
                         if node.nodeType == node.ELEMENT_NODE:
                             c = ParameterVMEC(self._runtime)
                             for node_param in node.childNodes:
-                                if (node_param.nodeType == node_param.ELEMENT_NODE):
-                                            name = node_param.localName
-                                            # helper to safely read text
-                                            text = None
-                                            if node_param.firstChild is not None:
-                                                text = node_param.firstChild.data
+                                if node_param.nodeType == node_param.ELEMENT_NODE:
+                                    name = node_param.localName
+                                    # helper to safely read text
+                                    text = None
+                                    if node_param.firstChild is not None:
+                                        text = node_param.firstChild.data
 
-                                            if name == "display" and text is not None:
-                                                c.set_display(text)
+                                    if name == "display" and text is not None:
+                                        c.set_display(text)
 
-                                            if name == "fixed" and text is not None:
-                                                c.set_fixed(text)
+                                    if name == "fixed" and text is not None:
+                                        c.set_fixed(text)
 
-                                            if name == "type" and text is not None:
-                                                t = text.strip().lower()
-                                                mapping = {
-                                                    "float": ParamType.FLOAT,
-                                                    "double": ParamType.FLOAT,
-                                                    "int": ParamType.INT,
-                                                    "bool": ParamType.BOOL,
-                                                    "string": ParamType.STRING,
-                                                }
-                                                c.set_type(mapping.get(t, ParamType.STRING))
+                                    if name == "type" and text is not None:
+                                        t = text.strip().lower()
+                                        mapping = {
+                                            "float": ParamType.FLOAT,
+                                            "double": ParamType.FLOAT,
+                                            "int": ParamType.INT,
+                                            "bool": ParamType.BOOL,
+                                            "string": ParamType.STRING,
+                                        }
+                                        c.set_type(mapping.get(t, ParamType.STRING))
 
-                                            if name == "value" and text is not None:
-                                                c.set_value(text)
-                                                try:
-                                                    if node_param.hasAttribute("x"):
-                                                        x_index = node_param.getAttribute("x")
-                                                        c.set_x_index(x_index)
-                                                    if node_param.hasAttribute("y"):
-                                                        y_index = node_param.getAttribute("y")
-                                                        c.set_y_index(y_index)
-                                                except Exception:
-                                                    pass
+                                    if name == "value" and text is not None:
+                                        c.set_value(text)
+                                        try:
+                                            if node_param.hasAttribute("x"):
+                                                x_index = node_param.getAttribute("x")
+                                                c.set_x_index(x_index)
+                                            if node_param.hasAttribute("y"):
+                                                y_index = node_param.getAttribute("y")
+                                                c.set_y_index(y_index)
+                                        except Exception:
+                                            pass
 
-                                            if name == "min_value" and text is not None:
-                                                c.set_min_value(text)
+                                    if name == "min_value" and text is not None:
+                                        c.set_min_value(text)
 
-                                            if name == "max_value" and text is not None:
-                                                c.set_max_value(text)
+                                    if name == "max_value" and text is not None:
+                                        c.set_max_value(text)
 
-                                            if name == "index" and text is not None:
-                                                c.set_index(text)
+                                    if name == "index" and text is not None:
+                                        c.set_index(text)
 
-                                            if name == "name" and text is not None:
-                                                c.set_name(text)
+                                    if name == "name" and text is not None:
+                                        c.set_name(text)
 
-                                            if name == "gap" and text is not None:
-                                                c.set_gap(text)
+                                    if name == "gap" and text is not None:
+                                        c.set_gap(text)
                             try:
                                 self.assign_parameter(c)
-                                if (c.to_be_modified()):
+                                if c.to_be_modified():
                                     self._numParams += 1
-                                    values = 1 + int(round((c.get_max_value() - c.get_min_value()) / c.get_gap()))
+                                    values = 1 + int(
+                                        round(
+                                            (c.get_max_value() - c.get_min_value())
+                                            / c.get_gap()
+                                        )
+                                    )
                                     self._maxRange = max(values, self._maxRange)
                             except Exception:
-                                self._runtime.logger.exception(f"VMECData. Exception assigning parameter with index {c.get_index()} and name {c.get_name()}")
+                                self._runtime.logger.exception(
+                                    f"VMECData. Exception assigning parameter with index {c.get_index()} and name {c.get_name()}"
+                                )
                                 raise
         except Exception:
-            self._runtime.logger.exception("VMECData. Exception while initializing from XML file")
+            self._runtime.logger.exception(
+                "VMECData. Exception while initializing from XML file"
+            )
             sys.exit(111)
         return
 
@@ -438,12 +515,10 @@ class VMECData:
             value = "T" if param.get_value() else "F"
             f.write(f"  {name} = {value}\n")
 
-
     def _write_scalar(self, f, name, param, fmt="{}"):
         if param.get_display():
             value = fmt.format(param.get_value())
             f.write(f"  {name} = {value}\n")
-
 
     def _write_array(
         self,
@@ -462,14 +537,12 @@ class VMECData:
         values = [fmt.format(float(p.get_value())) for p in displayed]
 
         lines = [
-            " ".join(values[i:i + per_line])
-            for i in range(0, len(values), per_line)
+            " ".join(values[i : i + per_line]) for i in range(0, len(values), per_line)
         ]
 
         f.write(f"  {name}{header_suffix}")
         f.write("\n".join(lines))
         f.write("\n")
-
 
     def _write_group(self, f, params):
         """
@@ -482,8 +555,7 @@ class VMECData:
         if not all(param.get_display() for _, param, _ in params):
             return
         values = [
-            f"{name}={fmt.format(param.get_value())}"
-            for name, param, fmt in params
+            f"{name}={fmt.format(param.get_value())}" for name, param, fmt in params
         ]
         f.write(f"  {', '.join(values)}\n")
 
@@ -602,11 +674,8 @@ class VMECData:
             f_input.write("/\n")
 
         except Exception:
-            self._runtime.logger.exception(
-                "Error writing INDATA section"
-            )
+            self._runtime.logger.exception("Error writing INDATA section")
             raise
-
 
     def __write_optimum(self, f_input):
         try:
@@ -676,9 +745,7 @@ class VMECData:
                 )
 
         except Exception:
-            self._runtime.logger.exception(
-                "Error writing OPTIMUM section"
-            )
+            self._runtime.logger.exception("Error writing OPTIMUM section")
             raise
 
     """
@@ -714,9 +781,7 @@ class VMECData:
             )
             f_input.write("/\n\n")
         except Exception:
-            self._runtime.logger.exception(
-                "Error writing BOOTIN section"
-            )
+            self._runtime.logger.exception("Error writing BOOTIN section")
             raise
 
     """
@@ -740,7 +805,6 @@ class VMECData:
             return True
         except Exception:
             self._runtime.logger.exception(
-                f"Error creating input file "
-                f"(worker {self._comms.rank}): {filename}"
+                f"Error creating input file (worker {self._comms.rank}): {filename}"
             )
             return False

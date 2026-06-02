@@ -5,10 +5,10 @@ from data.CristinaData import CristinaData
 from solution.SolutionBase import SolutionBase
 
 
-class SolutionCristina (SolutionBase):
+class SolutionCristina(SolutionBase):
     def __init__(self, runtime, comms):
         SolutionBase.__init__(self, runtime, comms)
-        #TODO: Implemement how data is initialized
+        # TODO: Implemement how data is initialized
         self._data = CristinaData(runtime)
         self._data.initialize(runtime.input_file)
         return

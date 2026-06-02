@@ -15,11 +15,11 @@ import sys
 from solvers.SolverBase import SolverBase
 
 
-class SolverSA (SolverBase):
+class SolverSA(SolverBase):
     def readConfigFile(self, runtime):
         config = configparser.ConfigParser()
         config.read(runtime.config_file)
-        if (not config.has_section("SA")):
+        if not config.has_section("SA"):
             runtime.logger.critical("SA section not specified in the ini file")
             sys.exit(-1)
 

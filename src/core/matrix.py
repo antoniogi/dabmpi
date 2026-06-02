@@ -6,6 +6,7 @@ import numpy as np
 # Matrix class
 # ============================================================================
 
+
 class Matrix:
     """
     Matrix abstraction backed by NumPy.
@@ -39,8 +40,7 @@ class Matrix:
         """
         if cols <= 0 or rows <= 0:
             raise ValueError(
-                f"Rows and columns must be positive: "
-                f"cols={cols}, rows={rows}"
+                f"Rows and columns must be positive: cols={cols}, rows={rows}"
             )
 
         self.cols = cols
@@ -133,11 +133,7 @@ class Matrix:
     # ---------------------------------------------------------------------
 
     def __repr__(self) -> str:
-        return (
-            f"Matrix(cols={self.cols}, "
-            f"rows={self.rows}, "
-            f"dtype={self._matrix.dtype})"
-        )
+        return f"Matrix(cols={self.cols}, rows={self.rows}, dtype={self._matrix.dtype})"
 
     def __str__(self) -> str:
         return str(self._matrix)

@@ -21,6 +21,7 @@ from typing import Any
 # Global variables - initialized by disop.py
 # ============================================================================
 
+
 @dataclass(frozen=True)
 class GlobalComms:
     # Rank of each process

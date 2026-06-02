@@ -5,7 +5,7 @@ from data.NonSeparableData import NonSeparableData
 from solution.SolutionBase import SolutionBase
 
 
-class SolutionNonSeparable (SolutionBase):
+class SolutionNonSeparable(SolutionBase):
     def __init__(self, runtime, comms):
         SolutionBase.__init__(self, runtime, comms)
         self._data = NonSeparableData(runtime)

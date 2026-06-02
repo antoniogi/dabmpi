@@ -5,7 +5,6 @@ from problems.ProblemBase import ProblemBase
 
 
 class ProblemFusion(ProblemBase):
-
     def __init__(self, runtime, comms):
         self._vmec: VMECProcess | None = None
         try:
@@ -20,9 +19,7 @@ class ProblemFusion(ProblemBase):
         try:
             return self._vmec.create_input_file(solution)
         except Exception:
-            self._runtime.logger.exception(
-                "ProblemFusion: error creating input file"
-            )
+            self._runtime.logger.exception("ProblemFusion: error creating input file")
             return False
 
     def execute_configuration(self):

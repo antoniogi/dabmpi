@@ -9,7 +9,7 @@ DERIVATIVE_CHECK_RANGE = range(-100, 100)
 
 
 class SolutionFusion(SolutionBase):
-    def __init__(self,runtime, comms):
+    def __init__(self, runtime, comms):
         super().__init__(runtime, comms)
         self._data = VMECData(runtime, comms)
         self._data.initialize(runtime.input_file)
@@ -40,7 +40,7 @@ class SolutionFusion(SolutionBase):
 
     def setParametersValues(self, buff):
         """Set parameter values from a float array.
-        
+
         Args:
             buff: Array of float values for parameters
         """
@@ -49,7 +49,7 @@ class SolutionFusion(SolutionBase):
 
     def setParameters(self, params):
         """Update parameters from a list of parameter objects.
-        
+
         Args:
             params: List of parameter objects with at least index and value
         """
@@ -62,11 +62,11 @@ class SolutionFusion(SolutionBase):
 
     def checkPressureDerivative(self):
         """Check if pressure derivative is non-positive across range.
-        
+
         Evaluates the derivative of a polynomial (coefficients in parameter
         values) at each point in the derivative check range. Returns True only
         if the derivative is <= 0 at all points.
-        
+
         Returns:
             bool: True if derivative is non-positive everywhere, False otherwise
         """
@@ -78,7 +78,7 @@ class SolutionFusion(SolutionBase):
             if derivative > 0.0:
                 return False
         return True
-    
+
     def print(self):
         pass
 

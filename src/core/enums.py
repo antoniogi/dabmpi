@@ -22,6 +22,7 @@ from enum import IntEnum
 # Enumerations
 # ============================================================================
 
+
 class ProblemType(IntEnum):
     NONE = 0
     FUSION = 1

@@ -9,7 +9,7 @@ from core.enums import ObjectiveType
 
 class SolutionBase(ABC):
     """Abstract base class for optimization solutions.
-    
+
     Defines the interface that all solution types must implement.
     Initializes the solution value based on the optimization objective:
     - MINIMIZE: starts at +infinity (any real value improves it)
@@ -18,10 +18,10 @@ class SolutionBase(ABC):
 
     def __init__(self, runtime, comms):
         """Initialize solution with appropriate initial value.
-        
+
         Args:
             infile: Input configuration file path
-            
+
         Raises:
             ValueError: If objective type is not defined
         """
@@ -41,7 +41,7 @@ class SolutionBase(ABC):
 
     def setValue(self, value: float) -> None:
         """Set the solution value.
-        
+
         Args:
             value: New solution value
         """
@@ -51,22 +51,23 @@ class SolutionBase(ABC):
     def getNumberofParams(self) -> int:
         """Return the number of parameters in this solution."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getNumberofParams()")
+            f"{self._class__.__name__} must implement getNumberofParams()"
+        )
 
     @abstractmethod
     def getMaxNumberofValues(self) -> int:
         """Return the maximum number of parameter values."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getMaxNumberofValues()")
+            f"{self._class__.__name__} must implement getMaxNumberofValues()"
+        )
 
     @abstractmethod
     def print(self) -> None:
         """Print solution information.
-        
+
         Must be implemented by subclasses to display solution details.
         """
-        raise NotImplementedError(
-            f"{self._class__.__name__} must implement print()")
+        raise NotImplementedError(f"{self._class__.__name__} must implement print()")
 
     def isValid(self) -> bool:
         """Return whether the solution is valid."""
@@ -74,7 +75,7 @@ class SolutionBase(ABC):
 
     def setValid(self, valid: bool) -> None:
         """Set the validity flag of the solution.
-        
+
         Args:
             valid: True if solution is valid, False otherwise
         """
@@ -83,12 +84,14 @@ class SolutionBase(ABC):
     @abstractmethod
     def getParametersValues(self):
         """Return the current values of all parameters."""
-        raise NotImplementedError(f"{self._class__.__name__} must implement getParametersValues()")
+        raise NotImplementedError(
+            f"{self._class__.__name__} must implement getParametersValues()"
+        )
 
     @abstractmethod
     def setParametersValues(self, buff: list) -> None:
         """Set parameter values.
-        
+
         Args:
             buff: Array of parameter values
         """
@@ -98,34 +101,36 @@ class SolutionBase(ABC):
     def getParameters(self) -> list:
         """Return the parameter objects."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getParameters()")
+            f"{self._class__.__name__} must implement getParameters()"
+        )
 
     @abstractmethod
     def setParameters(self, params: list) -> None:
         """Set parameters.
-        
+
         Args:
             params: List of parameter objects
         """
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement setParameters()")
+            f"{self._class__.__name__} must implement setParameters()"
+        )
 
     @abstractmethod
     def initialize(self, data) -> None:
         """Initialize solution with data.
-        
+
         Args:
             data: Data object for initialization
         """
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement initialize()")
+            f"{self._class__.__name__} must implement initialize()"
+        )
 
     @abstractmethod
     def prepare(self, filename: str) -> bool:
         """Prepare input file for solver.
-        
+
         Args:
             filename: Output filename to prepare
         """
-        raise NotImplementedError(
-            f"{self._class__.__name__} must implement prepare()")
+        raise NotImplementedError(f"{self._class__.__name__} must implement prepare()")

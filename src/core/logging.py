@@ -12,12 +12,12 @@ class ColoredFormatter(logging.Formatter):
     """Formatter that colors only the log level name."""
 
     COLORS = {
-        "DEBUG": "\033[36m",       # Cyan
-        "INFO": "\033[32m",        # Green
-        "WARNING": "\033[33m",     # Yellow
-        "ERROR": "\033[31m",       # Red
-        "CRITICAL": "\033[35m",    # Magenta
-        "BEST": "\033[1;37;44m",   # White on blue background
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[35m",  # Magenta
+        "BEST": "\033[1;37;44m",  # White on blue background
     }
 
     RESET = "\033[0m"
@@ -78,12 +78,7 @@ class LoggerConfig:
         logger.setLevel(logging.DEBUG)
         logger.propagate = False
 
-        log_format = (
-            "%(asctime)s.%(msecs)03d - "
-            "%(name)s - "
-            "%(levelname)s - "
-            "%(message)s"
-        )
+        log_format = "%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s"
 
         formatter = logging.Formatter(
             log_format,

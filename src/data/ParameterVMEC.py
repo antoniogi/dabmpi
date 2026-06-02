@@ -83,10 +83,12 @@ class ParameterVMEC(Parameter):
         return self.y_index
 
     def _logger(self):
-        if getattr(self, "_runtime", None) is not None and getattr(self._runtime, "logger", None) is not None:
+        if (
+            getattr(self, "_runtime", None) is not None
+            and getattr(self._runtime, "logger", None) is not None
+        ):
             return self._runtime.logger
         return logging.getLogger(__name__)
-
 
     def print_value(self):
         logger = self._logger()

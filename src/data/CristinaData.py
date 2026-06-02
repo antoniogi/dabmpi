@@ -8,13 +8,14 @@ from xml.dom import minidom
 from .Parameter import Parameter
 
 
-class CristinaData :
+class CristinaData:
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
     parameter, specifies the min/max/default values, the gap, the index,...
     It can also create an XML output file with the data it contains
     """
+
     def __init__(self, runtime):
         self.__numParams = 0
         self.__maxRange = 0
@@ -29,19 +30,25 @@ class CristinaData :
         except:
             pass
 
-    #returns the number of parameters that can be actually modified
+    # returns the number of parameters that can be actually modified
     def getNumParams(self):
         return self.__numParams
 
     def printData(self):
         for i in range(self.__numParams):
-            self.__runtime.logger.info("CristinaData. Param(" + str(i) +") - Value: " + str(self.__params[i].get_value()))
+            self.__runtime.logger.info(
+                "CristinaData. Param("
+                + str(i)
+                + ") - Value: "
+                + str(self.__params[i].get_value())
+            )
 
     """
     Returns a list of doubles with the values of the modificable parameters
     """
+
     def getValsOfParameters(self):
-        buff = array('f', [0]) * self.__numParams
+        buff = array("f", [0]) * self.__numParams
         for i in range(self.__numParams):
             buff[i] = float(self.__params[i].get_value())
         return buff
@@ -54,17 +61,20 @@ class CristinaData :
     """
 
     def setValsOfParameters(self, buff):
-        self.__runtime.logger.debug("CristinaData. Setting parameters (number: "
-                         + str(len(buff)) + ")")
+        self.__runtime.logger.debug(
+            "CristinaData. Setting parameters (number: " + str(len(buff)) + ")"
+        )
         for i in range(len(buff)):
             self.__params[i].set_value(buff[i])
 
     def setParameters(self, parameters):
         for param in parameters:
             self.assign_parameter(param)
+
     """
     Return a list with all the parameters (list of Parameter objects)
     """
+
     def getParameters(self):
         return self.__params
 
@@ -72,6 +82,7 @@ class CristinaData :
     Assign a parameter with a new value to an older version of the
     same parameter
     """
+
     def assign_parameter(self, parameter):
         index = parameter.get_index()
         if index >= len(self.__params):
@@ -115,17 +126,28 @@ class CristinaData :
                     try:
                         self.assign_parameter(c)
                         self.__numParams += 1
-                        values = 1 + int(round((c.get_max_value() -
-                                c.get_min_value()) / c.get_gap()))
+                        values = 1 + int(
+                            round((c.get_max_value() - c.get_min_value()) / c.get_gap())
+                        )
                         self.__maxRange = max(values, self.__maxRange)
                     except ValueError as e:
-                        self.__runtime.logger.warning("Problem calculating max range: " + 
-                                         str(e) + " . Fileno: " + str(sys.exc_info()[2].tb_lineno))
+                        self.__runtime.logger.warning(
+                            "Problem calculating max range: "
+                            + str(e)
+                            + " . Fileno: "
+                            + str(sys.exc_info()[2].tb_lineno)
+                        )
                         pass
-            self.__runtime.logger.debug("Number of parameters " +
-                           str(self.__numParams) + "(" +
-                           str(len(self.__params)) + ")")
+            self.__runtime.logger.debug(
+                "Number of parameters "
+                + str(self.__numParams)
+                + "("
+                + str(len(self.__params))
+                + ")"
+            )
         except Exception:
-            self.__runtime.logger.exception("CristinaData. Exception while initializing from XML file")
+            self.__runtime.logger.exception(
+                "CristinaData. Exception while initializing from XML file"
+            )
             sys.exit(111)
         return

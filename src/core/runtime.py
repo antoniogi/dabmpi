@@ -42,21 +42,25 @@ class GlobalRuntime:
 
     def validate(self) -> None:
         """Validate all configuration values.
-        
+
         Raises:
             ValueError: If any configuration is invalid
         """
         if self.iterations <= 0:
             raise ValueError(f"iterations must be positive, got {self.iterations}")
-        
+
         if self.start_time < 0:
             raise ValueError(f"start_time must be >= 0, got {self.start_time}")
-        
+
         if self.max_execution_time < 0:
-            raise ValueError(f"max_execution_time must be >= 0, got {self.max_execution_time}")
-        
+            raise ValueError(
+                f"max_execution_time must be >= 0, got {self.max_execution_time}"
+            )
+
         if self.max_valid_solution_value <= 0:
-            raise ValueError(f"max_valid_solution_value must be > 0, got {self.max_valid_solution_value}")
+            raise ValueError(
+                f"max_valid_solution_value must be > 0, got {self.max_valid_solution_value}"
+            )
 
     def log_configuration(self) -> None:
         """Log current configuration for debugging."""
@@ -72,16 +76,18 @@ class GlobalRuntime:
         self.objective = e.ObjectiveType.MINIMIZE
         self.comm_model = e.CommModelType.DRIVERWORKER
 
+
 # Global singleton instance (thread-safe)
 _runtime: GlobalRuntime | None = None
 _runtime_lock = threading.Lock()
 
+
 def get_runtime() -> GlobalRuntime:
     """Get the global runtime instance (thread-safe singleton).
-    
+
     Creates a new instance on first call. Subsequent calls return the
     same instance.
-    
+
     Returns:
         The global GlobalRuntime instance.
     """
@@ -95,7 +101,7 @@ def get_runtime() -> GlobalRuntime:
 
 def set_runtime(runtime: GlobalRuntime) -> None:
     """Set the global runtime instance.
-    
+
     Args:
         runtime: New GlobalRuntime instance to use globally.
     """
@@ -103,9 +109,9 @@ def set_runtime(runtime: GlobalRuntime) -> None:
     with _runtime_lock:
         _runtime = runtime
 
+
 def reset_runtime() -> None:
     """Reset runtime to defaults (primarily for testing)."""
     global _runtime
     with _runtime_lock:
         _runtime = None
-

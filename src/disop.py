@@ -21,9 +21,9 @@ from solvers.SolverDAB import SolverDAB
 from solvers.SolverSA import SolverSA
 
 PROBLEM_MAP = {
-    'FUSION': ProblemType.FUSION,
-    'CRISTINA': ProblemType.CRISTINA,
-    'NONSEPARABLE': ProblemType.NONSEPARABLE
+    "FUSION": ProblemType.FUSION,
+    "CRISTINA": ProblemType.CRISTINA,
+    "NONSEPARABLE": ProblemType.NONSEPARABLE,
 }
 
 CLI_SOLVER_MAP = {
@@ -54,9 +54,7 @@ def create_solver(runtime, comms):
     try:
         solver_class = SOLVER_MAP[runtime.solver_type]
     except KeyError as e:
-        raise ValueError(
-            f"Invalid solver type: {runtime.solver_type}"
-        ) from e
+        raise ValueError(f"Invalid solver type: {runtime.solver_type}") from e
     return solver_class(runtime, comms)
 
 
@@ -68,75 +66,79 @@ def is_valid_file(parser, arg) -> str:
     return str(path)
 
 
-
-
 def get_package_version():
     try:
-        return package_version('dabmpi')
+        return package_version("dabmpi")
     except PackageNotFoundError:
-        return 'unknown'
+        return "unknown"
+
 
 def parse_arguments(argv=None) -> argparse.Namespace:
     """Parse command-line arguments and return the namespace."""
     parser = argparse.ArgumentParser(
-        prog='disop.py',
+        prog="disop.py",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Distributed Solver for Global Optimization.',
-        epilog='Distributed Solver for Global Optimization.'
+        description="Distributed Solver for Global Optimization.",
+        epilog="Distributed Solver for Global Optimization.",
     )
 
     parser.add_argument(
-        '-p', '--problem',
+        "-p",
+        "--problem",
         required=True,
         type=str,
         choices=list(PROBLEM_MAP.keys()),
-        help='Problem type'
+        help="Problem type",
     )
     parser.add_argument(
-        '-v', '--verbose',
+        "-v",
+        "--verbose",
         required=False,
         type=int,
         default=2,
         choices=[1, 2, 3],
-        help='Verbosity level'
+        help="Verbosity level",
     )
     parser.add_argument(
-        '-s', '--solver',
+        "-s",
+        "--solver",
         required=True,
         type=str,
         choices=list(CLI_SOLVER_MAP.keys()),
-        help='Solver type'
+        help="Solver type",
     )
     parser.add_argument(
-        '-i', '--ifile',
+        "-i",
+        "--ifile",
         required=True,
-        help='input parameters file (an XML file)',
-        type=lambda x: is_valid_file(parser, x)
+        help="input parameters file (an XML file)",
+        type=lambda x: is_valid_file(parser, x),
     )
     parser.add_argument(
-        '-c', '--cfile',
+        "-c",
+        "--cfile",
         required=True,
-        help='configuration INI file',
-        type=lambda x: is_valid_file(parser, x)
+        help="configuration INI file",
+        type=lambda x: is_valid_file(parser, x),
     )
     parser.add_argument(
-        '-t', '--time',
+        "-t",
+        "--time",
         required=False,
         type=int,
         default=3600,
-        help='max execution time (in seconds)'
+        help="max execution time (in seconds)",
     )
     parser.add_argument(
-        '-m', '--mock',
-        action='store_true',
+        "-m",
+        "--mock",
+        action="store_true",
         required=False,
         default=False,
-        help='Run in mock mode without executing actual problem evaluations'
+        help="Run in mock mode without executing actual problem evaluations",
     )
     parser.add_argument(
-        '--version',
-        action='version',
-        version='%(prog)s ' + get_package_version()
+        "--version", action="version", version="%(prog)s " + get_package_version()
     )
 
     return parser.parse_args(argv)
@@ -200,17 +202,17 @@ def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
 def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
     """
     Initialize the global configuration and logging system.
-    
+
     Args:
         cfile (str): Path to the INI configuration file
-        
+
     Raises:
         FileNotFoundError: If configuration file doesn't exist
         configparser.Error: If configuration file is malformed
     """
     logger = LoggerConfig.create_logger(
         log_file="disop.log",
-        console_level=LOG_LEVELS[verbose]  # Map verbosity to log level
+        console_level=LOG_LEVELS[verbose],  # Map verbosity to log level
     )
     # Get runtime and update it
     runtime.logger = logger
@@ -220,12 +222,12 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
     runtime.log_configuration()
     runtime.comm_model = CommModelType.DRIVERWORKER  # Set default communication model
     runtime.objective = ObjectiveType.MINIMIZE  # Set default objective
-    
+
     # Load configuration
     try:
         config = configparser.ConfigParser()
         config.read(cfile)
-        
+
         # Parse communication model
         if config.has_option(CONFIG_SECTION_GENERAL, CONFIG_KEY_COMM_MODEL):
             val = config.get(CONFIG_SECTION_GENERAL, CONFIG_KEY_COMM_MODEL)
@@ -233,7 +235,7 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
                 runtime.comm_model = CommModelType.DRIVERWORKER
             elif val:
                 runtime.comm_model = CommModelType.ALL2ALL
-        
+
         # Parse objective
         if config.has_option(CONFIG_SECTION_ALGORITHM, CONFIG_KEY_OBJECTIVE):
             val = config.get(CONFIG_SECTION_ALGORITHM, CONFIG_KEY_OBJECTIVE)
@@ -241,14 +243,12 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
                 runtime.objective = ObjectiveType.MAXIMIZE
             elif val:
                 runtime.objective = ObjectiveType.MINIMIZE
-                
+
     except FileNotFoundError:
-        logger.warning(
-            f"Configuration file not found: {cfile}. "
-            "Using defaults."
-        )
+        logger.warning(f"Configuration file not found: {cfile}. Using defaults.")
     except configparser.Error as e:
         logger.warning(f"Error parsing configuration file: {e}. Using defaults.")
+
 
 # Main function
 def main(runtime, argv=None):
@@ -269,7 +269,7 @@ def main(runtime, argv=None):
         else:
             run_all2all(runtime, global_comms)
 
-        dump = array('i', [0]) * 1
+        dump = array("i", [0]) * 1
         global_comms.comm.Bcast(dump)
     except Exception:
         if getattr(runtime, "logger", None):
@@ -277,6 +277,7 @@ def main(runtime, argv=None):
         else:
             print("Exception in main execution")
         raise
+
 
 if __name__ == "__main__":
     runtime = GlobalRuntime()

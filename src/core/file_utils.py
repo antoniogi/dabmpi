@@ -19,6 +19,7 @@ SMALL_FILE_THRESHOLD: int = 100 * 1024 * 1024  # 100 MB
 # File utilities
 # ============================================================================
 
+
 def tail(filepath: str) -> str:
     """
     Read the last line from a file.
@@ -36,6 +37,7 @@ def tail(filepath: str) -> str:
         FileNotFoundError: If the file does not exist.
         OSError: If the file cannot be read.
     """
+
     def tail_small(filepath: str) -> str:
         """
         Read the last line from a small file.
@@ -52,7 +54,6 @@ def tail(filepath: str) -> str:
             lines = deque(f, maxlen=1)
 
         return lines[0].rstrip("\n") if lines else ""
-
 
     def tail_large(filepath: str, read_size: int = 4096) -> str:
         """

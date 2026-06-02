@@ -43,12 +43,10 @@ class SolutionsQueue:
             SolutionType.NONSEPARABLE: (
                 SolutionNonSeparable,
                 "Non-separable",
-            )
+            ),
         }
 
-        solution_class, solution_name = solution_map.get(
-            self._solType, (None, None)
-        )
+        solution_class, solution_name = solution_map.get(self._solType, (None, None))
 
         try:
             self._solutionBase = solution_class(self._runtime, self._comms)
@@ -64,9 +62,7 @@ class SolutionsQueue:
                 self.load_queue()
 
         except Exception:
-            self._runtime.logger.exception(
-                "Queue: Error initializing queue"
-            )
+            self._runtime.logger.exception("Queue: Error initializing queue")
             raise
 
     def __del__(self):
@@ -96,9 +92,7 @@ class SolutionsQueue:
         sources: int = 3,
     ) -> None:
         if solution is None:
-            self._runtime.logger.warning(
-                f"QUEUE. Solution is None. {self._filename}"
-            )
+            self._runtime.logger.warning(f"QUEUE. Solution is None. {self._filename}")
             return
 
         try:
@@ -113,8 +107,7 @@ class SolutionsQueue:
                 return
 
             sol = ",".join(
-                f"{param.get_index()}:{param.get_value()}"
-                for param in parameters
+                f"{param.get_index()}:{param.get_value()}" for param in parameters
             )
 
             sol_tuple = (sol, value, agent_idx)
@@ -154,7 +147,6 @@ class SolutionsQueue:
 
                 if not inserted and len(origins) < sources:
                     if agent_idx not in origins:
-
                         if self.qSize() > 0:
                             for index in range(
                                 self.qSize() - 1,
@@ -171,9 +163,7 @@ class SolutionsQueue:
                     self._queue.pop()
 
         except Exception:
-            self._runtime.logger.exception(
-                "QUEUE. Error adding solution"
-            )
+            self._runtime.logger.exception("QUEUE. Error adding solution")
             raise
 
         if not self._writeToFile:
@@ -181,15 +171,12 @@ class SolutionsQueue:
 
         try:
             with open(self._filename, "a", encoding="utf-8") as file:
-                file.write(
-                    f"{sol}#{value}#{agent_idx}\n"
-                )
+                file.write(f"{sol}#{value}#{agent_idx}\n")
 
         except Exception:
-            self._runtime.logger.exception(
-                "QUEUE. Error writing solution to file"
-            )
+            self._runtime.logger.exception("QUEUE. Error writing solution to file")
             raise
+
     """
     Loads a queue that it's contained in a text file
     """
@@ -197,7 +184,7 @@ class SolutionsQueue:
     def load_queue(self):
         with open(self._filename, encoding="utf-8") as file:
             for line in file:
-                sol_tuple = line.strip().split('#')
+                sol_tuple = line.strip().split("#")
                 if not self._isPriority:
                     self._queue.append(sol_tuple)
                     continue
@@ -206,8 +193,8 @@ class SolutionsQueue:
                 inserted = False
                 for index, queued_item in enumerate(self._queue):
                     if float(queued_item[1]) >= value:
-                        #TODO: check if is index-1 or index
-                        self._queue.insert(index-1, sol_tuple)
+                        # TODO: check if is index-1 or index
+                        self._queue.insert(index - 1, sol_tuple)
                         inserted = True
                         break
                 if not inserted:
@@ -245,16 +232,10 @@ class SolutionsQueue:
                         for param in parameters
                     )
 
-                    file.write(
-                        f"{solution}#"
-                        f"{solution_tuple[1]}#"
-                        f"{solution_tuple[2]}\n"
-                    )
+                    file.write(f"{solution}#{solution_tuple[1]}#{solution_tuple[2]}\n")
 
         except Exception:
-            self._runtime.logger.exception(
-                "QUEUE. Error writing solutions"
-            )
+            self._runtime.logger.exception("QUEUE. Error writing solutions")
             raise
 
     """
@@ -269,7 +250,7 @@ class SolutionsQueue:
         agent_idx = -1
         if self.qSize() == 0:
             raise IndexError("Queue is empty")
-            #return solution, val, agent_idx
+            # return solution, val, agent_idx
         solution = self._solutionBase
         if remove:
             sol_tuple = self._queue.pop(0)
@@ -278,14 +259,14 @@ class SolutionsQueue:
 
         val = sol_tuple[1]
         agent_idx = sol_tuple[2]
-        #split to get each idx:val
-        parameters = sol_tuple[0].split(',')
+        # split to get each idx:val
+        parameters = sol_tuple[0].split(",")
         params = []
-        #iterate through the elements in the list
+        # iterate through the elements in the list
         for p in parameters:
-            params.append(float(p.split(':')[1]))
+            params.append(float(p.split(":")[1]))
 
-        #this method expects a list of parameters
+        # this method expects a list of parameters
         self._solutionBase.setParametersValues(params)
 
         return self._solutionBase, float(val), int(agent_idx)
@@ -310,16 +291,17 @@ class SolutionsQueue:
 
             val = float(sol_tuple[1])
             agent_idx = int(sol_tuple[2])
-            #split to get each idx:val
-            parameters = sol_tuple[0].split(',')
-            #iterate through the elements in the list
-            self._runtime.logger.debug("QUEUE. Number of parameters: " +
-                              str(len(parameters)))
+            # split to get each idx:val
+            parameters = sol_tuple[0].split(",")
+            # iterate through the elements in the list
+            self._runtime.logger.debug(
+                "QUEUE. Number of parameters: " + str(len(parameters))
+            )
             for p in parameters:
-                self._runtime.logger.debug("Appending: " + str(p.split(':')[1]))
-                solution.append(float(p.split(':')[1]))
+                self._runtime.logger.debug("Appending: " + str(p.split(":")[1]))
+                solution.append(float(p.split(":")[1]))
         except Exception:
-            self._runtime.logger.exception( "QUEUE. Error getting solution list" )
+            self._runtime.logger.exception("QUEUE. Error getting solution list")
             raise
         return val, agent_idx, solution
 
@@ -327,6 +309,7 @@ class SolutionsQueue:
     Returns the sum of all the solutions values
     If minimizing, returns 1.0/total_sum
     """
+
     def get_total_solutions_values(self) -> float:
         total_sum = 0.0
 
@@ -364,14 +347,11 @@ class SolutionsQueue:
 
             temp_sum += increment
 
-            self._runtime.logger.debug(
-                f"TempSum: {temp_sum}/{score}"
-            )
+            self._runtime.logger.debug(f"TempSum: {temp_sum}/{score}")
 
             if temp_sum > value:
                 params = [
-                    float(param.split(":")[1])
-                    for param in solution_str.split(",")
+                    float(param.split(":")[1]) for param in solution_str.split(",")
                 ]
 
                 self._runtime.logger.info(
@@ -389,8 +369,7 @@ class SolutionsQueue:
                 )
 
         self._runtime.logger.info(
-            f"Queue. Returning None. "
-            f"{value}/{total_val}/{temp_sum}"
+            f"Queue. Returning None. {value}/{total_val}/{temp_sum}"
         )
 
         return None, None, None

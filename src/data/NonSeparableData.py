@@ -8,13 +8,14 @@ from xml.dom import minidom
 from .Parameter import Parameter
 
 
-class NonSeparableData :
+class NonSeparableData:
     """
     This class stores all the data required by VMEC.
     It also provides methods to read the input xml file that, for each
     parameter, specifies the min/max/default values, the gap, the index,...
     It can also create an XML output file with the data it contains
     """
+
     def __init__(self, runtime):
         self._numParams = 0
         self._maxRange = 0
@@ -29,15 +30,16 @@ class NonSeparableData :
         except:
             pass
 
-    #returns the number of parameters that can be actually modified
+    # returns the number of parameters that can be actually modified
     def getNumParams(self):
         return self._numParams
 
     """
     Returns a list of doubles with the values of the modificable parameters
     """
+
     def getValsOfParameters(self):
-        buff = array('f', [0]) * self._numParams
+        buff = array("f", [0]) * self._numParams
         for i in range(self._numParams):
             buff[i] = float(self._params[i].get_value())
         return buff
@@ -50,17 +52,20 @@ class NonSeparableData :
     """
 
     def setValsOfParameters(self, buff):
-        self._logger.debug("NonSeparableData. Setting parameters (number: "
-                         + str(len(buff)) + ")")
+        self._logger.debug(
+            "NonSeparableData. Setting parameters (number: " + str(len(buff)) + ")"
+        )
         for i in range(len(buff)):
             self._params[i].set_value(buff[i])
 
     def setParameters(self, parameters):
         for param in parameters:
             self.assign_parameter(param)
+
     """
     Return a list with all the parameters (list of Parameter objects)
     """
+
     def getParameters(self):
         return self._params
 
@@ -68,6 +73,7 @@ class NonSeparableData :
     Assign a parameter with a new value to an older version of the
     same parameter
     """
+
     def assign_parameter(self, parameter):
         index = parameter.get_index()
         if index >= len(self._params):
@@ -111,16 +117,28 @@ class NonSeparableData :
                     try:
                         self.assign_parameter(c)
                         self._numParams += 1
-                        values = 1 + int(round((c.get_max_value() -
-                                c.get_min_value()) / c.get_gap()))
+                        values = 1 + int(
+                            round((c.get_max_value() - c.get_min_value()) / c.get_gap())
+                        )
                         self._maxRange = max(values, self._maxRange)
                     except Exception:
-                        self._logger.exception("Problem calculating max range for parameter with index " + str(c.get_index()) + " and name " + str(c.get_name()))
+                        self._logger.exception(
+                            "Problem calculating max range for parameter with index "
+                            + str(c.get_index())
+                            + " and name "
+                            + str(c.get_name())
+                        )
                         raise
-            self._logger.debug("Number of parameters " +
-                           str(self._numParams) + "(" +
-                           str(len(self._params)) + ")")
+            self._logger.debug(
+                "Number of parameters "
+                + str(self._numParams)
+                + "("
+                + str(len(self._params))
+                + ")"
+            )
         except Exception:
-            self._logger.exception("NonSeparableData. Exception while initializing from XML file")
+            self._logger.exception(
+                "NonSeparableData. Exception while initializing from XML file"
+            )
             sys.exit(111)
         return
