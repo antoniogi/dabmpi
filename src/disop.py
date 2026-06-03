@@ -1,228 +1,291 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
 
-#############################################################################
-#    Copyright 2013  by Antonio Gomez and Miguel Cardenas                   #
-#                                                                           #
-#   Licensed under the Apache License, Version 2.0 (the "License");         #
-#   you may not use this file except in compliance with the License.        #
-#   You may obtain a copy of the License at                                 #
-#                                                                           #
-#       http://www.apache.org/licenses/LICENSE-2.0                          #
-#                                                                           #
-#   Unless required by applicable law or agreed to in writing, software     #
-#   distributed under the License is distributed on an "AS IS" BASIS,       #
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.#
-#   See the License for the specific language governing permissions and     #
-#   limitations under the License.                                          #
-#############################################################################
-
+import argparse
+import configparser
 import logging
 import sys
-import os.path
+import time
 from array import array
-import configparser
-import argparse
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as package_version
+from pathlib import Path
+
 from mpi4py import MPI
-import textwrap
-from SolverDAB import SolverDAB
-from SolverSA import SolverSA
-from SolverBase import SolverBase
-from Worker import Worker
-import Utils as util
 
-__author__ = ' AUTHORS:     Antonio Gomez (antonio.gomez@csiro.au)'
-__version__ = ' REVISION:   1.0  -  15-01-2014'
+from core.comms import GlobalComms
+from core.enums import CommModelType, ObjectiveType, ProblemType, SolverType
+from core.logging import LoggerConfig
+from core.runtime import GlobalRuntime
+from runtime.EvaluationWorker import EvaluationWorker
+from solvers.SolverDAB import SolverDAB
+from solvers.SolverSA import SolverSA
 
-"""
-HISTORY
-    Version 0.1 (12-04-2013): Creation of the file.
-    Version 0.11(17-10-2013): Assign default values if there are problems
-                              reading the command arguments.
-    Version 1.0 (15-01-2014):   Fist stable version.
+PROBLEM_MAP = {
+    "FUSION": ProblemType.FUSION,
+    "CRISTINA": ProblemType.CRISTINA,
+    "NONSEPARABLE": ProblemType.NONSEPARABLE,
+}
 
-To run this file just type in mpirun -np X python disop.py
-where X is the number of processes to be used
-"""
+CLI_SOLVER_MAP = {
+    "DAB": SolverType.DAB,
+    "SA": SolverType.SA,
+}
+
+SOLVER_MAP = {
+    SolverType.DAB: SolverDAB,
+    SolverType.SA: SolverSA,
+}
+
+LOG_LEVELS = {
+    1: logging.WARNING,
+    2: logging.INFO,
+    3: logging.DEBUG,
+}
+
+# Configuration file constants
+CONFIG_SECTION_GENERAL = "General"
+CONFIG_SECTION_ALGORITHM = "Algorithm"
+CONFIG_KEY_COMM_MODEL = "commModel"
+CONFIG_KEY_OBJECTIVE = "objective"
+
+
+def create_solver(runtime, comms):
+    """Factory function to create the appropriate solver instance."""
+    try:
+        solver_class = SOLVER_MAP[runtime.solver_type]
+    except KeyError as e:
+        raise ValueError(f"Invalid solver type: {runtime.solver_type}") from e
+    return solver_class(runtime, comms)
 
 
 # This function checks if the file exists
-def is_valid_file(parser, arg):
-    if not os.path.exists(arg):
-        parser.error(f"The file {arg} does not exist!")
-        return None
-    return arg
+def is_valid_file(parser, arg) -> str:
+    path = Path(arg)
+    if not path.is_file():
+        parser.error(f"File does not exist: {arg}")
+    return str(path)
 
-# This function initializes the configuration
-def init(cfile):
-    # create logger with 'disop'
-    util.logger = logging.getLogger('disop')
-    util.logger.setLevel(logging.DEBUG)
 
-    #default model
-    util.commModel = util.commModelType.DRIVERWORKER
+def get_package_version():
+    try:
+        return package_version("dabmpi")
+    except PackageNotFoundError:
+        return "unknown"
 
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler('disop.log')
-    fh.setLevel(logging.DEBUG)
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.WARNING)
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    # add the handlers to the logger
-    util.logger.addHandler(fh)
-    util.logger.addHandler(ch)
-    logging.addLevelName(util.extraLog, "BEST")
 
-    util.cfile = cfile
-    config = configparser.ConfigParser()
-    config.read(cfile)
-    if config.has_option("General", "commModel"):
-        val = config.get("General", "commModel")
-        if val is not None:
-            if val == "DRIVERWORKER":
-                util.commModel = util.commModelType.DRIVERWORKER
-            else:
-                util.commModel = util.commModelType.ALL2ALL
-    if config.has_option("Algorithm", "objective"):
-        val = config.get("Algorithm", "objective")
-        if val is not None:
-            if val == "max":
-                util.objective = util.objectiveType.MAXIMIZE
-            else:
-                util.objective = util.objectiveType.MINIMIZE
+def parse_arguments(argv=None) -> argparse.Namespace:
+    """Parse command-line arguments and return the namespace."""
+    parser = argparse.ArgumentParser(
+        prog="disop.py",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Distributed Solver for Global Optimization.",
+        epilog="Distributed Solver for Global Optimization.",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--problem",
+        required=True,
+        type=str,
+        choices=list(PROBLEM_MAP.keys()),
+        help="Problem type",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        required=False,
+        type=int,
+        default=2,
+        choices=[1, 2, 3],
+        help="Verbosity level",
+    )
+    parser.add_argument(
+        "-s",
+        "--solver",
+        required=True,
+        type=str,
+        choices=list(CLI_SOLVER_MAP.keys()),
+        help="Solver type",
+    )
+    parser.add_argument(
+        "-i",
+        "--ifile",
+        required=True,
+        help="input parameters file (an XML file)",
+        type=lambda x: is_valid_file(parser, x),
+    )
+    parser.add_argument(
+        "-c",
+        "--cfile",
+        required=True,
+        help="configuration INI file",
+        type=lambda x: is_valid_file(parser, x),
+    )
+    parser.add_argument(
+        "-t",
+        "--time",
+        required=False,
+        type=int,
+        default=3600,
+        help="max execution time (in seconds)",
+    )
+    parser.add_argument(
+        "-m",
+        "--mock",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Run in mock mode without executing actual problem evaluations",
+    )
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + get_package_version()
+    )
+
+    return parser.parse_args(argv)
+
+
+def configure_runtime(runtime: GlobalRuntime, args) -> None:
+    """Apply parsed CLI values to runtime and initialize config."""
+    problem_type = PROBLEM_MAP[args.problem]
+    solver_type = CLI_SOLVER_MAP[args.solver]
+
+    bootstrap_runtime(args.cfile, runtime, args.verbose)
+
+    runtime.problem_type = problem_type
+    runtime.solver_type = solver_type
+    runtime.config_file = args.cfile
+    runtime.input_file = args.ifile
+    runtime.max_execution_time = args.time
+    runtime.mock = args.mock
+
+    if runtime.logger is not None:
+        runtime.logger.setLevel(LOG_LEVELS[args.verbose])
+
+
+def create_mpi_comms() -> GlobalComms:
+    """Create the MPI communicator wrapper used by the runtime."""
+    comm = MPI.COMM_WORLD
+    return GlobalComms(comm.Get_rank(), comm.Get_size(), comm)
+
+
+def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
+    """Run the driver-side MPI execution path."""
+    runtime.logger.info("DRIVER - BEGIN OF THE EXECUTION")
+    solver = create_solver(runtime, global_comms)
+    solver.initialize()
+    solver.solve()
+    runtime.logger.info("DRIVER has finished solve")
+    solver.finish()
+    runtime.logger.info("DRIVER - END OF THE EXECUTION")
+
+
+def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
+    """Run the worker-side MPI execution path."""
+    runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
+    worker = EvaluationWorker(runtime, global_comms)
+    worker.run()
+    worker.finish()
+    runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")
+
+
+def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
+    """Run the ALL2ALL execution path."""
+    runtime.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
+    solver = create_solver(runtime, global_comms)
+    solver.initialize()
+    solver.solve()
+    runtime.logger.debug(f"Rank {global_comms.rank} has finished solve")
+    solver.finish()
+    runtime.logger.info(f"RANK {global_comms.rank} - END OF THE EXECUTION")
+
+
+def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
+    """
+    Initialize the global configuration and logging system.
+
+    Args:
+        cfile (str): Path to the INI configuration file
+
+    Raises:
+        FileNotFoundError: If configuration file doesn't exist
+        configparser.Error: If configuration file is malformed
+    """
+    logger = LoggerConfig.create_logger(
+        log_file="disop.log",
+        console_level=LOG_LEVELS[verbose],  # Map verbosity to log level
+    )
+    # Get runtime and update it
+    runtime.logger = logger
+    runtime.config_file = cfile
+    runtime.start_time = time.time()
+    runtime.validate()
+    runtime.log_configuration()
+    runtime.comm_model = CommModelType.DRIVERWORKER  # Set default communication model
+    runtime.objective = ObjectiveType.MINIMIZE  # Set default objective
+
+    # Load configuration
+    try:
+        config = configparser.ConfigParser()
+        config.read(cfile)
+
+        # Parse communication model
+        if config.has_option(CONFIG_SECTION_GENERAL, CONFIG_KEY_COMM_MODEL):
+            val = config.get(CONFIG_SECTION_GENERAL, CONFIG_KEY_COMM_MODEL)
+            if val and val.upper() == "DRIVERWORKER":
+                runtime.comm_model = CommModelType.DRIVERWORKER
+            elif val:
+                runtime.comm_model = CommModelType.ALL2ALL
+
+        # Parse objective
+        if config.has_option(CONFIG_SECTION_ALGORITHM, CONFIG_KEY_OBJECTIVE):
+            val = config.get(CONFIG_SECTION_ALGORITHM, CONFIG_KEY_OBJECTIVE)
+            if val and val.lower() == "max":
+                runtime.objective = ObjectiveType.MAXIMIZE
+            elif val:
+                runtime.objective = ObjectiveType.MINIMIZE
+
+    except FileNotFoundError:
+        logger.warning(f"Configuration file not found: {cfile}. Using defaults.")
+    except configparser.Error as e:
+        logger.warning(f"Error parsing configuration file: {e}. Using defaults.")
+
 
 # Main function
-def main():
+def main(runtime, argv=None):
+    args = parse_arguments(argv)
     try:
-        inputfile = "../data/param_config.xml"
-        configfile = "../data/DABConfigFile"
-        problem_type = util.problem_type.CRISTINA
-        solver_type = util.solver_type.DAB
+        configure_runtime(runtime, args)
 
-        #process the arguments if the argparse module has been found
-        parser = argparse.ArgumentParser(prog='disop.py',
-             formatter_class=argparse.RawDescriptionHelpFormatter,
-             description='Distributed Solver for Global Optimization.',
-             epilog=textwrap.dedent(__author__))
+        global_comms = create_mpi_comms()
 
-        parser.add_argument('-p', '--problem', required=True, type=str,
-                            default='FUSION',
-                            choices=['FUSION', 'NONSEPARABLE', 'CRISTINA'],
-                            help='Problem type')
-        parser.add_argument('-v', '--verbose', required=False, type=int,
-                            default=3, choices=[1, 2, 3],
-                            help='Verbosity')
-        parser.add_argument('-s', '--solver', required=True, type=str,
-                            default='DAB',
-                            choices=['DAB', 'SA'],
-                            help='Solver type')
-        parser.add_argument('-i', '--ifile', required=True,
-                            help='input parameters file (an XML file)',
-                            type=lambda x: is_valid_file(parser, x))
-        parser.add_argument('-c', '--cfile', required=True,
-                            help='configuration INI file',
-                            type=lambda x: is_valid_file(parser, x))
-        parser.add_argument('--version', action='version',
-                             version='%(prog)s ' + __version__)
+        if global_comms.rank == 0:
+            runtime.logger.info(f"Verbosity level: {args.verbose}")
 
-        args = parser.parse_args()
-
-        #extract the problem type
-        if args.problem == 'FUSION':
-            problem_type = util.problem_type.FUSION
-        if args.problem == 'CRISTINA':
-            problem_type = util.problem_type.CRISTINA
-        if args.problem == 'NONSEPARABLE':
-            problem_type = util.problem_type.NONSEPARABLE
-
-        #extract the solver type
-        if args.solver == 'DAB':
-            solver_type = util.solver_type.DAB
-        if args.solver == 'SA':
-            solver_type = util.solver_type.SA
-
-        #input and config file
-        inputfile = args.ifile
-        configfile = args.cfile
-
-        #init he configuration
-        init(configfile)
-
-        #init MPI
-        rank = MPI.COMM_WORLD.Get_rank()
-        comm = MPI.COMM_WORLD
-        util.rank = rank
-        util.comm = comm
-        util.size = comm.Get_size()
-
-        #set the verbosity level
-        if rank == 0:
-            util.logger.info(f"Verbosity level: {args.verbose}")
-        if args.verbose == 1:
-            logging.disable(logging.WARNING)
-        elif args.verbose == 2:
-            logging.disable(logging.INFO)
-        else:
-            logging.disable(logging.DEBUG)
-
-        if util.commModel == util.commModelType.DRIVERWORKER:
-            if rank == 0:
-                #create driver task
-                util.logger.info("DRIVER - BEGIN OF THE EXECUTION")
-                #create the solver
-                if solver_type == util.solver_type.DAB:
-                    solver = SolverDAB(problem_type, inputfile, configfile)
-                elif solver_type == util.solver_type.SA:
-                    solver = SolverSA(problem_type, inputfile, configfile)
-                else:
-                    solver = SolverBase(problem_type, inputfile, configfile)
-                #initialize the solver
-                solver.initialize()
-                #execute the solver
-                solver.solve()
-                util.logger.info("DRIVER has finished solve")
-                #clean everything
-                solver.finish()
-                util.logger.info("DRIVER - END OF THE EXECUTION")
+        if runtime.comm_model == CommModelType.DRIVERWORKER:
+            if global_comms.rank == 0:
+                run_driver(runtime, global_comms)
             else:
-                #create worker task
-                util.logger.info(f"WORKER {rank} - BEGIN OF THE EXECUTION")
-                worker = Worker(comm, problem_type)
-                worker.run(inputfile, configfile)
-                worker.finish()
-                util.logger.info(f"WORKER {rank} - END OF THE EXECUTION")
+                run_worker(runtime, global_comms)
         else:
-            util.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
-            #create the solver
-            if solver_type == util.solver_type.DAB:
-                solver = SolverDAB(problem_type, inputfile, configfile)
-            elif solver_type == util.solver_type.SA:
-                solver = SolverSA(problem_type, inputfile, configfile)
-            else:
-                solver = SolverBase(problem_type, inputfile, configfile)
-            #initialize the solver
-            solver.initialize()
-            #execute the solver
-            solver.solve()
-            util.logger.debug(f"Rank {rank} has finished solve")
-            #clean everything
-            solver.finish()
-            util.logger.info(f"RANK {rank} - END OF THE EXECUTION")
+            run_all2all(runtime, global_comms)
 
-        dump = array('i', [0]) * 1
-        util.comm.Bcast(dump)
-    except Exception as e:
-        util.logger.error(f"Exception: {e}")
+        dump = array("i", [0]) * 1
+        global_comms.comm.Bcast(dump)
+    except Exception:
+        if getattr(runtime, "logger", None):
+            runtime.logger.exception("Exception in main execution")
+        else:
+            print("Exception in main execution")
+        raise
+
 
 if __name__ == "__main__":
+    runtime = GlobalRuntime()
     try:
-        main()
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        print(exc_type, fname, exc_tb.tb_lineno)
+        main(runtime)
+    except Exception:
+        if getattr(runtime, "logger", None):
+            runtime.logger.exception("Fatal error in main execution")
+        else:
+            print("Fatal error in main execution")
+        sys.exit(1)

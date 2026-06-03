@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dabmpi"
+version = "2.0.0"
+description = "Distributed optimization and VMEC input generation for MPI-enabled applications."
+readme = "Readme.md"
+requires-python = ">=3.10,<4.0"
+license = { text = "Apache-2.0" }
+keywords = ["mpi", "optimization", "vmec", "simulation"]
+authors = [{ name = "Antonio Gomez" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.24",
+    "mpi4py>=4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pylint>=2.17",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*"]

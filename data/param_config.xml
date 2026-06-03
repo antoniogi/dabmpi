@@ -6869,8 +6869,6 @@
 		<display>False</display>
 		<fixed>True</fixed>
 		<gap>2</gap>
-		<min_value>10</min_value>
-		<max_value>300</max_value>
 	</param>
 	<param>
 		<index>625</index>
@@ -6880,8 +6878,6 @@
 		<display>False</display>
 		<fixed>True</fixed>
 		<gap>2</gap>
-		<min_value>10</min_value>
-		<max_value>300</max_value>
 	</param>
 	<param>
 		<index>626</index>
@@ -6891,8 +6887,6 @@
 		<display>False</display>
 		<fixed>True</fixed>
 		<gap>2</gap>
-		<min_value>10</min_value>
-		<max_value>300</max_value>
 	</param>
 	<param>
 		<index>627</index>
@@ -11060,8 +11054,6 @@
 		<display>False</display>
 		<fixed>True</fixed>
 		<gap>2</gap>
-		<min_value>-10000</min_value>
-		<max_value>10000</max_value>
 	</param>
 	<param>
 		<index>1006</index>
