@@ -25,29 +25,46 @@ class Parameter:
 
     def __init__(
         self,
-        runtime: Any | None = None,
-        name: str = "",
-        index: int | None = None,
-        type: ParamType = ParamType.STRING,
-        value: Any = None,
-        gap: float | None = None,
-        min_value: Any = -INFINITY,
-        max_value: Any = INFINITY,
+        name: str,
+        index: int,
+        ptype: ParamType,
+        value: Any,
+        gap: float,
+        min_value: Any,
+        max_value: Any,
     ) -> None:
-        self._runtime = runtime
         self._name = str(name)
         self._index = int(index) if index is not None else None
-        self._type = type
-        self._value = None
+        self._type = ptype
         self._gap = float(gap) if gap is not None else None
-        self._min_value = min_value
-        self._max_value = max_value
+        self._min_value = min_value if min_value is not None else -INFINITY
+        self._max_value = max_value if max_value is not None else INFINITY
 
         if not isinstance(self._type, ParamType):
             raise TypeError("type must be a ParamType")
 
-        if value is not None:
-            self.set_value(value)
+        if value is None:
+            raise ValueError("value cannot be None")
+    
+        if self._type == ParamType.STRING:
+            self._value = str(value)
+            self._min_value = str(self._min_value)
+            self._max_value = str(self._max_value)
+
+        if self._type == ParamType.FLOAT:
+            self._value = float(value)
+            self._min_value = float(self._min_value)
+            self._max_value = float(self._max_value)
+
+        if self._type == ParamType.INT:
+            self._value = int(round(float(value)))
+            self._min_value = int(round(float(self._min_value)))
+            self._max_value = int(round(float(self._max_value)))
+
+        if self._type == ParamType.BOOL:
+            self._value = self._parse_bool(value)
+            self._min_value = self._parse_bool(self._min_value)
+            self._max_value = self._parse_bool(self._max_value)
 
     def _parse_bool(self, value: Any) -> bool:
         if isinstance(value, bool):
@@ -61,24 +78,6 @@ class Parameter:
             return False
         raise ValueError(f"Cannot parse boolean value: {value}")
 
-    def set_value(self, value: Any) -> None:
-        if self._type == ParamType.STRING:
-            self._value = str(value)
-            return
-
-        if self._type == ParamType.FLOAT:
-            self._value = float(value)
-            return
-
-        if self._type == ParamType.INT:
-            self._value = int(round(float(value)))
-            return
-
-        if self._type == ParamType.BOOL:
-            self._value = self._parse_bool(value)
-            return
-
-        raise TypeError(f"Unsupported parameter type: {self._type}")
 
     def get_index(self) -> int | None:
         return self._index
@@ -116,6 +115,21 @@ class Parameter:
 
     def get_type(self) -> ParamType:
         return self._type
+    
+    def set_value(self, value: Any) -> None:
+        if self._type == ParamType.STRING:
+            self._value = str(value)
+            return
+        if self._type == ParamType.FLOAT:
+            self._value = float(value)
+            return
+        if self._type == ParamType.INT:
+            self._value = int(round(float(value)))
+            return
+        if self._type == ParamType.BOOL:
+            self._value = self._parse_bool(value)
+            return
+        raise TypeError("Unsupported parameter type")
 
     def get_value(self) -> Any:
         if self._type == ParamType.FLOAT:
@@ -126,44 +140,11 @@ class Parameter:
             return self._parse_bool(self._value)
         return self._value
 
-    def set_min_value(self, min_value: Any) -> None:
-        if self._type == ParamType.STRING:
-            self._min_value = str(min_value)
-            return
-        if self._type == ParamType.FLOAT:
-            self._min_value = float(min_value)
-            return
-        if self._type == ParamType.INT:
-            self._min_value = int(min_value)
-            return
-        if self._type == ParamType.BOOL:
-            self._min_value = self._parse_bool(min_value)
-            return
-        raise TypeError(f"Unsupported parameter type: {self._type}")
-
     def get_min_value(self) -> Any:
         return self._min_value
 
-    def set_max_value(self, max_value: Any) -> None:
-        if self._type == ParamType.STRING:
-            self._max_value = str(max_value)
-            return
-        if self._type == ParamType.FLOAT:
-            self._max_value = float(max_value)
-            return
-        if self._type == ParamType.INT:
-            self._max_value = int(max_value)
-            return
-        if self._type == ParamType.BOOL:
-            self._max_value = self._parse_bool(max_value)
-            return
-        raise TypeError(f"Unsupported parameter type: {self._type}")
-
     def get_max_value(self) -> Any:
         return self._max_value
-
-    def set_gap(self, gap: Any) -> None:
-        self._gap = float(gap)
 
     def get_gap(self) -> float | None:
         return self._gap

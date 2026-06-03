@@ -435,7 +435,18 @@ class VMECData:
                             self._show_bootin = False
                     for node in namelists.childNodes:
                         if node.nodeType == node.ELEMENT_NODE:
-                            c = ParameterVMEC(self._runtime)
+                            pname = None
+                            display = None
+                            index = None
+                            fixed = None
+                            ptype = None
+                            value = None
+                            min_value = None
+                            max_value = None
+                            x_index = None
+                            y_index = None
+                            gap = None
+
                             for node_param in node.childNodes:
                                 if node_param.nodeType == node_param.ELEMENT_NODE:
                                     name = node_param.localName
@@ -443,14 +454,20 @@ class VMECData:
                                     text = None
                                     if node_param.firstChild is not None:
                                         text = node_param.firstChild.data
+                                    
+                                    if text==None:
+                                        continue
 
-                                    if name == "display" and text is not None:
-                                        c.set_display(text)
+                                    if name == "index":
+                                        index = int(text)
 
-                                    if name == "fixed" and text is not None:
-                                        c.set_fixed(text)
+                                    if name == "display":
+                                        display = text.strip().lower() in ("true", "t", "yes", "1")
 
-                                    if name == "type" and text is not None:
+                                    if name == "fixed":
+                                        fixed = text.strip().lower() in ("true", "t", "yes", "1")
+
+                                    if name == "type":
                                         t = text.strip().lower()
                                         mapping = {
                                             "float": ParamType.FLOAT,
@@ -459,35 +476,53 @@ class VMECData:
                                             "bool": ParamType.BOOL,
                                             "string": ParamType.STRING,
                                         }
-                                        c.set_type(mapping.get(t, ParamType.STRING))
+                                        ptype = mapping.get(t, ParamType.STRING)
 
-                                    if name == "value" and text is not None:
-                                        c.set_value(text)
+                                    if name == "value":
+                                        value = text
                                         try:
                                             if node_param.hasAttribute("x"):
                                                 x_index = node_param.getAttribute("x")
-                                                c.set_x_index(x_index)
+                                                x_index = int(x_index)
                                             if node_param.hasAttribute("y"):
                                                 y_index = node_param.getAttribute("y")
-                                                c.set_y_index(y_index)
+                                                y_index = int(y_index)
                                         except Exception:
                                             pass
 
-                                    if name == "min_value" and text is not None:
-                                        c.set_min_value(text)
+                                    if name == "min_value":
+                                        min_value = text
+                                        #c.set_min_value(text)
 
-                                    if name == "max_value" and text is not None:
-                                        c.set_max_value(text)
+                                    if name == "max_value":
+                                        max_value = text
+                                        #c.set_max_value(text)
 
-                                    if name == "index" and text is not None:
-                                        c.set_index(text)
+                                    #if name == "index":
+                                        #index = text
+                                        # c.set_index(text)3
 
-                                    if name == "name" and text is not None:
-                                        c.set_name(text)
+                                    if name == "name":
+                                        pname = text.strip()
+                                        #c.set_name(text)
 
-                                    if name == "gap" and text is not None:
-                                        c.set_gap(text)
+                                    if name == "gap":
+                                        gap = text
+                                        #c.set_gap(text)
                             try:
+                                c = ParameterVMEC(
+                                    name=pname,
+                                    index=index,
+                                    ptype=ptype,
+                                    value=value,
+                                    gap=gap,
+                                    min_value=min_value,
+                                    max_value=max_value,
+                                    x_index=x_index,
+                                    y_index=y_index,
+                                    fixed=fixed,
+                                    display=display
+                                )
                                 self.assign_parameter(c)
                                 if c.to_be_modified():
                                     self._numParams += 1
@@ -500,7 +535,7 @@ class VMECData:
                                     self._maxRange = max(values, self._maxRange)
                             except Exception:
                                 self._runtime.logger.exception(
-                                    f"VMECData. Exception assigning parameter with index {c.get_index()} and name {c.get_name()}"
+                                    f"VMECData. Exception assigning parameter with index {index} and name {pname}"
                                 )
                                 raise
         except Exception:
