@@ -1012,6 +1012,7 @@ class SolverDAB(SolverBase):
             source = status.source
             if source < 0 or source >= len(self._requestSolution):
                 self._runtime.logger.critical(f"SolverDAB. Invalid source: {source}")
+                raise ValueError(f"Invalid source index: {source}")
             self._requestSolution[source] = MPI.REQUEST_NULL
             self._runtime.logger.debug(
                 f"SolverDAB. Receiving solution (worker {source})"
@@ -1107,6 +1108,7 @@ class SolverDAB(SolverBase):
                     self._bestSolution.setValue(solVal[0])
 
                     self._bestSolution.setParametersValues(buff)
+                    # TODO: this logic needs to be moved to VMECProcess or similar, to avoid having solver-specific code in the solver
                     if not self._runtime.mock:
                         if self._runtime.solution_type == SolutionType.FUSION:
                             filenametime = datetime.now().strftime(
@@ -1126,7 +1128,7 @@ class SolverDAB(SolverBase):
                                     str(origin) + "/OUTPUT/results.av",
                                     "results.best." + filenametime,
                                 )
-                            except Exxception:
+                            except Exception:
                                 self._runtime.logger.exception(
                                     "SolverDAB. Exception copying results for best solution"
                                 )
