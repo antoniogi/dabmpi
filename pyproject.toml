@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dabmpi"
 version = "2.0.0"
 description = "Distributed optimization and VMEC input generation for MPI-enabled applications."
-readme = "Readme.md"
+readme = "README.md"
 requires-python = ">=3.10,<4.0"
 license = { text = "Apache-2.0" }
 keywords = ["mpi", "optimization", "vmec", "simulation"]
