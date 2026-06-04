@@ -15,7 +15,8 @@ import numpy as np
 from core.comms import GlobalComms
 from core.enums import ObjectiveType
 from core.file_utils import tail
-from core.matrix import Matrix
+
+# from core.matrix import Matrix
 from core.runtime import GlobalRuntime
 
 INFINITY = math.inf
@@ -27,9 +28,10 @@ class VMECProcess:
     It is responsible for callling VMEC and analising its result.
     """
 
-    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms) -> None:
         self._runtime = runtime
         self._comms = comms
+        # self._probMatrix = probMatrix
 
         self._currentPath = os.getcwd()
         self._execPath = os.path.join(
@@ -303,7 +305,7 @@ class VMECProcess:
           fitness value
     """
 
-    def process_wout(self, filepath, filepath_out, probMatrix: Matrix):
+    def process_wout(self, filepath, filepath_out):
         try:
             with open(filepath) as file_wout:
                 # Skip the first 4 lines of the file
@@ -323,10 +325,6 @@ class VMECProcess:
                 m = np.zeros(nmax, dtype=int)
                 n = np.zeros(nmax, dtype=int)
 
-                rmn = probMatrix.getitem(ns, nmax)
-                zmn = probMatrix.getitem(ns, nmax)
-                bmn = probMatrix.getitem(ns, nmax)
-
                 iotas = []
                 phi = np.zeros(ns)
                 rho = np.zeros(ns)
@@ -343,8 +341,8 @@ class VMECProcess:
                         line = file_wout.readline()
                         parts = line.split()
 
-                        rmn.setitem(j, i, float(parts[0].strip()))
-                        zmn.setitem(j, i, float(parts[1].strip()))
+                        # self._probMatrix.setitem(j, i, float(parts[0].strip()))
+                        # self._probMatrix.setitem(j, i, float(parts[1].strip()))
                     for j in range(0, nmax):
                         if i == 0:
                             line = file_wout.readline()
@@ -352,7 +350,7 @@ class VMECProcess:
                             self._runtime.logger.debug(f"m {parts[0]} n {parts[1]}")
                         line = file_wout.readline()
                         parts = line.split()
-                        bmn.setitem(j, i, float(parts[0]))
+                        # self._probMatrix.setitem(j, i, float(parts[0]))
                         file_wout.readline()
                         file_wout.readline()
 
@@ -369,7 +367,7 @@ class VMECProcess:
 
             with open(filepath_out, "w") as file_out:
                 file_out.write("Br, Bphi, Bz, dBr, dBphi, dBz , rho\n")
-
+                """
                 delta = 0.000001
                 for i in range(0, ns, 20):
                     self._runtime.logger.debug(f"Surface: {i}")
@@ -388,19 +386,22 @@ class VMECProcess:
                                 angle = m[j] * phi * 4 - n[j] * epsilon * 4
                                 c = math.cos(angle)
                                 s = math.sin(angle)
-                                R = R + rmn.getitem(j, i) * c
-                                Z = Z + zmn.getitem(j, i) * s
-                                BR = BR + bmn.getitem(j, i) * c
-                                BZ = BZ + bmn.getitem(j, i) * s
-                                BPHI = BPHI + bmn.getitem(j, i) * c
-                                dBR = BR + ((delta + bmn.getitem(j, i)) * c)
-                                dBZ = BZ + ((delta + bmn.getitem(j, i)) * s)
-                                dBphi = BPHI + ((delta + bmn.getitem(j, i)) * c)
+                                R = R + self._probMatrix.getitem(j, i) * c
+                                #R = R + rmn.getitem(j, i) * c
+                                Z = Z + self._probMatrix.getitem(j, i) * s
+                                #Z = Z + zmn.getitem(j, i) * s
+                                BR = BR + self._probMatrix.getitem(j, i) * c
+                                BZ = BZ + self._probMatrix.getitem(j, i) * s
+                                BPHI = BPHI + self._probMatrix.getitem(j, i) * c
+                                dBR = BR + ((delta + self._probMatrix.getitem(j, i)) * c)
+                                dBZ = BZ + ((delta + self._probMatrix.getitem(j, i)) * s)
+                                dBphi = BPHI + ((delta + self._probMatrix.getitem(j, i)) * c)
 
                                 values = [BR, BPHI, BZ, dBR, dBphi, dBZ, rho[i]]
                                 file_out.write(
                                     ", ".join(f"{v:e}" for v in values) + "\n"
                                 )
+                """
         except Exception:
             self._runtime.logger.exception("VMECProcess: error processing wout file.")
             return False
@@ -423,7 +424,7 @@ class VMECProcess:
                     if lineRPhiZ.find("Surface") != -1:
                         lineRPhiZ = file_out.readline()
                         continue
-                    parts = lineRPhiZ.split(",").strip()
+                    parts = lineRPhiZ.split(",")
                     #                parts = map(string.strip, string.split(lineRPhiZ, ','))
                     Br = float(parts[0])
                     Bphi = float(parts[1])
@@ -431,7 +432,7 @@ class VMECProcess:
                     dBr = float(parts[3])
                     dBphi = float(parts[4])
                     dBz = float(parts[5])
-                    rho = float(parts[6])
+                    # rho = float(parts[6])
                     if Br != 0.0 or Bz != 0.0 or Bphi != 0.0:
                         divisor = Br**3 + Bz**3 + Bphi**3
                         if divisor == 0.0:
@@ -498,12 +499,16 @@ class VMECProcess:
                 return False
             lines = [line.strip() for line in open("OUTPUT/results.av")]
             sum = 0.0
-            for l in lines:
-                if l.find("average") > 0:
-                    parts = l.split()
-                    d31 = abs(float(parts[4]))
-                    rho = math.sqrt(float(parts[0]))
-                    sum += d31 * rho
+            total = 0.0
+
+            for line in lines:
+                if "average" in line:
+                    parts = line.split()
+
+                    if len(parts) >= 5:
+                        d31 = abs(float(parts[4]))
+                        rho = math.sqrt(float(parts[0]))
+                        total += d31 * rho
             self._bootstrap = sum
             self._runtime.logger.info(
                 f"({self._comms.rank}) DKES VALUE: {self._bootstrap}"

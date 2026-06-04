@@ -17,15 +17,17 @@ from solution.SolutionNonSeparable import SolutionNonSeparable
 
 
 class EvaluationWorker:
+    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+
     def __init__(self, runtime: GlobalRuntime, comm: GlobalComms):
         try:
-            self._comm = comm
-            self._runtime = runtime
-            self._rank = self._comm.comm.Get_rank()
-            self._endRequest = None
+            self._comm: GlobalComms = comm
+            self._runtime: GlobalRuntime = runtime
+            self._rank: int = self._comm.comm.Get_rank()
+            self._endRequest: MPI.Request | None = None
 
             self._end = array("i", [0])
-            self._requestsEnd = []
+            self._requestsEnd: list[MPI.Request] = []
             if self._runtime.problem_type == ProblemType.FUSION:
                 self._problem = ProblemFusion(runtime, comm)
             elif self._runtime.problem_type == ProblemType.NONSEPARABLE:

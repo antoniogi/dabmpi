@@ -2,6 +2,7 @@
 
 from .Parameter import INFINITY, Parameter, ParamType
 
+
 class ParameterVMEC(Parameter):
     """
     Extension of Parameter with VMEC-specific metadata.
@@ -47,6 +48,6 @@ class ParameterVMEC(Parameter):
 
     def get_x_index(self):
         return self.x_index
-    
+
     def get_y_index(self):
         return self.y_index

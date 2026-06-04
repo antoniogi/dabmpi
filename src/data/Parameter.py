@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from enum import IntEnum
-from typing import Any, Optional
+from typing import Any
 
 INFINITY = math.inf
 
@@ -22,6 +22,14 @@ FALSE_VALUES = {"false", "f", "no", "n", "0"}
 
 class Parameter:
     """Represents a parameter used during optimization."""
+
+    _name: str
+    _index: int | None
+    _type: ParamType
+    _gap: float | None
+    _value: str | float | int | bool
+    _min_value: str | float | int | bool
+    _max_value: str | float | int | bool
 
     def __init__(
         self,
@@ -45,7 +53,7 @@ class Parameter:
 
         if value is None:
             raise ValueError("value cannot be None")
-    
+
         if self._type == ParamType.STRING:
             self._value = str(value)
             self._min_value = str(self._min_value)
@@ -77,7 +85,6 @@ class Parameter:
         if normalized in FALSE_VALUES:
             return False
         raise ValueError(f"Cannot parse boolean value: {value}")
-
 
     def get_index(self) -> int | None:
         return self._index
@@ -115,7 +122,7 @@ class Parameter:
 
     def get_type(self) -> ParamType:
         return self._type
-    
+
     def set_value(self, value: Any) -> None:
         if self._type == ParamType.STRING:
             self._value = str(value)

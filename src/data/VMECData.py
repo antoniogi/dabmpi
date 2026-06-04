@@ -214,8 +214,8 @@ class VMECData:
             del self.rbc[:]
             del self.zbc[:]
             del self.ftol[:]
-        except:
-            pass
+        except Exception:
+            raise Exception("Error while deleting VMECData object")
 
     def getNumParams(self):
         """Returns the number of parameters that can be actually modified"""
@@ -454,18 +454,28 @@ class VMECData:
                                     text = None
                                     if node_param.firstChild is not None:
                                         text = node_param.firstChild.data
-                                    
-                                    if text==None:
+
+                                    if text is None:
                                         continue
 
                                     if name == "index":
                                         index = int(text)
 
                                     if name == "display":
-                                        display = text.strip().lower() in ("true", "t", "yes", "1")
+                                        display = text.strip().lower() in (
+                                            "true",
+                                            "t",
+                                            "yes",
+                                            "1",
+                                        )
 
                                     if name == "fixed":
-                                        fixed = text.strip().lower() in ("true", "t", "yes", "1")
+                                        fixed = text.strip().lower() in (
+                                            "true",
+                                            "t",
+                                            "yes",
+                                            "1",
+                                        )
 
                                     if name == "type":
                                         t = text.strip().lower()
@@ -492,23 +502,23 @@ class VMECData:
 
                                     if name == "min_value":
                                         min_value = text
-                                        #c.set_min_value(text)
+                                        # c.set_min_value(text)
 
                                     if name == "max_value":
                                         max_value = text
-                                        #c.set_max_value(text)
+                                        # c.set_max_value(text)
 
-                                    #if name == "index":
-                                        #index = text
-                                        # c.set_index(text)3
+                                    # if name == "index":
+                                    # index = text
+                                    # c.set_index(text)3
 
                                     if name == "name":
                                         pname = text.strip()
-                                        #c.set_name(text)
+                                        # c.set_name(text)
 
                                     if name == "gap":
                                         gap = text
-                                        #c.set_gap(text)
+                                        # c.set_gap(text)
                             try:
                                 c = ParameterVMEC(
                                     name=pname,
@@ -521,7 +531,7 @@ class VMECData:
                                     x_index=x_index,
                                     y_index=y_index,
                                     fixed=fixed,
-                                    display=display
+                                    display=display,
                                 )
                                 self.assign_parameter(c)
                                 if c.to_be_modified():

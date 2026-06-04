@@ -46,11 +46,13 @@ that created that solution and set the value for that solution in the bee
 
 
 class BeeBase:
+    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+    _solution: SolutionFusion | SolutionNonSeparable | SolutionCristina
+    _bestLocalSolution: SolutionFusion | SolutionNonSeparable | SolutionCristina
+    _bestGlobalSolution: SolutionFusion | SolutionNonSeparable | SolutionCristina
+
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix):
         random.seed()
-        self._problem = None
-        self._bestLocalSolution: SolutionBase = None
-        self._bestGlobalSolution: SolutionBase = None
         # Number of iterations since the local solution
         # was created
         self._itersinceLastUpdate = 0
@@ -598,28 +600,28 @@ Solver DAB main class
 
 
 class SolverDAB(SolverBase):
+    _probMatrix: Matrix
+    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         super().__init__(runtime, comms)
-        self._runtime.logger.info(f"Initializing solver {self.__class__.__name__}")
-
         """
         probMatrix stores the probability for each parameter, for each
         value, to be selected. Everytime a new feasible solution is found,
         we increase the probability of the current value of each parameter
         """
         self._useMatrix = False
-        self._probMatrix: Matrix | None = None
         # default values
         self._nEmployed = 0
         self._nOnlooker = 0
-        self._bees = []
+        self._bees: list[BeeBase] = []
         self._scout: BeeBase | None = None
         self._exectime = 0
         self._pendingSize = 10
         self._iterAbandoned = 10
         self._probEmployedChange = 4
         self._onlookerModFactor = 0.5
-        self._probOnlookerChange = 50
+        self._probOnlookerChange: int | float = 50
         self._maxNumTopSolutions = 100
 
         try:
@@ -627,9 +629,9 @@ class SolverDAB(SolverBase):
 
             self._totalSumGoodSolutions = 0.0
 
-            self._requestsEnd = []
-            self._requestsInput = []
-            self._requestSolution = []
+            self._requestsEnd: list[MPI.Request] = []
+            self._requestsInput: list[MPI.Request] = []
+            self._requestSolution: list[MPI.Request] = []
             for i in range(self._comms.size):
                 self._requestSolution.append(MPI.REQUEST_NULL)
 
@@ -733,12 +735,13 @@ class SolverDAB(SolverBase):
                     )
                     raise
                 if self._useMatrix:
-                    self._probMatrix = Matrix(
+                    self._probMatrix: Matrix = Matrix(
                         self._bestSolution.getMaxNumberofValues() + 1,
                         self._bestSolution.getNumberofParams(),
                         1.0,
                     )
-
+                else:
+                    self._probMatrix = Matrix(0, 0, 0.0)
                 self._topSolutions.setMaxSize(self._maxNumTopSolutions)
                 """
                 Create bees
@@ -776,11 +779,9 @@ class SolverDAB(SolverBase):
                     "Created " + str(self._nOnlooker) + " onlooker bees"
                 )
 
-                try:
-                    if origin != -1:
-                        self._bees[i].setSolution(self._bestSolution)
-                except:
-                    pass
+                if origin != -1:
+                    self._bees[origin].setSolution(self._bestSolution)
+
                 """
                 Create only one scout. The scout creates a random solution, so
                 it is just called when needed
@@ -794,7 +795,7 @@ class SolverDAB(SolverBase):
 
     def print_configuration(self):
         self._runtime.logger.info("SolverDAB configuration:")
-        self._runtime.logger.info(f"Number of scout bees: 1")
+        self._runtime.logger.info("Number of scout bees: 1")
         self._runtime.logger.info(f"Number of employed bees: {self._nEmployed}")
         self._runtime.logger.info(f"Number of onlooker bees: {self._nOnlooker}")
         self._runtime.logger.info(
@@ -1271,8 +1272,8 @@ class SolverDAB(SolverBase):
         elif self._runtime.problem_type == ProblemType.CRISTINA:
             self._problem = ProblemCristina(self._runtime, self._comms)
 
-        numParams = self._bestSolution.getNumberofParams()
-        buff = array("f", [0]) * numParams
+        # numParams = self._bestSolution.getNumberofParams()
+        # buff = array("f", [0]) * numParams
         solValue = array("f", [0]) * 1
 
         while not self.check_finish():
@@ -1332,7 +1333,7 @@ class SolverDAB(SolverBase):
                     ):
                         self._bestGlobalSolution = self._bestSolution
 
-                    buff = self._bestSolution.getParametersValues()
+                    # buff = self._bestSolution.getParametersValues()
                     solValue[0] = solutionValue
 
                     if self._runtime.problem_type == ProblemType.FUSION:
@@ -1404,7 +1405,7 @@ class SolverDAB(SolverBase):
                         ):
                             self._bestGlobalSolution = self._bestSolution
 
-                        buff = self._bestSolution.getParametersValues()
+                        # buff = self._bestSolution.getParametersValues()
                         solValue[0] = solutionValue
 
                         if self._runtime.problem_type == ProblemType.FUSION:

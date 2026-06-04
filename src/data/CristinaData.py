@@ -27,7 +27,7 @@ class CristinaData:
     def __del__(self):
         try:
             del self.__params[:]
-        except:
+        except Exception:
             pass
 
     # returns the number of parameters that can be actually modified

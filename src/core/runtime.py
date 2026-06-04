@@ -11,7 +11,6 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass, field
 from logging import Logger
-from typing import Optional
 
 import core.enums as e
 from core.logging import get_logger
@@ -32,7 +31,7 @@ class GlobalRuntime:
     solution_type: e.SolutionType = field(default=e.SolutionType.FUSION)
     solver_type: e.SolverType = field(default=e.SolverType.DAB)
     # Logger instance
-    logger: Logger | None = field(default_factory=lambda: get_logger())
+    logger: Logger = field(default_factory=lambda: get_logger())
     max_valid_solution_value: float = field(default=1e6)
     mock: bool = field(default=False)  # For testing without actual problem execution
 

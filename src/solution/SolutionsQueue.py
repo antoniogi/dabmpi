@@ -21,7 +21,7 @@ class SolutionsQueue:
         writeToFile: bool,
         isPriority: bool = False,
     ):
-        self._queue = []
+        self._queue: list[tuple[str, float, int]] = []
         self._filename = solutions_file
         self._solType = runtime.solution_type
         self._isPriority = isPriority
@@ -47,6 +47,9 @@ class SolutionsQueue:
         }
 
         solution_class, solution_name = solution_map.get(self._solType, (None, None))
+        assert solution_class is not None, (
+            f"Type {self._solType} is missing from solution_map"
+        )
 
         try:
             self._solutionBase = solution_class(self._runtime, self._comms)
@@ -245,13 +248,13 @@ class SolutionsQueue:
     """
 
     def get_solution_tuple(self, remove=True) -> tuple[SolutionBase, float, int]:
-        solution = None
+        # solution = None
         val = -1.0
         agent_idx = -1
         if self.qSize() == 0:
             raise IndexError("Queue is empty")
             # return solution, val, agent_idx
-        solution = self._solutionBase
+        # solution = self._solutionBase
         if remove:
             sol_tuple = self._queue.pop(0)
         else:

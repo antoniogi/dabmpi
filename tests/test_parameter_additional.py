@@ -8,8 +8,46 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.Parameter import Parameter, ParamType
 
 
+def make_param(
+    *,
+    ptype: ParamType = ParamType.STRING,
+    value: object | None = None,
+    name: str = "x",
+    index: int = 0,
+    gap: float = 0.0,
+    min_value: object | None = None,
+    max_value: object | None = None,
+) -> Parameter:
+    if ptype == ParamType.INT:
+        default_min = -100
+        default_max = 100
+        default_value = 0
+    elif ptype == ParamType.FLOAT:
+        default_min = -1.0e6
+        default_max = 1.0e6
+        default_value = 0.0
+    elif ptype == ParamType.BOOL:
+        default_min = False
+        default_max = True
+        default_value = False
+    else:
+        default_min = ""
+        default_max = ""
+        default_value = ""
+
+    return Parameter(
+        name=name,
+        index=index,
+        ptype=ptype,
+        value=default_value if value is None else value,
+        gap=gap,
+        min_value=default_min if min_value is None else min_value,
+        max_value=default_max if max_value is None else max_value,
+    )
+
+
 def test_set_type_from_string_variants():
-    p = Parameter()
+    p = make_param()
 
     p.set_type("float")
     assert p.get_type() == ParamType.FLOAT
@@ -28,21 +66,21 @@ def test_set_type_from_string_variants():
 
 
 def test_set_type_invalid_string_raises():
-    p = Parameter()
+    p = make_param()
 
     with pytest.raises(TypeError):
         p.set_type("invalid-type")
 
 
 def test_bool_parse_invalid_value_raises():
-    p = Parameter(type=ParamType.BOOL)
+    p = make_param(ptype=ParamType.BOOL, value=False)
 
     with pytest.raises(ValueError, match="Cannot parse boolean value"):
         p.set_value("notabool")
 
 
 def test_property_setters_and_getters():
-    p = Parameter()
+    p = make_param()
 
     p.type = "int"
     p.name = "alpha"
@@ -56,17 +94,16 @@ def test_property_setters_and_getters():
 
 
 def test_set_min_max_values_for_bool():
-    p = Parameter(type=ParamType.BOOL)
-
-    p.set_min_value("true")
-    p.set_max_value("false")
+    p = make_param(
+        ptype=ParamType.BOOL, value=False, min_value="true", max_value="false"
+    )
 
     assert p.get_min_value() is True
     assert p.get_max_value() is False
 
 
 def test_repr_includes_name_and_type():
-    p = Parameter(name="beta", index=3, type=ParamType.FLOAT, value=1.23)
+    p = make_param(name="beta", index=3, ptype=ParamType.FLOAT, value=1.23)
     rep = repr(p)
 
     assert "beta" in rep

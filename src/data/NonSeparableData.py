@@ -27,7 +27,7 @@ class NonSeparableData:
     def __del__(self):
         try:
             del self._params[:]
-        except:
+        except Exception:
             pass
 
     # returns the number of parameters that can be actually modified

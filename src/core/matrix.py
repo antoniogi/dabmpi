@@ -38,7 +38,7 @@ class Matrix:
             init: Initial value.
             dtype: NumPy dtype.
         """
-        if cols <= 0 or rows <= 0:
+        if cols < 0 or rows < 0:
             raise ValueError(
                 f"Rows and columns must be positive: cols={cols}, rows={rows}"
             )

@@ -51,14 +51,14 @@ class SolutionBase(ABC):
     def getNumberofParams(self) -> int:
         """Return the number of parameters in this solution."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getNumberofParams()"
+            f"{self.__class__.__name__} must implement getNumberofParams()"
         )
 
     @abstractmethod
     def getMaxNumberofValues(self) -> int:
         """Return the maximum number of parameter values."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getMaxNumberofValues()"
+            f"{self.__class__.__name__} must implement getMaxNumberofValues()"
         )
 
     @abstractmethod
@@ -67,7 +67,7 @@ class SolutionBase(ABC):
 
         Must be implemented by subclasses to display solution details.
         """
-        raise NotImplementedError(f"{self._class__.__name__} must implement print()")
+        raise NotImplementedError(f"{self.__class__.__name__} must implement print()")
 
     def isValid(self) -> bool:
         """Return whether the solution is valid."""
@@ -85,7 +85,7 @@ class SolutionBase(ABC):
     def getParametersValues(self):
         """Return the current values of all parameters."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getParametersValues()"
+            f"{self.__class__.__name__} must implement getParametersValues()"
         )
 
     @abstractmethod
@@ -101,7 +101,7 @@ class SolutionBase(ABC):
     def getParameters(self) -> list:
         """Return the parameter objects."""
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement getParameters()"
+            f"{self.__class__.__name__} must implement getParameters()"
         )
 
     @abstractmethod
@@ -112,7 +112,7 @@ class SolutionBase(ABC):
             params: List of parameter objects
         """
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement setParameters()"
+            f"{self.__class__.__name__} must implement setParameters()"
         )
 
     @abstractmethod
@@ -123,7 +123,7 @@ class SolutionBase(ABC):
             data: Data object for initialization
         """
         raise NotImplementedError(
-            f"{self._class__.__name__} must implement initialize()"
+            f"{self.__class__.__name__} must implement initialize()"
         )
 
     @abstractmethod
@@ -133,4 +133,4 @@ class SolutionBase(ABC):
         Args:
             filename: Output filename to prepare
         """
-        raise NotImplementedError(f"{self._class__.__name__} must implement prepare()")
+        raise NotImplementedError(f"{self.__class__.__name__} must implement prepare()")

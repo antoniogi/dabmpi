@@ -18,12 +18,7 @@ def test_matrix_creation():
 
 @pytest.mark.parametrize(
     "cols,rows",
-    [
-        (0, 1),
-        (1, 0),
-        (-1, 1),
-        (1, -1),
-    ],
+    [(-1, 0), (0, -1), (-1, 1), (1, -1), (-1, -1)],
 )
 def test_matrix_invalid_sizes(cols, rows):
     with pytest.raises(ValueError):
