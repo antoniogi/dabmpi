@@ -22,10 +22,15 @@ dependencies = [
     "mpi4py>=4.0",
 ]
 
+[project.scripts]
+dabmpi = "disop:cli_main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "pylint>=2.17",
+    "pre-commit>=4.0",
+    "ruff>=0.12.0",
+    "mypy>=1.16.0",
 ]
 
 [tool.setuptools]

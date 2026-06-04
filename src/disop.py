@@ -279,13 +279,18 @@ def main(runtime, argv=None):
         raise
 
 
-if __name__ == "__main__":
+def cli_main(argv=None):
+    """Console entry point for the installed dabmpi command."""
     runtime = GlobalRuntime()
     try:
-        main(runtime)
+        main(runtime, argv)
     except Exception:
         if getattr(runtime, "logger", None):
             runtime.logger.exception("Fatal error in main execution")
         else:
             print("Fatal error in main execution")
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    cli_main()
