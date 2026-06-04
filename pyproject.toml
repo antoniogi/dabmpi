@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-dabmpi = "disop:cli_main"
+dabmpi = "dabmpi.cli:main"
 
 [project.optional-dependencies]
 dev = [

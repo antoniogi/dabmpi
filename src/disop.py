@@ -76,7 +76,7 @@ def get_package_version():
 def parse_arguments(argv=None) -> argparse.Namespace:
     """Parse command-line arguments and return the namespace."""
     parser = argparse.ArgumentParser(
-        prog="disop.py",
+        prog="dabmpi",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Distributed Solver for Global Optimization.",
         epilog="Distributed Solver for Global Optimization.",
