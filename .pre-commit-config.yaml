@@ -25,10 +25,9 @@ repos:
   # 4. Local Test Suite
   - repo: local
     hooks:
-      - id: pytest-fast
-        name: pytest-fast
-        # Uses a marker instead of hardcoded file names
-        entry: pytest -m fast
+      - id: pytest
+        name: pytest
+        entry: pytest tests -q
         language: system
         pass_filenames: false
         always_run: true

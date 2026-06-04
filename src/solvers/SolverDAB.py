@@ -263,13 +263,13 @@ class Employed(BeeBase):
     def getSolutionBasedOnMatrix(self, solution):
         if not self._useMatrix:
             return solution
-        values = self._matrix._repr_()
+        values = self._matrix.__repr__()
         with open("matrix.txt", "w") as fileMat:
             fileMat.write(values)
         solutionCopy = solution
         try:
             parameters = solutionCopy.getParameters()
-            numCols = self._matrix.getNumCols()
+            numCols = self._matrix.get_num_cols()
             for i in range(len(parameters)):
                 sumRow = 0.0
                 for j in range(numCols):
@@ -1067,8 +1067,8 @@ class SolverDAB(SolverBase):
 
                     solutionTemp.setParametersValues(buff)
                     if self._useMatrix:
-                        for i in range(self._probMatrix.getNumRows()):
-                            for j in range(self._probMatrix.getNumCols()):
+                        for i in range(self._probMatrix.get_num_rows()):
+                            for j in range(self._probMatrix.get_num_cols()):
                                 val = self._probMatrix.getitem(i, j)
                                 newVal = max(1.0, val - 0.01)
                                 self._probMatrix.setitem(i, j, newVal)
@@ -1172,8 +1172,8 @@ class SolverDAB(SolverBase):
                             parameters = solutionTemp.getParameters()
                             if self._useMatrix:
                                 try:
-                                    for i in range(self._probMatrix.getNumRows()):
-                                        for j in range(self._probMatrix.getNumCols()):
+                                    for i in range(self._probMatrix.get_num_rows()):
+                                        for j in range(self._probMatrix.get_num_cols()):
                                             val = self._probMatrix.getitem(i, j)
                                             newVal = max(1.0, val - 0.5)
                                             self._probMatrix.setitem(i, j, newVal)
