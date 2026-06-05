@@ -569,7 +569,7 @@ class Onlooker(BeeBase):
                     )
 
                     self._runtime.logger.debug(
-                        "Top solutions queue size %d", topSolutions.qSize()
+                        "Top solutions queue size %d", topSolutions.queue_size
                     )
 
                     return solution, beeIdx
@@ -652,7 +652,7 @@ class SolverDAB(SolverBase):
 
             # if top solutions is not empty, that means we have a best solution from the previous execution
             try:
-                if self._topSolutions.qSize() != 0:
+                if self._topSolutions.queue_size != 0:
                     self._bestSolution, value, origin = (
                         self._topSolutions.get_solution_tuple(False)
                     )
@@ -734,7 +734,7 @@ class SolverDAB(SolverBase):
                     )
                 else:
                     self._probMatrix = Matrix(0, 0, 0.0)
-                self._topSolutions.setMaxSize(self._maxNumTopSolutions)
+                self._topSolutions.max_size = self._maxNumTopSolutions
                 """
                 Create bees
                 """
@@ -831,10 +831,10 @@ class SolverDAB(SolverBase):
                         self._dump, source=i, tag=Tags.REQINPUT
                     )
 
-                while self._pendingSolutions.qSize() < self._pendingSize:
+                while self._pendingSolutions.queue_size < self._pendingSize:
                     self._runtime.logger.info(
                         "Creating initial solutions. Pending queue size: "
-                        + str(self._pendingSolutions.qSize())
+                        + str(self._pendingSolutions.queue_size)
                     )
                     self._pendingSolutions.put_solution(
                         self._scout.createNewCandidate(
@@ -858,7 +858,7 @@ class SolverDAB(SolverBase):
     """
 
     def checkPendingSolutionsQueue(self):
-        while self._pendingSolutions.qSize() < self._pendingSize:
+        while self._pendingSolutions.queue_size < self._pendingSize:
             try:
                 for bee in range(len(self._bees)):
                     self._runtime.logger.debug(
@@ -932,11 +932,11 @@ class SolverDAB(SolverBase):
                     )
                     # Sends the front of the pending Solutions queue
                     solTuple = self._pendingSolutions.get_solution_list()
-                    if self._pendingSolutions.qSize() == 0:
+                    if self._pendingSolutions.queue_size == 0:
                         self.checkPendingSolutionsQueue()
                     while len(solTuple) < 3:
                         solTuple = self._pendingSolutions.get_solution_list()
-                        if self._pendingSolutions.qSize() < 1:
+                        if self._pendingSolutions.queue_size < 1:
                             self._pendingSolutions.put_solution(
                                 self._scout.createNewCandidate(
                                     self._pendingSolutions,

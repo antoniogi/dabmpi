@@ -27,7 +27,7 @@ class SolutionsQueue:
         self._isPriority = isPriority
         self._infile = runtime.input_file
         self._writeToFile = writeToFile
-        self._maxSize = math.inf
+        self._max_size = math.inf
         self._runtime = runtime
         self._comms = comms
 
@@ -72,10 +72,16 @@ class SolutionsQueue:
         if self._filename == "top.queue":
             self.write_all_solutions()
 
-    def setMaxSize(self, maxS):
-        self._maxSize = maxS
+    @property
+    def max_size(self):
+        return self._max_size
 
-    def qSize(self):
+    @max_size.setter
+    def max_size(self, maxS):
+        self._max_size = maxS
+
+    @property
+    def queue_size(self):
         return len(self._queue)
 
     """
@@ -114,7 +120,7 @@ class SolutionsQueue:
             sol_tuple = (sol, value, agent_idx)
 
             if not self._isPriority:
-                if self.qSize() < self._maxSize:
+                if self.queue_size < self._max_size:
                     self._queue.append(sol_tuple)
 
             else:
@@ -136,7 +142,7 @@ class SolutionsQueue:
                             continue
 
                     if (
-                        index > self._maxSize / 10
+                        index > self._max_size / 10
                         and len(origins) <= 1
                         and agent_idx in origins
                     ):
@@ -148,9 +154,9 @@ class SolutionsQueue:
 
                 if not inserted and len(origins) < sources:
                     if agent_idx not in origins:
-                        if self.qSize() > 0:
+                        if self.queue_size > 0:
                             for index in range(
-                                self.qSize() - 1,
+                                self.queue_size - 1,
                                 -1,
                                 -1,
                             ):
@@ -160,7 +166,7 @@ class SolutionsQueue:
 
                         self._queue.append(sol_tuple)
 
-                if self.qSize() > self._maxSize:
+                if self.queue_size > self._max_size:
                     self._queue.pop()
 
         except Exception:
@@ -215,7 +221,7 @@ class SolutionsQueue:
     def write_all_solutions(self) -> None:
         try:
             with open(self._filename, "w", encoding="utf-8") as file:
-                while self.qSize() > 0:
+                while self.queue_size > 0:
                     solution_tuple = self.get_solution_tuple(True)
 
                     parameters = solution_tuple[0].get_parameters()
@@ -248,7 +254,7 @@ class SolutionsQueue:
         # solution = None
         val = -1.0
         agent_idx = -1
-        if self.qSize() == 0:
+        if self.queue_size == 0:
             raise IndexError("Queue is empty")
             # return solution, val, agent_idx
         # solution = self._solutionBase
@@ -357,7 +363,7 @@ class SolutionsQueue:
                 self._runtime.logger.info(
                     "Queue. Returning solution in position "
                     f"{index} / {temp_sum} / {value} / "
-                    f"{self.qSize()} / {total_val}"
+                    f"{self.queue_size} / {total_val}"
                 )
 
                 self._solutionBase.set_parameters_values(params)
