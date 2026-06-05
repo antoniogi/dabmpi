@@ -76,9 +76,19 @@ class EvaluationWorker:
                     )
                     # solution = SolutionFusion(self._runtime, self._comm)
                 elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                    solution = SolutionNonSeparable(self._runtime, self._comm, None)
+                    template = SolutionNonSeparable.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionNonSeparable(
+                        self._runtime, self._comm, deepcopy(template)
+                    )
                 elif self._runtime.problem_type == ProblemType.CRISTINA:
-                    solution = SolutionCristina(self._runtime, self._comm, None)
+                    template = SolutionCristina.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionCristina(
+                        self._runtime, self._comm, deepcopy(template)
+                    )
                 else:
                     raise ValueError(
                         f"Unknown problem type: {self._runtime.problem_type}"
