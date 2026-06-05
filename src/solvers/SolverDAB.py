@@ -8,6 +8,7 @@ import shutil
 import time
 from array import array
 from datetime import datetime
+from copy import deepcopy
 
 from mpi4py import MPI
 
@@ -62,17 +63,32 @@ class BeeBase:
 
         if self._runtime.problem_type == ProblemType.FUSION:
             self._problem = ProblemFusion(self._runtime, self._comms)
-            self._solution = SolutionFusion(self._runtime, self._comms)
-            self._bestLocalSolution = SolutionFusion(self._runtime, self._comms)
-            self._bestGlobalSolution = SolutionFusion(self._runtime, self._comms)
+            template = SolutionFusion.get_template_data(runtime, comms)
+            self._solution = SolutionFusion(runtime, comms, data=deepcopy(template))
+            self._bestLocalSolution = SolutionFusion(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
+            self._bestGlobalSolution = SolutionFusion(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
         elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
             self._problem = ProblemNonSeparable(self._runtime, self._comms)
-            self._bestLocalSolution = SolutionNonSeparable(self._runtime, self._comms)
-            self._bestGlobalSolution = SolutionNonSeparable(self._runtime, self._comms)
+            template = SolutionNonSeparable.get_template_data(runtime, comms)
+            self._bestLocalSolution = SolutionNonSeparable(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
+            self._bestGlobalSolution = SolutionNonSeparable(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
         elif self._runtime.problem_type == ProblemType.CRISTINA:
             self._problem = ProblemCristina(self._runtime, self._comms)
-            self._bestLocalSolution = SolutionCristina(self._runtime, self._comms)
-            self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
+            template = SolutionCristina.get_template_data(runtime, comms)
+            self._bestLocalSolution = SolutionCristina(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
+            self._bestGlobalSolution = SolutionCristina(
+                self._runtime, self._comms, data=deepcopy(template)
+            )
 
         if self._runtime.objective == ObjectiveType.MAXIMIZE:
             self._bestLocalSolution.value = -math.inf
@@ -634,18 +650,35 @@ class SolverDAB(SolverBase):
 
             if self._runtime.problem_type == ProblemType.FUSION:
                 self._problem = ProblemFusion(self._runtime, self._comms)
-                self._bestSolution = SolutionFusion(self._runtime, self._comms)
-                self._bestGlobalSolution = SolutionFusion(self._runtime, self._comms)
+                template = SolutionFusion.get_template_data(self._runtime, self._comms)
+                self._bestSolution = SolutionFusion(
+                    self._runtime, self._comms, deepcopy(template)
+                )
+                self._bestGlobalSolution = SolutionFusion(
+                    self._runtime, self._comms, deepcopy(template)
+                )
             elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
                 self._problem = ProblemNonSeparable(self._runtime, self._comms)
-                self._bestSolution = SolutionNonSeparable(self._runtime, self._comms)
-                self._bestGlobalSolution = SolutionNonSeparable(
+                template = SolutionNonSeparable.get_template_data(
                     self._runtime, self._comms
+                )
+                self._bestSolution = SolutionNonSeparable(
+                    self._runtime, self._comms, deepcopy(template)
+                )
+                self._bestGlobalSolution = SolutionNonSeparable(
+                    self._runtime, self._comms, deepcopy(template)
                 )
             elif self._runtime.problem_type == ProblemType.CRISTINA:
                 self._problem = ProblemCristina(self._runtime, self._comms)
-                self._bestSolution = SolutionCristina(self._runtime, self._comms)
-                self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
+                template = SolutionCristina.get_template_data(
+                    self._runtime, self._comms
+                )
+                self._bestSolution = SolutionCristina(
+                    self._runtime, self._comms, deepcopy(template)
+                )
+                self._bestGlobalSolution = SolutionCristina(
+                    self._runtime, self._comms, deepcopy(template)
+                )
             else:
                 raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
             self._numParams = self._bestSolution.get_number_of_params()
@@ -1041,7 +1074,12 @@ class SolverDAB(SolverBase):
                 solutionTemp = None
                 try:
                     if self._runtime.problem_type == ProblemType.FUSION:
-                        solutionTemp = SolutionFusion(self._runtime, self._comms)
+                        template = SolutionFusion.get_template_data(
+                            self._runtime, self._comms
+                        )
+                        solutionTemp = SolutionFusion(
+                            self._runtime, self._comms, data=deepcopy(template)
+                        )
                     elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
                         solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
                     elif self._runtime.problem_type == ProblemType.CRISTINA:
@@ -1130,7 +1168,12 @@ class SolverDAB(SolverBase):
             try:
                 solutionTemp = None
                 if self._runtime.problem_type is ProblemType.FUSION:
-                    solutionTemp = SolutionFusion(self._runtime, self._comms)
+                    template = SolutionFusion.get_template_data(
+                        self._runtime, self._comms
+                    )
+                    solutionTemp = SolutionFusion(
+                        self._runtime, self._comms, data=deepcopy(template)
+                    )
                 elif self._runtime.problem_type is ProblemType.NONSEPARABLE:
                     solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
                 elif self._runtime.problem_type is ProblemType.CRISTINA:

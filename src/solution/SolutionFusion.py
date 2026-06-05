@@ -9,10 +9,20 @@ DERIVATIVE_CHECK_RANGE = range(-100, 100)
 
 
 class SolutionFusion(SolutionBase):
-    def __init__(self, runtime, comms):
-        super().__init__(runtime, comms)
-        self._data = VMECData(runtime, comms)
-        self._data.initialize(runtime.input_file)
+    _template_data = None
+
+    @classmethod
+    def get_template_data(cls, runtime, comms):
+        if cls._template_data is None:
+            d = VMECData(runtime, comms)
+            d.initialize(runtime.input_file)
+            cls._template_data = d
+        return cls._template_data
+
+    def __init__(self, runtime, comms, data):
+        super().__init__(runtime, comms, data)
+        self._data = data
+        self._runtime.logger.debug("Solution fusion initialized")
 
     def initialize(self, data):
         """Initialize with external data object."""

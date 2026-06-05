@@ -6,8 +6,8 @@ from solution.SolutionBase import SolutionBase
 
 
 class SolutionCristina(SolutionBase):
-    def __init__(self, runtime, comms):
-        SolutionBase.__init__(self, runtime, comms)
+    def __init__(self, runtime, comms, data):
+        SolutionBase.__init__(self, runtime, comms, data)
         # TODO: Implemement how data is initialized
         self._data = CristinaData(runtime)
         self._data.initialize(runtime.input_file)

@@ -6,8 +6,8 @@ from solution.SolutionBase import SolutionBase
 
 
 class SolutionNonSeparable(SolutionBase):
-    def __init__(self, runtime, comms):
-        SolutionBase.__init__(self, runtime, comms)
+    def __init__(self, runtime, comms, data):
+        SolutionBase.__init__(self, runtime, comms, data)
         self._data = NonSeparableData(runtime)
         self._data.initialize(runtime.input_file)
         return

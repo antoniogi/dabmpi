@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from array import array
+from copy import deepcopy
 from time import time
 
 from mpi4py import MPI
@@ -67,11 +68,17 @@ class EvaluationWorker:
                 # Send a request for data
                 status = MPI.Status()
                 if self._runtime.problem_type == ProblemType.FUSION:
-                    solution = SolutionFusion(self._runtime, self._comm)
+                    template = SolutionFusion.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionFusion(
+                        self._runtime, self._comm, data=deepcopy(template)
+                    )
+                    # solution = SolutionFusion(self._runtime, self._comm)
                 elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                    solution = SolutionNonSeparable(self._runtime, self._comm)
+                    solution = SolutionNonSeparable(self._runtime, self._comm, None)
                 elif self._runtime.problem_type == ProblemType.CRISTINA:
-                    solution = SolutionCristina(self._runtime, self._comm)
+                    solution = SolutionCristina(self._runtime, self._comm, None)
                 else:
                     raise ValueError(
                         f"Unknown problem type: {self._runtime.problem_type}"

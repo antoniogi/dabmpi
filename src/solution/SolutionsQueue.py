@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from copy import deepcopy
 import math
 import os
 
@@ -52,7 +53,10 @@ class SolutionsQueue:
         )
 
         try:
-            self._solutionBase = solution_class(self._runtime, self._comms)
+            template = solution_class.get_template_data(self._runtime, self._comms)
+            self._solutionBase = solution_class(
+                self._runtime, self._comms, deepcopy(template)
+            )
 
             self._runtime.logger.info(
                 f"Queue: Initialized {solution_name} queue "

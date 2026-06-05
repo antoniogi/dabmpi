@@ -384,6 +384,7 @@ class VMECData:
         and sanitizes stringified YAML or dictionary values into native Python types.
         """
         try:
+            self._runtime.logger.debug("VMEC data initialization")
             if not os.path.exists(filepath):
                 filepath = "../" + filepath
 
@@ -524,6 +525,7 @@ class VMECData:
                 "VMECData. Exception while initializing from YAML file"
             )
             sys.exit(111)
+        self._runtime.logger.debug("VMECData initialized")
         return
 
     def _write_bool(self, f, name, param):

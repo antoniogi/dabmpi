@@ -8,6 +8,10 @@ from core.enums import ObjectiveType
 
 
 class SolutionBase(ABC):
+    @classmethod
+    def get_template_data(cls, runtime, comms):
+        raise NotImplementedError("Must implement get_template_data")
+
     """Abstract base class for optimization solutions.
 
     Defines the interface that all solution types must implement.
@@ -16,7 +20,7 @@ class SolutionBase(ABC):
     - MAXIMIZE: starts at -infinity (any real value improves it)
     """
 
-    def __init__(self, runtime, comms):
+    def __init__(self, runtime, comms, data):
         """Initialize solution with appropriate initial value.
 
         Args:
