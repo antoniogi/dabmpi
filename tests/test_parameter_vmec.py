@@ -32,13 +32,13 @@ class TestParameterVMECInitialization:
         p = make_vmec_param()
 
         assert isinstance(p, ParameterVMEC)
-        assert p.get_name() == "test_param"
-        assert p.get_type() == ParamType.FLOAT
-        assert pytest.approx(p.get_value()) == 3.14
-        assert p.get_x_index() == 1
-        assert p.get_y_index() == 2
-        assert p.get_display() is True
-        assert p.get_fixed() is False
+        assert p.name == "test_param"
+        assert p.type == ParamType.FLOAT
+        assert pytest.approx(p.value) == 3.14
+        assert p.x_index == 1
+        assert p.y_index == 2
+        assert p.display is True
+        assert p.fixed is False
 
     def test_init_requires_all_arguments(self):
         with pytest.raises(TypeError):
@@ -49,54 +49,54 @@ class TestDisplayAndFixedFlags:
     def test_display_and_fixed_flags(self):
         p = make_vmec_param(fixed=False, display=True)
 
-        assert p.get_display() is True
-        assert p.get_fixed() is False
+        assert p.display is True
+        assert p.fixed is False
 
         p.fixed = True
 
-        assert p.get_fixed() is True
+        assert p.fixed is True
 
     def test_to_be_modified_logic(self):
         p = make_vmec_param(fixed=False, display=True)
 
-        assert p.to_be_modified() is True
+        assert p.to_be_modified is True
 
         p.fixed = True
-        assert p.to_be_modified() is False
+        assert p.to_be_modified is False
 
         p.display = False
-        assert p.to_be_modified() is False
+        assert p.to_be_modified is False
 
 
 class TestMatrixIndices:
     def test_xy_index_set_get(self):
         p = make_vmec_param(x_index=10, y_index=20)
 
-        assert p.get_x_index() == 10
-        assert p.get_y_index() == 20
+        assert p.x_index == 10
+        assert p.y_index == 20
 
 
 class TestInheritedParameterMethods:
     def test_name_type_value_accessors(self):
         p = make_vmec_param()
 
-        p.set_name("alpha")
-        p.set_type(ParamType.INT)
-        p.set_value("5")
+        p.name = "alpha"
+        p.type = ParamType.INT
+        p.value = "5"
 
-        assert p.get_name() == "alpha"
-        assert p.get_type() == ParamType.INT
-        assert p.get_value() == 5
+        assert p.name == "alpha"
+        assert p.type == ParamType.INT
+        assert p.value == 5
 
     def test_value_conversion_for_bool(self):
         p = make_vmec_param(ptype=ParamType.BOOL, value=False)
 
-        p.set_value("yes")
-        assert p.get_value() is True
+        p.value = "yes"
+        assert p.value is True
 
     def test_bounds_and_gap_are_preserved(self):
         p = make_vmec_param(min_value=-1.0, max_value=1.0, gap=0.5)
 
-        assert p.get_min_value() == -1.0
-        assert p.get_max_value() == 1.0
-        assert p.get_gap() == 0.5
+        assert p.min_value == -1.0
+        assert p.max_value == 1.0
+        assert p.gap == 0.5

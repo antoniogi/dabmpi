@@ -24,30 +24,30 @@ class SolutionFusion(SolutionBase):
 
     def get_number_of_params(self):
         """Return the number of parameters."""
-        return self._data.getNumParams()
+        return self._data.num_parameters
 
-    def getMaxNumberofValues(self):
+    def get_max_number_of_values(self):
         """Return the maximum range of parameter values."""
-        return self._data.getMaxRange()
+        return self._data.max_range
 
-    def getParameters(self):
+    def get_parameters(self):
         """Return the parameters."""
-        return self._data.getParameters()
+        return self._data.get_parameters()
 
-    def getParametersValues(self):
+    def get_parameters_values(self):
         """Return the current values of all parameters."""
-        return self._data.getValsOfParameters()
+        return self._data.get_parameters_values()
 
-    def setParametersValues(self, buff):
+    def set_parameters_values(self, buff):
         """Set parameter values from a float array.
 
         Args:
             buff: Array of float values for parameters
         """
         self._runtime.logger.debug("SolutionFusion. Setting parameters")
-        self._data.setValsOfParameters(buff)
+        self._data.set_parameters_values(buff)
 
-    def setParameters(self, params):
+    def set_parameters(self, params):
         """Update parameters from a list of parameter objects.
 
         Args:
@@ -56,11 +56,11 @@ class SolutionFusion(SolutionBase):
         for p in params:
             self._data.assign_parameter(p)
 
-    def getData(self):
+    def get_data(self):
         """Return the underlying VMEC data object."""
         return self._data
 
-    def checkPressureDerivative(self):
+    def check_pressure_derivative(self):
         """Check if pressure derivative is non-positive across range.
 
         Evaluates the derivative of a polynomial (coefficients in parameter
@@ -70,7 +70,7 @@ class SolutionFusion(SolutionBase):
         Returns:
             bool: True if derivative is non-positive everywhere, False otherwise
         """
-        values = self.getParametersValues()
+        values = self.get_parameters_values()
         for v in DERIVATIVE_CHECK_RANGE:
             derivative = 0.0
             for i in range(1, len(values)):
@@ -81,7 +81,3 @@ class SolutionFusion(SolutionBase):
 
     def print(self):
         pass
-
-    def getNumberofParams(self):
-        """Return the number of parameters."""
-        return self._data.getNumParams()

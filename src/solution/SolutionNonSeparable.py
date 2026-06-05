@@ -12,26 +12,26 @@ class SolutionNonSeparable(SolutionBase):
         self._data.initialize(runtime.input_file)
         return
 
-    def getParametersValues(self):
-        return self._data.getValsOfParameters()
+    def get_parameters_values(self):
+        return self._data.get_params_values()
 
-    def setParametersValues(self, buff):
-        self._data.setValsOfParameters(buff)
+    def set_parameters_values(self, buff):
+        self._data.set_params_values(buff)
 
-    def getParameters(self):
-        return self._data.getParameters()
+    def get_parameters(self):
+        return self._data.params
 
-    def setParameters(self, params):
-        self._data.setParameters(params)
+    def set_parameters(self, params):
+        self._data.params = params
 
     def initialize(self, data):
         self._data = data
 
-    def getNumberofParams(self):
-        return self._data.getNumParams()
+    def get_number_of_params(self):
+        return self._data.num_params
 
-    def getMaxNumberofValues(self):
-        return self._data.getMaxRange()
+    def get_max_number_of_values(self):
+        return self._data.max_range
 
     def prepare(self, filename) -> bool:
         return True

@@ -34,20 +34,10 @@ class ParameterVMEC(Parameter):
 
         self.display = display
         self.fixed = fixed
-        self.x_index = x_index
-        self.y_index = y_index
+        self.x_index = x_index if x_index is not None else -1
+        self.y_index = y_index if y_index is not None else -1
 
-    def get_display(self):
-        return self.display
-
-    def get_fixed(self):
-        return self.fixed
-
-    def to_be_modified(self):
+    @property
+    def to_be_modified(self) -> bool:
+        """Dynamically checks if the parameter is open for optimization modifications."""
         return self.display and not self.fixed
-
-    def get_x_index(self):
-        return self.x_index
-
-    def get_y_index(self):
-        return self.y_index

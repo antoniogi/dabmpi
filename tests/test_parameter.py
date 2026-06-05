@@ -57,38 +57,38 @@ def test_set_type_requires_enum():
     p = make_param()
 
     with pytest.raises(TypeError):
-        p.set_type("FLOAT")  # should fail
+        p.type = "FLOAT"  # should fail
 
-    p.set_type(ParamType.FLOAT)
-    assert p.get_type() == ParamType.FLOAT
+    p.type = ParamType.FLOAT
+    assert p.type == ParamType.FLOAT
 
 
 def test_string_type_conversion():
     p = make_param(ptype=ParamType.STRING, value="")
 
-    p.set_value(123)
-    assert p.get_value() == "123"
+    p.value = 123
+    assert p.value == "123"
 
-    p.set_value("hello")
-    assert p.get_value() == "hello"
+    p.value = "hello"
+    assert p.value == "hello"
 
 
 def test_float_conversion():
     p = make_param(ptype=ParamType.FLOAT, value=0.0)
 
-    p.set_value("3.14")
-    assert isinstance(p.get_value(), float)
-    assert p.get_value() == 3.14
+    p.value = "3.14"
+    assert isinstance(p.value, float)
+    assert p.value == 3.14
 
 
 def test_int_conversion_rounding():
     p = make_param(ptype=ParamType.INT, value=0)
 
-    p.set_value(3.6)
-    assert p.get_value() == 4
+    p.value = 3.6
+    assert p.value == 4
 
-    p.set_value("2.1")
-    assert p.get_value() == 2
+    p.value = "2.1"
+    assert p.value == 2
 
 
 @pytest.mark.parametrize(
@@ -110,22 +110,22 @@ def test_int_conversion_rounding():
 def test_bool_conversion(input_value, expected):
     p = make_param(ptype=ParamType.BOOL, value=False)
 
-    p.set_value(input_value)
-    assert p.get_value() == expected
+    p.value = input_value
+    assert p.value == expected
 
 
 def test_index_set_get():
     p = make_param()
 
-    p.set_index(5)
-    assert p.get_index() == 5
+    p.index = 5
+    assert p.index == 5
 
 
 def test_name_set_get():
     p = make_param()
 
-    p.set_name("alpha")
-    assert p.get_name() == "alpha"
+    p.name = "alpha"
+    assert p.name == "alpha"
 
 
 def test_is_numeric():
@@ -133,11 +133,11 @@ def test_is_numeric():
     assert p.is_numeric()
 
     p.type = ParamType.FLOAT
-    p.set_value(0.0)
+    p.value = 0.0
     assert p.is_numeric()
 
     p.type = ParamType.STRING
-    p.set_value("")
+    p.value = ""
     assert not p.is_numeric()
 
 
@@ -158,13 +158,13 @@ def test_bounds_validation_error():
 def test_gap():
     p = make_param(ptype=ParamType.FLOAT, value=0.0, gap=0.5)
 
-    assert p.get_gap() == 0.5
+    assert p.gap == 0.5
 
 
 def test_default_type_is_string():
     p = make_param()
 
-    assert p.get_type() == ParamType.STRING
+    assert p.type == ParamType.STRING
 
 
 def test_repr_contains_fields():
@@ -180,5 +180,5 @@ def test_value_overwrite_consistency():
     p = make_param(ptype=ParamType.FLOAT, value=0.0)
 
     for v in [1, 2, 3.5, "4.2", 10]:
-        p.set_value(v)
-        assert isinstance(p.get_value(), float)
+        p.value = v
+        assert isinstance(p.value, float)

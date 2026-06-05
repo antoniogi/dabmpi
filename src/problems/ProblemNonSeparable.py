@@ -13,13 +13,13 @@ class ProblemNonSeparable(ProblemBase):
     # this implements Rosenbrock's Function
     def solve(self, solution) -> None:
         try:
-            parameters = solution.getParametersValues()
+            parameters = solution.get_parameters_values()
             val = 0.0
             for i in range(0, len(parameters) - 1):
                 val += 100 * (
                     math.pow((math.pow(parameters[i], 2) - parameters[i + 1]), 2)
                 ) + math.pow(parameters[i] + 1, 2)
-            solution.setValue(val)
+            solution.value = val
             self._runtime.logger.debug("Solve Problem NonSeparable")
         except Exception:
             self._runtime.logger.exception(

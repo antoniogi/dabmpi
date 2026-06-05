@@ -108,8 +108,8 @@ class VMECData:
     def __init__(self, runtime, comms):
         self._runtime = runtime
         self._comms = comms
-        self._numParams = 0
-        self._maxRange = 0
+        self._num_parameters = 0
+        self._max_range = 0
         self._show_indata = True
         self._show_optimum = True
         self._show_bootin = True
@@ -217,19 +217,14 @@ class VMECData:
         except Exception:
             raise Exception("Error while deleting VMECData object")
 
-    def getNumParams(self):
+    @property
+    def num_parameters(self):
         """Returns the number of parameters that can be actually modified"""
-        return self._numParams
+        return self._num_parameters
 
-    def getMaxRange(self):
-        """
-        Returns the maximum range(maximum number of values) that a parameter
-        can take. This is the global maximum, meaning that most of the
-        parameters will take less values than this.
-        If param.max_value = 3, and param.min_value=1, and param.gap=1, the
-        range for param is 3 (it can take values 1,2,3)
-        """
-        return self._maxRange
+    @property
+    def max_range(self):
+        return self._max_range
 
     def _iter_params(self, include_config=False):
         """
@@ -253,19 +248,19 @@ class VMECData:
             else:
                 yield val
 
-    def getValsOfParameters(self):
+    def get_parameters_values(self):
         """Returns a list of doubles with the values of the modifiable parameters"""
-        buff = array("f", [0]) * self._numParams
+        buff = array("f", [0]) * self._num_parameters
         idx = 0
 
         for param in self._iter_params(include_config=False):
-            if param.to_be_modified():
-                buff[idx] = float(param.get_value())
+            if param.to_be_modified:
+                buff[idx] = float(param.value)
                 idx += 1
 
         return buff
 
-    def setValsOfParameters(self, buff):
+    def set_parameters_values(self, buff):
         """
         Receives as parameter (buff) a list of values corresponding to the values
         that the parameters that can be modified must take.
@@ -276,16 +271,16 @@ class VMECData:
         idx = 0
 
         for param in self._iter_params(include_config=False):
-            if param.to_be_modified():
-                param.set_value(buff[idx])
+            if param.to_be_modified:
+                param.value = buff[idx]
                 idx += 1
 
-    def getParameters(self):
+    def get_parameters(self):
         """Return a list with all the parameters (list of Parameter objects)"""
         parameters = []
 
         for param in self._iter_params(include_config=True):
-            if param.to_be_modified():
+            if param.to_be_modified:
                 parameters.append(param)
 
         return parameters
@@ -388,7 +383,7 @@ class VMECData:
             (871, 901, "sigma_balloon"),
             (902, 932, "sigma_pgrad"),
         ]
-        index = parameter.get_index()
+        index = parameter.index
 
         # Direct assignments
         if attr := DIRECT_ASSIGNMENTS.get(index):
@@ -407,7 +402,7 @@ class VMECData:
             return self._assign_to_list(target, offset // 2, parameter)
         # If we reach this point, the parameter index is unrecognized.
         # Only log a warning if the parameter is meant to be displayed, otherwise silently ignore it.
-        if parameter.get_display():
+        if parameter.display:
             self._runtime.logger.warning(f"Unassigned element with index: {index}")
         return -1
 
@@ -534,15 +529,12 @@ class VMECData:
                                     display=display,
                                 )
                                 self.assign_parameter(c)
-                                if c.to_be_modified():
-                                    self._numParams += 1
+                                if c.to_be_modified:
+                                    self._num_parameters += 1
                                     values = 1 + int(
-                                        round(
-                                            (c.get_max_value() - c.get_min_value())
-                                            / c.get_gap()
-                                        )
+                                        round((c.max_value - c.min_value) / c.gap)
                                     )
-                                    self._maxRange = max(values, self._maxRange)
+                                    self._max_range = max(values, self._max_range)
                             except Exception:
                                 self._runtime.logger.exception(
                                     f"VMECData. Exception assigning parameter with index {index} and name {pname}"
@@ -556,13 +548,13 @@ class VMECData:
         return
 
     def _write_bool(self, f, name, param):
-        if param.get_display():
-            value = "T" if param.get_value() else "F"
+        if param.display:
+            value = "T" if param.value else "F"
             f.write(f"  {name} = {value}\n")
 
     def _write_scalar(self, f, name, param, fmt="{}"):
-        if param.get_display():
-            value = fmt.format(param.get_value())
+        if param.display:
+            value = fmt.format(param.value)
             f.write(f"  {name} = {value}\n")
 
     def _write_array(
@@ -574,12 +566,12 @@ class VMECData:
         per_line=5,
         header_suffix=" = ",
     ):
-        displayed = [p for p in params if p.get_display()]
+        displayed = [p for p in params if p.display]
 
         if not displayed:
             return
 
-        values = [fmt.format(float(p.get_value())) for p in displayed]
+        values = [fmt.format(float(p.value)) for p in displayed]
 
         lines = [
             " ".join(values[i : i + per_line]) for i in range(0, len(values), per_line)
@@ -597,11 +589,9 @@ class VMECData:
                 ...
             ]
         """
-        if not all(param.get_display() for _, param, _ in params):
+        if not all(param.display for _, param, _ in params):
             return
-        values = [
-            f"{name}={fmt.format(param.get_value())}" for name, param, fmt in params
-        ]
+        values = [f"{name}={fmt.format(param.value)}" for name, param, fmt in params]
         f.write(f"  {', '.join(values)}\n")
 
     def __write_indata(self, f_input):
@@ -646,11 +636,8 @@ class VMECData:
             for name, param, fmt in scalar_fields:
                 self._write_scalar(f_input, name, param, fmt)
 
-            if self.mpol.get_display() and self.ntor.get_display():
-                f_input.write(
-                    f"  MPOL = {self.mpol.get_value()}  "
-                    f"NTOR = {self.ntor.get_value()}\n"
-                )
+            if self.mpol.display and self.ntor.display:
+                f_input.write(f"  MPOL = {self.mpol.value}  NTOR = {self.ntor.value}\n")
 
             self._write_array(
                 f_input,
@@ -704,16 +691,16 @@ class VMECData:
             )
 
             for rbc, zbs in zip(self.rbc, self.zbc):
-                if not rbc.get_display():
+                if not rbc.display:
                     continue
 
                 f_input.write(
-                    f"  RBC({rbc.get_x_index():3d},"
-                    f"{rbc.get_y_index()}) = "
-                    f"{float(rbc.get_value()): .4E}     "
-                    f"ZBS({zbs.get_x_index():3d},"
-                    f"{zbs.get_y_index()}) = "
-                    f"{float(zbs.get_value()): .4E}\n"
+                    f"  RBC({rbc.x_index:3d},"
+                    f"{rbc.y_index}) = "
+                    f"{float(rbc.value): .4E}     "
+                    f"ZBS({zbs.x_index:3d},"
+                    f"{zbs.y_index}) = "
+                    f"{float(zbs.value): .4E}\n"
                 )
 
             f_input.write("/\n")

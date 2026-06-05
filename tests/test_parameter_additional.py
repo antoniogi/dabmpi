@@ -49,34 +49,34 @@ def make_param(
 def test_set_type_from_string_variants():
     p = make_param()
 
-    p.set_type("float")
-    assert p.get_type() == ParamType.FLOAT
+    p.type = "float"
+    assert p.type == ParamType.FLOAT
 
-    p.set_type("double")
-    assert p.get_type() == ParamType.FLOAT
+    p.type = "double"
+    assert p.type == ParamType.FLOAT
 
-    p.set_type("int")
-    assert p.get_type() == ParamType.INT
+    p.type = "int"
+    assert p.type == ParamType.INT
 
-    p.set_type("bool")
-    assert p.get_type() == ParamType.BOOL
+    p.type = "bool"
+    assert p.type == ParamType.BOOL
 
-    p.set_type("string")
-    assert p.get_type() == ParamType.STRING
+    p.type = "string"
+    assert p.type == ParamType.STRING
 
 
 def test_set_type_invalid_string_raises():
     p = make_param()
 
     with pytest.raises(TypeError):
-        p.set_type("invalid-type")
+        p.type = "invalid-type"
 
 
 def test_bool_parse_invalid_value_raises():
     p = make_param(ptype=ParamType.BOOL, value=False)
 
     with pytest.raises(ValueError, match="Cannot parse boolean value"):
-        p.set_value("notabool")
+        p.value = "notabool"
 
 
 def test_property_setters_and_getters():
@@ -85,12 +85,12 @@ def test_property_setters_and_getters():
     p.type = "int"
     p.name = "alpha"
     p.index = 42
-    p.set_value("7.8")
+    p.value = "7.8"
 
-    assert p.get_type() == ParamType.INT
-    assert p.get_name() == "alpha"
-    assert p.get_index() == 42
-    assert p.get_value() == 8
+    assert p.type == ParamType.INT
+    assert p.name == "alpha"
+    assert p.index == 42
+    assert p.value == 8
 
 
 def test_set_min_max_values_for_bool():
@@ -98,8 +98,8 @@ def test_set_min_max_values_for_bool():
         ptype=ParamType.BOOL, value=False, min_value="true", max_value="false"
     )
 
-    assert p.get_min_value() is True
-    assert p.get_max_value() is False
+    assert p.min_value is True
+    assert p.max_value is False
 
 
 def test_repr_includes_name_and_type():

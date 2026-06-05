@@ -59,7 +59,7 @@ class SolutionsQueue:
                 f"({self._filename}) {self._infile}"
             )
 
-            self._numParams = self._solutionBase.getNumberofParams()
+            self._numParams = self._solutionBase.get_number_of_params()
 
             if os.path.exists(self._filename):
                 self.load_queue()
@@ -99,7 +99,7 @@ class SolutionsQueue:
             return
 
         try:
-            parameters = solution.getParameters()
+            parameters = solution.get_parameters()
 
             if len(parameters) != self._numParams:
                 self._runtime.logger.warning(
@@ -109,9 +109,7 @@ class SolutionsQueue:
                 )
                 return
 
-            sol = ",".join(
-                f"{param.get_index()}:{param.get_value()}" for param in parameters
-            )
+            sol = ",".join(f"{param.index}:{param.value}" for param in parameters)
 
             sol_tuple = (sol, value, agent_idx)
 
@@ -220,7 +218,7 @@ class SolutionsQueue:
                 while self.qSize() > 0:
                     solution_tuple = self.get_solution_tuple(True)
 
-                    parameters = solution_tuple[0].getParameters()
+                    parameters = solution_tuple[0].get_parameters()
 
                     if len(parameters) != self._numParams:
                         self._runtime.logger.warning(
@@ -231,8 +229,7 @@ class SolutionsQueue:
                         return
 
                     solution = ",".join(
-                        f"{param.get_index()}:{param.get_value()}"
-                        for param in parameters
+                        f"{param.index}:{param.value}" for param in parameters
                     )
 
                     file.write(f"{solution}#{solution_tuple[1]}#{solution_tuple[2]}\n")
@@ -270,7 +267,7 @@ class SolutionsQueue:
             params.append(float(p.split(":")[1]))
 
         # this method expects a list of parameters
-        self._solutionBase.setParametersValues(params)
+        self._solutionBase.set_parameters_values(params)
 
         return self._solutionBase, float(val), int(agent_idx)
 
@@ -363,7 +360,7 @@ class SolutionsQueue:
                     f"{self.qSize()} / {total_val}"
                 )
 
-                self._solutionBase.setParametersValues(params)
+                self._solutionBase.set_parameters_values(params)
 
                 return (
                     self._solutionBase,

@@ -36,9 +36,7 @@ class ProblemFusion(ProblemBase):
             self._runtime.logger.debug("Start solving Fusion problem")
 
             self.create_input_file(solution)
-            value = self.execute_configuration()
-
-            solution.setValue(value)
+            solution.value = self.execute_configuration()
 
             self._runtime.logger.debug("Finished solving Fusion problem")
 

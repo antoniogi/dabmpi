@@ -20,26 +20,26 @@ class SolutionCristina(SolutionBase):
     def prepare(self, filename) -> bool:
         return True
 
-    def getNumberofParams(self):
-        return self._data.getNumParams()
+    def get_number_of_params(self):
+        return self._data.num_parameters
 
-    def getMaxNumberofValues(self):
-        return self._data.getMaxRange()
+    def get_max_number_of_values(self):
+        return self._data.max_range
 
-    def getParameters(self):
-        return self._data.getParameters()
+    def get_parameters(self):
+        return self._data.parameters
 
-    def getParametersValues(self):
-        return self._data.getValsOfParameters()
+    def get_parameters_values(self):
+        return self._data.get_parameters_values()
 
-    def setParametersValues(self, buff):
-        self._data.setValsOfParameters(buff)
+    def set_parameters_values(self, buff):
+        self._data.set_parameters_values(buff)
 
-    def setParameters(self, params):
-        self._data.setParameters(params)
+    def set_parameters(self, params):
+        self._data.set_parameters(params)
 
     def getData(self):
         return self._data
 
     def print(self):
-        self._data.printData()
+        self._data.print_data()

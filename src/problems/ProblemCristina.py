@@ -11,8 +11,9 @@ class ProblemCristina(ProblemBase):
         super().__init__(runtime, comms)
 
     def solve(self, solution) -> None:
-        val = random.randint(0, 1000000)
-        solution.setValue(val)
+        if self._runtime.mock:
+            solution.value = random.randint(0, 1000000)
+        raise NotImplementedError("Solver not implemented")
 
     def extractSolution(self) -> tuple[float, float]:
         raise NotImplementedError("Extract solution abstract problem")

@@ -75,11 +75,11 @@ class BeeBase:
             self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
 
         if self._runtime.objective == ObjectiveType.MAXIMIZE:
-            self._bestLocalSolution.setValue(-math.inf)
-            self._bestGlobalSolution.setValue(-math.inf)
+            self._bestLocalSolution.value = -math.inf
+            self._bestGlobalSolution.value = -math.inf
         else:
-            self._bestLocalSolution.setValue(math.inf)
-            self._bestGlobalSolution.setValue(math.inf)
+            self._bestLocalSolution.value = math.inf
+            self._bestGlobalSolution.value = math.inf
 
         self._matrix = matrix
         self._runtime.logger.info(
@@ -153,26 +153,24 @@ class BeeBase:
         try:
             for _ in range(self._max_attempts):
                 solution = self.getBestLocalSolution()
-                params = solution.getParameters()
+                params = solution.get_parameters()
 
                 self._runtime.logger.debug(f"number of parameters: {len(params)}")
 
                 for param in params:
-                    ptype = param.get_type()
+                    ptype = param.type
                     new_value = None
 
                     if ptype is ParamType.STRING:
                         continue
 
                     elif ptype is ParamType.FLOAT:
-                        minVal, maxVal = sorted(
-                            (param.get_min_value(), param.get_max_value())
-                        )
+                        minVal, maxVal = sorted((param.min_value, param.max_value))
 
                         if minVal == maxVal:
                             new_value = minVal
                         else:
-                            gap = param.get_gap()
+                            gap = param.gap
 
                             if gap == 0.0:
                                 new_value = random.uniform(minVal, maxVal)
@@ -183,9 +181,7 @@ class BeeBase:
                         new_value = random.choice((True, False))
 
                     elif ptype is ParamType.INT:
-                        minVal, maxVal = sorted(
-                            (param.get_min_value(), param.get_max_value())
-                        )
+                        minVal, maxVal = sorted((param.min_value, param.max_value))
 
                         if minVal == maxVal:
                             new_value = minVal
@@ -195,7 +191,7 @@ class BeeBase:
                     else:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
 
-                    param.set_value(new_value)
+                    param.value = new_value
                 if self.is_new(solution, pendingSolutions, finishedSolutions):
                     break
             else:
@@ -207,7 +203,7 @@ class BeeBase:
             self._runtime.logger.exception("Error creating random solution")
             raise
 
-        solution.setParameters(params)
+        solution.set_parameters(params)
         solution.print()
 
         return solution
@@ -218,7 +214,7 @@ class BeeBase:
     """
 
     def getBestLocalValue(self):
-        return self._bestLocalSolution.getValue()
+        return self._bestLocalSolution.value
 
     """
     Allows to modify the best local solution. When a scout generates a new
@@ -268,7 +264,7 @@ class Employed(BeeBase):
             fileMat.write(values)
         solutionCopy = solution
         try:
-            parameters = solutionCopy.getParameters()
+            parameters = solutionCopy.get_parameters()
             numCols = self._matrix.get_num_cols()
             for i in range(len(parameters)):
                 sumRow = 0.0
@@ -293,11 +289,11 @@ class Employed(BeeBase):
                         + " -- "
                         + str(sumRow)
                     )
-                value = float(parameters[i].get_min_value()) + float(
-                    selectedPos
-                ) * float(parameters[i].get_gap())
-                parameters[i].set_value(value)
-            solutionCopy.setParameters(parameters)
+                value = float(parameters[i].min_value) + float(selectedPos) * float(
+                    parameters[i].gap
+                )
+                parameters[i].value = value
+            solutionCopy.set_parameters(parameters)
         except Exception:
             self._runtime.logger.exception("Error creating solution based on matrix")
         return solutionCopy
@@ -330,7 +326,7 @@ class Employed(BeeBase):
                     return solution, -1
 
             for _ in range(self._max_attempts):
-                parameters = solution.getParameters()
+                parameters = solution.get_parameters()
 
                 for param in parameters:
                     val = random.randint(0, self._probEmployedChange)
@@ -338,22 +334,22 @@ class Employed(BeeBase):
                     if val != 0:
                         continue
 
-                    ptype = param.get_type()
+                    ptype = param.type
                     new_value = None
 
                     if ptype is ParamType.STRING:
                         continue
 
                     elif ptype is ParamType.FLOAT:
-                        currentVal = param.get_value()
+                        currentVal = param.value
 
-                        gap = abs(param.get_gap())
+                        gap = abs(param.gap)
 
                         minVal = currentVal - 10.0 * gap
                         maxVal = currentVal + 10.0 * gap
 
-                        minVal = max(param.get_min_value(), minVal)
-                        maxVal = min(param.get_max_value(), maxVal)
+                        minVal = max(param.min_value, minVal)
+                        maxVal = min(param.max_value, maxVal)
 
                         minVal, maxVal = sorted((minVal, maxVal))
 
@@ -364,15 +360,15 @@ class Employed(BeeBase):
                                 new_value = random.uniform(minVal, maxVal)
                             else:
                                 new_value = self.randrange_float(
-                                    minVal, maxVal, param.get_gap()
+                                    minVal, maxVal, param.gap
                                 )
 
                     elif ptype is ParamType.BOOL:
                         new_value = random.choice((True, False))
 
                     elif ptype is ParamType.INT:
-                        currentVal = param.get_value()
-                        gap = abs(param.get_gap())
+                        currentVal = param.value
+                        gap = abs(param.gap)
 
                         if random.randint(0, 10) == 0:
                             minVal = currentVal - 10 * gap
@@ -381,8 +377,8 @@ class Employed(BeeBase):
                             minVal = currentVal - 5 * gap
                             maxVal = currentVal + 5 * gap
 
-                        minVal = max(param.get_min_value(), minVal)
-                        maxVal = min(param.get_max_value(), maxVal)
+                        minVal = max(param.min_value, minVal)
+                        maxVal = min(param.max_value, maxVal)
 
                         minVal, maxVal = sorted((minVal, maxVal))
 
@@ -394,12 +390,12 @@ class Employed(BeeBase):
                     else:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
 
-                    currentVal = param.get_value()
+                    currentVal = param.value
 
                     if new_value != currentVal:
-                        param.set_value(new_value)
+                        param.value = new_value
 
-                solution.setParameters(parameters)
+                solution.set_parameters(parameters)
 
                 if self.is_new(solution, pendingSolutions, finishedSolutions):
                     return solution, -1
@@ -496,24 +492,22 @@ class Onlooker(BeeBase):
 
         try:
             for _ in range(self._max_attempts):
-                for param in solution.getParameters():
+                for param in solution.get_parameters():
                     val = random.randint(0, self._probOnlookerChange)
 
                     if val != 0:
                         continue
 
-                    ptype = param.get_type()
+                    ptype = param.type
                     new_value = None
 
                     if ptype is ParamType.STRING:
                         continue
 
                     elif ptype is ParamType.FLOAT:
-                        minVal = param.get_min_value()
-                        maxVal = param.get_max_value()
-
-                        currentVal = param.get_value()
-
+                        minVal = param.min_value
+                        maxVal = param.max_value
+                        currentVal = param.value
                         minNewVal = currentVal - self._modFactor * currentVal
                         maxNewVal = currentVal + self._modFactor * currentVal
 
@@ -526,7 +520,7 @@ class Onlooker(BeeBase):
                             new_value = minVal
 
                         else:
-                            gap = param.get_gap()
+                            gap = param.gap
 
                             if not gap:
                                 new_value = random.uniform(minVal, maxVal)
@@ -537,12 +531,10 @@ class Onlooker(BeeBase):
                         new_value = random.choice((True, False))
 
                     elif ptype is ParamType.INT:
-                        minVal = param.get_min_value()
-                        maxVal = param.get_max_value()
-
-                        currentVal = param.get_value()
-
-                        gap = abs(param.get_gap())
+                        minVal = param.min_value
+                        maxVal = param.max_value
+                        currentVal = param.value
+                        gap = abs(param.gap)
 
                         minNewVal = int(currentVal - 2 * gap)
                         maxNewVal = int(currentVal + 2 * gap)
@@ -567,8 +559,8 @@ class Onlooker(BeeBase):
                     else:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
 
-                    if new_value != param.get_value():
-                        param.set_value(new_value)
+                    if new_value != param.value:
+                        param.value = new_value
 
                 if self.is_new(solution, pendingSolutions, finishedSolutions):
                     self._runtime.logger.debug(
@@ -656,7 +648,7 @@ class SolverDAB(SolverBase):
                 self._bestGlobalSolution = SolutionCristina(self._runtime, self._comms)
             else:
                 raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
-            self._numParams = self._bestSolution.getNumberofParams()
+            self._numParams = self._bestSolution.get_number_of_params()
 
             # if top solutions is not empty, that means we have a best solution from the previous execution
             try:
@@ -664,7 +656,7 @@ class SolverDAB(SolverBase):
                     self._bestSolution, value, origin = (
                         self._topSolutions.get_solution_tuple(False)
                     )
-                    self._bestSolution.setValue(value)
+                    self._bestSolution.value = value
             except Exception:
                 self._runtime.logger.exception(
                     "SolverDAB. Problem getting best solution from top solutions queue"
@@ -736,8 +728,8 @@ class SolverDAB(SolverBase):
                     raise
                 if self._useMatrix:
                     self._probMatrix: Matrix = Matrix(
-                        self._bestSolution.getMaxNumberofValues() + 1,
-                        self._bestSolution.getNumberofParams(),
+                        self._bestSolution.get_max_number_of_values() + 1,
+                        self._bestSolution.get_number_of_params(),
                         1.0,
                     )
                 else:
@@ -961,7 +953,7 @@ class SolverDAB(SolverBase):
                     buff = array("f", [0]) * self._numParams
                     try:
                         beeIdx[0] = solTuple[1]
-                        # buff = solTuple[0].getParametersValues()
+                        # buff = solTuple[0].get_parameters_values()
                         for i in range(len(buff)):
                             buff[i] = float(solTuple[2][i])
                             self._runtime.logger.debug(
@@ -1065,7 +1057,7 @@ class SolverDAB(SolverBase):
                             f"{self._runtime.problem_type}"
                         )
 
-                    solutionTemp.setParametersValues(buff)
+                    solutionTemp.set_parameters_values(buff)
                     if self._useMatrix:
                         for i in range(self._probMatrix.get_num_rows()):
                             for j in range(self._probMatrix.get_num_cols()):
@@ -1073,14 +1065,11 @@ class SolverDAB(SolverBase):
                                 newVal = max(1.0, val - 0.01)
                                 self._probMatrix.setitem(i, j, newVal)
 
-                        parameters = solutionTemp.getParameters()
+                        parameters = solutionTemp.get_parameters()
                         for i in range(len(parameters)):
                             idx = round(
-                                (
-                                    parameters[i].get_value()
-                                    - parameters[i].get_min_value()
-                                )
-                                / parameters[i].get_gap()
+                                (parameters[i].value - parameters[i].min_value)
+                                / parameters[i].gap
                             )
                             val = self._probMatrix.getitem(i, idx)
                             self._probMatrix.setitem(i, idx, val + 0.5)
@@ -1097,18 +1086,18 @@ class SolverDAB(SolverBase):
 
                 if (
                     self._runtime.objective == ObjectiveType.MAXIMIZE
-                    and float(solVal[0]) > float(self._bestSolution.getValue())
+                    and float(solVal[0]) > float(self._bestSolution.value)
                 ) or (
                     self._runtime.objective == ObjectiveType.MINIMIZE
-                    and float(solVal[0]) < float(self._bestSolution.getValue())
+                    and float(solVal[0]) < float(self._bestSolution.value)
                 ):
                     isNewBest = True
                     self._runtime.logger.best(
                         f"New best solution found by bee {beeIdx[0]} with value {solVal[0]}"
                     )
-                    self._bestSolution.setValue(solVal[0])
+                    self._bestSolution.value = solVal[0]
 
-                    self._bestSolution.setParametersValues(buff)
+                    self._bestSolution.set_parameters_values(buff)
                     # TODO: this logic needs to be moved to VMECProcess or similar, to avoid having solver-specific code in the solver
                     if not self._runtime.mock:
                         if self._runtime.solution_type == SolutionType.FUSION:
@@ -1157,7 +1146,7 @@ class SolverDAB(SolverBase):
                     )
                     raise
                 else:
-                    solutionTemp.setParametersValues(buff)
+                    solutionTemp.set_parameters_values(buff)
 
                     self._finishedSolutions.put_solution(
                         solutionTemp, solVal[0], beeIdx[0]
@@ -1169,7 +1158,7 @@ class SolverDAB(SolverBase):
                         math.inf / 100.0
                     ):
                         if isNewBest:
-                            parameters = solutionTemp.getParameters()
+                            parameters = solutionTemp.get_parameters()
                             if self._useMatrix:
                                 try:
                                     for i in range(self._probMatrix.get_num_rows()):
@@ -1179,10 +1168,10 @@ class SolverDAB(SolverBase):
                                             self._probMatrix.setitem(i, j, newVal)
                                     for i in range(len(parameters)):
                                         idx = (
-                                            parameters[i].get_value()
-                                            - parameters[i].get_min_value()
+                                            parameters[i].value
+                                            - parameters[i].min_value
                                         )
-                                        idx = idx / parameters[i].get_gap()
+                                        idx = idx / parameters[i].gap
                                         idx = round(idx)
                                         idx = int(idx)
                                         val = self._probMatrix.getitem(i, idx)
@@ -1208,7 +1197,7 @@ class SolverDAB(SolverBase):
                                         "Bee " + str(beeIdx[0]) + ". Resetting counter"
                                     )
                                     self._bees[beeIdx[0]].setIter(0)
-                                    solutionTemp.setValue(solVal[0])
+                                    solutionTemp.value = solVal[0]
                                     self._runtime.logger.info(
                                         "Bee "
                                         + str(beeIdx[0])
@@ -1299,7 +1288,7 @@ class SolverDAB(SolverBase):
                         self._totalSumGoodSolutions,
                     )[0]
                 self._problem.solve(newSolution)
-                solutionValue = float(newSolution.getValue())
+                solutionValue = float(newSolution.value)
 
                 if (
                     not math.isfinite(solutionValue)
@@ -1312,10 +1301,10 @@ class SolverDAB(SolverBase):
                 )
                 if (
                     self._runtime.objective == ObjectiveType.MAXIMIZE
-                    and float(solutionValue) > float(self._bestSolution.getValue())
+                    and float(solutionValue) > float(self._bestSolution.value)
                 ) or (
                     self._runtime.objective == ObjectiveType.MINIMIZE
-                    and float(solutionValue) < float(self._bestSolution.getValue())
+                    and float(solutionValue) < float(self._bestSolution.value)
                 ):
                     self._runtime.logger.best(
                         f"New best solution found by bee {beeIdx} with value {solutionValue}"
@@ -1324,16 +1313,14 @@ class SolverDAB(SolverBase):
 
                     if (
                         self._runtime.objective == ObjectiveType.MAXIMIZE
-                        and float(solutionValue)
-                        > float(self._bestGlobalSolution.getValue())
+                        and float(solutionValue) > float(self._bestGlobalSolution.value)
                     ) or (
                         self._runtime.objective == ObjectiveType.MINIMIZE
-                        and float(solutionValue)
-                        < float(self._bestGlobalSolution.getValue())
+                        and float(solutionValue) < float(self._bestGlobalSolution.value)
                     ):
                         self._bestGlobalSolution = self._bestSolution
 
-                    # buff = self._bestSolution.getParametersValues()
+                    # buff = self._bestSolution.get_parameters_values()
                     solValue[0] = solutionValue
 
                     if self._runtime.problem_type == ProblemType.FUSION:
@@ -1372,7 +1359,7 @@ class SolverDAB(SolverBase):
                     self._bees[bee].setIter(0)
                     self._bees[bee].setSolution(newSolution)
                     self._problem.solve(newSolution)
-                    solutionValue = float(newSolution.getValue())
+                    solutionValue = float(newSolution.value)
 
                     if (
                         not math.isfinite(solutionValue)
@@ -1384,10 +1371,10 @@ class SolverDAB(SolverBase):
 
                     if (
                         self._runtime.objective == ObjectiveType.MAXIMIZE
-                        and float(solutionValue) > float(self._bestSolution.getValue())
+                        and float(solutionValue) > float(self._bestSolution.value)
                     ) or (
                         self._runtime.objective == ObjectiveType.MINIMIZE
-                        and float(solutionValue) < float(self._bestSolution.getValue())
+                        and float(solutionValue) < float(self._bestSolution.value)
                     ):
                         self._runtime.logger.best(
                             f"New best solution found by bee {bee} with value {solutionValue}"
@@ -1397,15 +1384,15 @@ class SolverDAB(SolverBase):
                         if (
                             self._runtime.objective == ObjectiveType.MAXIMIZE
                             and float(solutionValue)
-                            > float(self._bestGlobalSolution.getValue())
+                            > float(self._bestGlobalSolution.value)
                         ) or (
                             self._runtime.objective == ObjectiveType.MINIMIZE
                             and float(solutionValue)
-                            < float(self._bestGlobalSolution.getValue())
+                            < float(self._bestGlobalSolution.value)
                         ):
                             self._bestGlobalSolution = self._bestSolution
 
-                        # buff = self._bestSolution.getParametersValues()
+                        # buff = self._bestSolution.get_parameters_values()
                         solValue[0] = solutionValue
 
                         if self._runtime.problem_type == ProblemType.FUSION:

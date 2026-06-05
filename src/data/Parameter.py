@@ -86,44 +86,18 @@ class Parameter:
             return False
         raise ValueError(f"Cannot parse boolean value: {value}")
 
-    def get_index(self) -> int | None:
-        return self._index
+    @property
+    def value(self) -> Any:
+        if self._type == ParamType.FLOAT:
+            return float(self._value)
+        if self._type == ParamType.INT:
+            return int(self._value)
+        if self._type == ParamType.BOOL:
+            return self._parse_bool(self._value)
+        return self._value
 
-    def set_index(self, index: Any) -> None:
-        self._index = int(index)
-
-    def get_name(self) -> str:
-        return self._name
-
-    def set_name(self, name: Any) -> None:
-        self._name = str(name)
-
-    def set_type(self, type_: Any) -> None:
-        if isinstance(type_, ParamType):
-            self._type = type_
-            return
-
-        if isinstance(type_, str):
-            normalized = type_.strip()
-            if normalized in ("float", "double"):
-                self._type = ParamType.FLOAT
-                return
-            if normalized == "int":
-                self._type = ParamType.INT
-                return
-            if normalized == "bool":
-                self._type = ParamType.BOOL
-                return
-            if normalized == "string":
-                self._type = ParamType.STRING
-                return
-
-        raise TypeError("type must be a ParamType")
-
-    def get_type(self) -> ParamType:
-        return self._type
-
-    def set_value(self, value: Any) -> None:
+    @value.setter
+    def value(self, value: Any) -> None:
         if self._type == ParamType.STRING:
             self._value = str(value)
             return
@@ -138,22 +112,16 @@ class Parameter:
             return
         raise TypeError("Unsupported parameter type")
 
-    def get_value(self) -> Any:
-        if self._type == ParamType.FLOAT:
-            return float(self._value)
-        if self._type == ParamType.INT:
-            return int(self._value)
-        if self._type == ParamType.BOOL:
-            return self._parse_bool(self._value)
-        return self._value
-
-    def get_min_value(self) -> Any:
+    @property
+    def min_value(self) -> Any:
         return self._min_value
 
-    def get_max_value(self) -> Any:
+    @property
+    def max_value(self) -> Any:
         return self._max_value
 
-    def get_gap(self) -> float | None:
+    @property
+    def gap(self) -> float | None:
         return self._gap
 
     def is_numeric(self) -> bool:
@@ -177,7 +145,26 @@ class Parameter:
 
     @type.setter
     def type(self, type_: Any) -> None:
-        self.set_type(type_)
+        if isinstance(type_, ParamType):
+            self._type = type_
+            return
+
+        if isinstance(type_, str):
+            normalized = type_.strip()
+            if normalized in ("float", "double"):
+                self._type = ParamType.FLOAT
+                return
+            if normalized == "int":
+                self._type = ParamType.INT
+                return
+            if normalized == "bool":
+                self._type = ParamType.BOOL
+                return
+            if normalized == "string":
+                self._type = ParamType.STRING
+                return
+
+        raise TypeError("type must be a ParamType")
 
     @property
     def name(self) -> str:
@@ -185,7 +172,7 @@ class Parameter:
 
     @name.setter
     def name(self, name: Any) -> None:
-        self.set_name(name)
+        self._name = str(name)
 
     @property
     def index(self) -> int | None:
@@ -193,4 +180,4 @@ class Parameter:
 
     @index.setter
     def index(self, index: Any) -> None:
-        self.set_index(index)
+        self._index = int(index) if index is not None else None

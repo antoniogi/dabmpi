@@ -77,7 +77,7 @@ class EvaluationWorker:
                         f"Unknown problem type: {self._runtime.problem_type}"
                     )
 
-                num_params = solution.getNumberofParams()
+                num_params = solution.get_number_of_params()
                 buff = array("f", [0]) * num_params
                 solution_value = array("f", [0]) * 1
                 dump = array("i", [0]) * 1
@@ -99,13 +99,13 @@ class EvaluationWorker:
                 self._runtime.logger.info(
                     f"WORKER ( {self._rank} ) has received a solution to evaluate from bee {agent_idx[0]}"
                 )
-                solution.setParametersValues(buff)
+                solution.set_parameters_values(buff)
 
                 # Evalute the solution
                 self._problem.solve(solution)
 
-                buff = solution.getParametersValues()
-                solution_value[0] = float(solution.getValue())
+                buff = solution.get_parameters_values()
+                solution_value[0] = float(solution.value)
 
                 # Send the solution back together with the bee id
                 req = self._comm.comm.Isend([dump, MPI.INT], 0, Tags.REQSENDINPUT)
