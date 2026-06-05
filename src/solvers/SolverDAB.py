@@ -1081,9 +1081,19 @@ class SolverDAB(SolverBase):
                             self._runtime, self._comms, data=deepcopy(template)
                         )
                     elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                        solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
+                        template = SolutionNonSeparable.get_template_data(
+                            self._runtime, self._comms
+                        )
+                        solutionTemp = SolutionNonSeparable(
+                            self._runtime, self._comms, deepcopy(template)
+                        )
                     elif self._runtime.problem_type == ProblemType.CRISTINA:
-                        solutionTemp = SolutionCristina(self._runtime, self._comms)
+                        template = SolutionCristina.get_template_data(
+                            self._runtime, self._comms
+                        )
+                        solutionTemp = SolutionCristina(
+                            self._runtime, self._comms, deepcopy(template)
+                        )
                     else:
                         raise ValueError(
                             f"Unknown problem type: {self._runtime.problem_type}"
@@ -1175,9 +1185,19 @@ class SolverDAB(SolverBase):
                         self._runtime, self._comms, data=deepcopy(template)
                     )
                 elif self._runtime.problem_type is ProblemType.NONSEPARABLE:
-                    solutionTemp = SolutionNonSeparable(self._runtime, self._comms)
+                    template = SolutionNonSeparable.get_template_data(
+                        self._runtime, self._comms
+                    )
+                    solutionTemp = SolutionNonSeparable(
+                        self._runtime, self._comms, deepcopy(template)
+                    )
                 elif self._runtime.problem_type is ProblemType.CRISTINA:
-                    solutionTemp = SolutionCristina(self._runtime, self._comms)
+                    template = SolutionCristina.get_template_data(
+                        self._runtime, self._comms
+                    )
+                    solutionTemp = SolutionCristina(
+                        self._runtime, self._comms, deepcopy(template)
+                    )
                 else:
                     raise ValueError(
                         f"Unknown problem type: {self._runtime.problem_type}"
