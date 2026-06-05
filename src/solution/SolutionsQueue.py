@@ -301,9 +301,13 @@ class SolutionsQueue:
             parameters = sol_tuple[0].split(",")
             # iterate through the elements in the list
             self._runtime.logger.debug(
-                "QUEUE. Number of parameters: " + str(len(parameters))
+                f"QUEUE. Number of parameters: {len(parameters)}"
             )
             for p in parameters:
+                parts = p.split(":")
+                if len(parts) == 0:
+                    self._runtime.logger.error("Incorrect parameter received (empty)")
+                    raise
                 self._runtime.logger.debug("Appending: " + str(p.split(":")[1]))
                 solution.append(float(p.split(":")[1]))
         except Exception:

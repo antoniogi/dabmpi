@@ -20,6 +20,7 @@ classifiers = [
 dependencies = [
     "numpy>=1.24",
     "mpi4py>=4.0",
+    "pyyaml>=6.0.1",
 ]
 
 [project.scripts]
@@ -31,6 +32,7 @@ dev = [
     "pre-commit>=4.0",
     "ruff>=0.12.0",
     "mypy>=1.16.0",
+    "types-PyYAML",
 ]
 
 [tool.setuptools]
@@ -39,3 +41,16 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*"]
+
+[tool.ruff]
+target-version = "py310"
+exclude = [
+    "*.xml",
+    "*.yaml",
+    "*.yml",
+    "tests/data/*",
+]
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
