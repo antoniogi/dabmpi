@@ -97,12 +97,11 @@ class EvaluationWorker:
                 num_params = solution.get_number_of_params()
                 buff = array("f", [0]) * num_params
                 solution_value = array("f", [0]) * 1
-                dump = array("i", [0]) * 1
+                wait_signal = array("i", [0]) * 1
                 self._runtime.logger.debug(
                     "Worker (" + str(self._rank) + "). Waiting for a solution"
                 )
-                # self._comm.Isend(dump, dest=0, tag=u.tags.REQINPUT)
-                self._comm.comm.Send(dump, dest=0, tag=Tags.REQINPUT)
+                self._comm.comm.Send(wait_signal, dest=0, tag=Tags.REQINPUT)
 
                 agent_idx = array("i", [0]) * 1
                 # Receive the solution
@@ -125,7 +124,9 @@ class EvaluationWorker:
                 solution_value[0] = float(solution.value)
 
                 # Send the solution back together with the bee id
-                req = self._comm.comm.Isend([dump, MPI.INT], 0, Tags.REQSENDINPUT)
+                req = self._comm.comm.Isend(
+                    [wait_signal, MPI.INT], 0, Tags.REQSENDINPUT
+                )
                 req.Wait(status)
 
                 self._runtime.logger.debug(

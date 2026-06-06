@@ -612,7 +612,7 @@ class SolverDAB(SolverBase):
             for _ in range(self._comms.size):
                 self._requestSolution.append(MPI.REQUEST_NULL)
 
-            self._dump = array("i", [0]) * 1
+            self._wait_signal = array("i", [0]) * 1
 
             self._bestSolution: SolutionBase
             self._bestGlobalSolution: SolutionBase
@@ -816,10 +816,10 @@ class SolverDAB(SolverBase):
                     if i == self._comms.rank:
                         continue
                     self._requestsEnd[i] = self._comms.comm.Irecv(
-                        self._dump, source=i, tag=Tags.ENDSIM
+                        self._wait_signal, source=i, tag=Tags.ENDSIM
                     )
                     self._requestsInput[i] = self._comms.comm.Irecv(
-                        self._dump, source=i, tag=Tags.REQINPUT
+                        self._wait_signal, source=i, tag=Tags.REQINPUT
                     )
 
                 while self._pendingSolutions.queue_size < self._pendingSize:
@@ -967,12 +967,12 @@ class SolverDAB(SolverBase):
                     )
                     # adds a request for receiving the solution
                     req = self._comms.comm.Irecv(
-                        [self._dump, MPI.INT], destination, Tags.REQSENDINPUT
+                        [self._wait_signal, MPI.INT], destination, Tags.REQSENDINPUT
                     )
                     self._requestSolution[destination] = req
                     # adds a request for sending more input
                     req = self._comms.comm.Irecv(
-                        self._dump, source=destination, tag=Tags.REQINPUT
+                        self._wait_signal, source=destination, tag=Tags.REQINPUT
                     )
                     self._requestsInput[destination] = req
                     self._runtime.logger.debug(
