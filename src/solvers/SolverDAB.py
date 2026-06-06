@@ -17,6 +17,7 @@ from core.enums import CommModelType, ObjectiveType, ProblemType, SolutionType, 
 from core.matrix import Matrix
 from core.runtime import GlobalRuntime
 from data.Parameter import ParamType
+from problems.ProblemBase import ProblemBase
 from problems.ProblemCristina import ProblemCristina
 from problems.ProblemFusion import ProblemFusion
 from problems.ProblemNonSeparable import ProblemNonSeparable
@@ -26,6 +27,12 @@ from solution.SolutionFusion import SolutionFusion
 from solution.SolutionNonSeparable import SolutionNonSeparable
 from solution.SolutionsQueue import SolutionsQueue
 from solvers.SolverBase import SolverBase
+
+PROBLEM_TYPE_REGISTRY = {
+    ProblemType.FUSION: (ProblemFusion, SolutionFusion),
+    ProblemType.NONSEPARABLE: (ProblemNonSeparable, SolutionNonSeparable),
+    ProblemType.CRISTINA: (ProblemCristina, SolutionCristina),
+}
 
 """
 Class that implements the DAB solver. It has to:
@@ -47,10 +54,14 @@ that created that solution and set the value for that solution in the bee
 
 
 class BeeBase:
-    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
-    _solution: SolutionFusion | SolutionNonSeparable | SolutionCristina
-    _bestLocalSolution: SolutionFusion | SolutionNonSeparable | SolutionCristina
-    _bestGlobalSolution: SolutionFusion | SolutionNonSeparable | SolutionCristina
+    _problem: ProblemBase | ProblemFusion | ProblemNonSeparable | ProblemCristina
+    _solution: SolutionBase | SolutionFusion | SolutionNonSeparable | SolutionCristina
+    _bestLocalSolution: (
+        SolutionBase | SolutionFusion | SolutionNonSeparable | SolutionCristina
+    )
+    _bestGlobalSolution: (
+        SolutionBase | SolutionFusion | SolutionNonSeparable | SolutionCristina
+    )
 
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms, matrix: Matrix):
         random.seed()
@@ -61,34 +72,28 @@ class BeeBase:
         self._comms = comms
         self._max_attempts = 1000
 
-        if self._runtime.problem_type == ProblemType.FUSION:
-            self._problem = ProblemFusion(self._runtime, self._comms)
-            template = SolutionFusion.get_template_data(runtime, comms)
-            self._solution = SolutionFusion(runtime, comms, data=deepcopy(template))
-            self._bestLocalSolution = SolutionFusion(
-                self._runtime, self._comms, data=deepcopy(template)
+        prob_type = self._runtime.problem_type
+
+        if prob_type in PROBLEM_TYPE_REGISTRY:
+            problem_cls, solution_cls = PROBLEM_TYPE_REGISTRY[prob_type]
+
+            self._problem = problem_cls(self._runtime, self._comms)
+            template = solution_cls.get_template_data(self._runtime, self._comms)
+
+            self._solution = solution_cls(
+                self._runtime, self._comms, deepcopy(template)
             )
-            self._bestGlobalSolution = SolutionFusion(
-                self._runtime, self._comms, data=deepcopy(template)
+            self._bestSolution = solution_cls(
+                self._runtime, self._comms, deepcopy(template)
             )
-        elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-            self._problem = ProblemNonSeparable(self._runtime, self._comms)
-            template = SolutionNonSeparable.get_template_data(runtime, comms)
-            self._bestLocalSolution = SolutionNonSeparable(
-                self._runtime, self._comms, data=deepcopy(template)
+            self._bestLocalSolution = solution_cls(
+                self._runtime, self._comms, deepcopy(template)
             )
-            self._bestGlobalSolution = SolutionNonSeparable(
-                self._runtime, self._comms, data=deepcopy(template)
+            self._bestGlobalSolution = solution_cls(
+                self._runtime, self._comms, deepcopy(template)
             )
-        elif self._runtime.problem_type == ProblemType.CRISTINA:
-            self._problem = ProblemCristina(self._runtime, self._comms)
-            template = SolutionCristina.get_template_data(runtime, comms)
-            self._bestLocalSolution = SolutionCristina(
-                self._runtime, self._comms, data=deepcopy(template)
-            )
-            self._bestGlobalSolution = SolutionCristina(
-                self._runtime, self._comms, data=deepcopy(template)
-            )
+        else:
+            raise ValueError(f"Unknown problem type: {prob_type}")
 
         if self._runtime.objective == ObjectiveType.MAXIMIZE:
             self._bestLocalSolution.value = -math.inf
@@ -609,7 +614,7 @@ Solver DAB main class
 
 class SolverDAB(SolverBase):
     _probMatrix: Matrix
-    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+    _problem: ProblemBase | ProblemFusion | ProblemNonSeparable | ProblemCristina
 
     def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         super().__init__(runtime, comms)
@@ -648,39 +653,26 @@ class SolverDAB(SolverBase):
             self._bestSolution: SolutionBase
             self._bestGlobalSolution: SolutionBase
 
-            if self._runtime.problem_type == ProblemType.FUSION:
-                self._problem = ProblemFusion(self._runtime, self._comms)
-                template = SolutionFusion.get_template_data(self._runtime, self._comms)
-                self._bestSolution = SolutionFusion(
+            if self._runtime.problem_type in PROBLEM_TYPE_REGISTRY:
+                problem_cls, solution_cls = PROBLEM_TYPE_REGISTRY[
+                    self._runtime.problem_type
+                ]
+
+                self._problem = problem_cls(self._runtime, self._comms)
+                template = solution_cls.get_template_data(self._runtime, self._comms)
+
+                self._solution = solution_cls(
                     self._runtime, self._comms, deepcopy(template)
                 )
-                self._bestGlobalSolution = SolutionFusion(
+                self._bestSolution = solution_cls(
                     self._runtime, self._comms, deepcopy(template)
                 )
-            elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                self._problem = ProblemNonSeparable(self._runtime, self._comms)
-                template = SolutionNonSeparable.get_template_data(
-                    self._runtime, self._comms
-                )
-                self._bestSolution = SolutionNonSeparable(
-                    self._runtime, self._comms, deepcopy(template)
-                )
-                self._bestGlobalSolution = SolutionNonSeparable(
-                    self._runtime, self._comms, deepcopy(template)
-                )
-            elif self._runtime.problem_type == ProblemType.CRISTINA:
-                self._problem = ProblemCristina(self._runtime, self._comms)
-                template = SolutionCristina.get_template_data(
-                    self._runtime, self._comms
-                )
-                self._bestSolution = SolutionCristina(
-                    self._runtime, self._comms, deepcopy(template)
-                )
-                self._bestGlobalSolution = SolutionCristina(
+                self._bestGlobalSolution = solution_cls(
                     self._runtime, self._comms, deepcopy(template)
                 )
             else:
                 raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
+
             self._numParams = self._bestSolution.get_number_of_params()
 
             # if top solutions is not empty, that means we have a best solution from the previous execution
@@ -1073,25 +1065,14 @@ class SolverDAB(SolverBase):
                 # priority list)
                 solutionTemp = None
                 try:
-                    if self._runtime.problem_type == ProblemType.FUSION:
-                        template = SolutionFusion.get_template_data(
+                    if self._runtime.problem_type in PROBLEM_TYPE_REGISTRY:
+                        _, solution_cls = PROBLEM_TYPE_REGISTRY[
+                            self._runtime.problem_type
+                        ]
+                        template = solution_cls.get_template_data(
                             self._runtime, self._comms
                         )
-                        solutionTemp = SolutionFusion(
-                            self._runtime, self._comms, data=deepcopy(template)
-                        )
-                    elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                        template = SolutionNonSeparable.get_template_data(
-                            self._runtime, self._comms
-                        )
-                        solutionTemp = SolutionNonSeparable(
-                            self._runtime, self._comms, deepcopy(template)
-                        )
-                    elif self._runtime.problem_type == ProblemType.CRISTINA:
-                        template = SolutionCristina.get_template_data(
-                            self._runtime, self._comms
-                        )
-                        solutionTemp = SolutionCristina(
+                        solutionTemp = solution_cls(
                             self._runtime, self._comms, deepcopy(template)
                         )
                     else:
@@ -1177,25 +1158,13 @@ class SolverDAB(SolverBase):
                 raise
             try:
                 solutionTemp = None
-                if self._runtime.problem_type is ProblemType.FUSION:
-                    template = SolutionFusion.get_template_data(
+                if self._runtime.problem_type in PROBLEM_TYPE_REGISTRY:
+                    _, solution_cls = PROBLEM_TYPE_REGISTRY[self._runtime.problem_type]
+                    template = solution_cls.get_template_data(
                         self._runtime, self._comms
                     )
-                    solutionTemp = SolutionFusion(
-                        self._runtime, self._comms, data=deepcopy(template)
-                    )
-                elif self._runtime.problem_type is ProblemType.NONSEPARABLE:
-                    template = SolutionNonSeparable.get_template_data(
-                        self._runtime, self._comms
-                    )
-                    solutionTemp = SolutionNonSeparable(
-                        self._runtime, self._comms, deepcopy(template)
-                    )
-                elif self._runtime.problem_type is ProblemType.CRISTINA:
-                    template = SolutionCristina.get_template_data(
-                        self._runtime, self._comms
-                    )
-                    solutionTemp = SolutionCristina(
+
+                    solutionTemp = solution_cls(
                         self._runtime, self._comms, deepcopy(template)
                     )
                 else:
@@ -1317,12 +1286,11 @@ class SolverDAB(SolverBase):
             self.runDistributed()
 
     def runDistributed(self):
-        if self._runtime.problem_type == ProblemType.FUSION:
-            self._problem = ProblemFusion(self._runtime, self._comms)
-        elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-            self._problem = ProblemNonSeparable(self._runtime, self._comms)
-        elif self._runtime.problem_type == ProblemType.CRISTINA:
-            self._problem = ProblemCristina(self._runtime, self._comms)
+        if self._runtime.problem_type in PROBLEM_TYPE_REGISTRY:
+            problem_cls, _ = PROBLEM_TYPE_REGISTRY[self._runtime.problem_type]
+            self._problem = problem_cls(self._runtime, self._comms)
+        else:
+            raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
 
         # numParams = self._bestSolution.getNumberofParams()
         # buff = array("f", [0]) * numParams
