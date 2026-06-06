@@ -37,8 +37,8 @@ From the project root, use `mpirun` with the desired process count:
 mpirun -np 4 dabmpi \
   --problem FUSION \
   --solver DAB \
-  --ifile data/input.xml \
-  --cfile data/param_config.xml \
+  --ifile data/param_config.yaml \
+  --cfile data/config_file \
   --time 3600 \
   --verbose 2
 ```
@@ -54,7 +54,7 @@ mpirun -np 4 dabmpi \
   - Allowed values: `DAB`, `SA`
 
 - `-i`, `--ifile`
-  - Path to the input parameter XML file.
+  - Path to the input parameter YAML file.
 
 - `-c`, `--cfile`
   - Path to the runtime INI configuration file.
@@ -103,10 +103,10 @@ If the configuration file cannot be found or parsed, defaults are used.
 
 The `data/` directory includes sample input files and configuration templates such as:
 
-- `data/input.xml`
-- `data/param_config.xml`
-- `data/param_config_w7x.xml`
-- `data/param_config_pressure.xml`
+- `data/input.yaml`
+- `data/param_config.yaml`
+- `data/param_config_w7x.yaml`
+- `data/param_config_pressure.yaml`
 
 Use these as starting points for your own optimization runs.
 
