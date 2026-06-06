@@ -715,7 +715,7 @@
 		<min_value>-100000</min_value>
 		<max_value>100000</max_value>
 	</param>
-	<param>    
+	<param>
 		<index>66</index>
 		<name>am4</name>
 		<value>0.0000E+00</value>
@@ -748,7 +748,7 @@
 		<min_value>-100000</min_value>
 		<max_value>100000</max_value>
 	</param>
-	<param>  
+	<param>
 		<index>69</index>
 		<name>am7</name>
 		<value>-9.8500E+05</value>
@@ -1122,7 +1122,7 @@
 		<min_value>-3</min_value>
 		<max_value>3</max_value>
 	</param>
-	<param>         
+	<param>
 		<index>103</index>
 		<name>ac0</name>
 		<value>0.0000E+00</value>

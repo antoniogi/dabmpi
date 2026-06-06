@@ -32,7 +32,7 @@ min_mercier_radius: 0.8
 ballooning: False
 
 #Extra checks in the threed1
-threed1: False 
+threed1: False
 
 #Get the beta
 get_beta: True

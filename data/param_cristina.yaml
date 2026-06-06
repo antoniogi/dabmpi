@@ -1,0 +1,37 @@
+CristinaParams:
+  param:
+  - index: '0'
+    name: x0
+    value: '0'
+    type: int
+    gap: '1'
+    min_value: '-100'
+    max_value: '100'
+  - index: '1'
+    name: x1
+    value: '0'
+    type: int
+    gap: '1'
+    min_value: '-100'
+    max_value: '100'
+  - index: '2'
+    name: x2
+    value: '0'
+    type: int
+    gap: '1'
+    min_value: '-100'
+    max_value: '100'
+  - index: '3'
+    name: x3
+    value: '0'
+    type: int
+    gap: '1'
+    min_value: '-100'
+    max_value: '100'
+  - index: '4'
+    name: x4
+    value: '0'
+    type: int
+    gap: '1'
+    min_value: '-100'
+    max_value: '100'

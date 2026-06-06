@@ -1,0 +1,11 @@
+# Vim swap files
+*.swp
+
+#Mac files
+.DS_STORE
+
+__pycache__
+*.log
+*.queue
+*egg-info*
+src/[0-9]*/

@@ -27,14 +27,14 @@ python -m pip install --upgrade pip
 python -m pip install -e .[dev]
 ```
 
-This installs the project in editable mode and installs development dependencies such as `pytest` and `pylint`.
+This installs the project in editable mode and installs development dependencies such as `pytest`, `ruff`, and `mypy`.
 
 ## Running the tool
 
 From the project root, use `mpirun` with the desired process count:
 
 ```bash
-mpirun -np 4 python src/disop.py \
+mpirun -np 4 dabmpi \
   --problem FUSION \
   --solver DAB \
   --ifile data/input.xml \

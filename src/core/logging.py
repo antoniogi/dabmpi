@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations
-
-"""Application logging configuration and management."""
-
-
 import logging
 
 
@@ -53,7 +49,6 @@ class LoggerConfig:
         console_level: int = logging.WARNING,
         file_level: int = logging.DEBUG,
     ) -> logging.Logger:
-
         logging.addLevelName(
             LoggerConfig.CUSTOM_LEVEL,
             LoggerConfig.CUSTOM_LEVEL_NAME,
@@ -68,7 +63,7 @@ class LoggerConfig:
             )
 
         if not hasattr(logging.Logger, "best"):
-            logging.Logger.best = best
+            setattr(logging.Logger, "best", best)
 
         logger = logging.getLogger(name)
 

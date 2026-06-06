@@ -76,7 +76,7 @@ def get_package_version():
 def parse_arguments(argv=None) -> argparse.Namespace:
     """Parse command-line arguments and return the namespace."""
     parser = argparse.ArgumentParser(
-        prog="disop.py",
+        prog="dabmpi",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Distributed Solver for Global Optimization.",
         epilog="Distributed Solver for Global Optimization.",
@@ -279,13 +279,18 @@ def main(runtime, argv=None):
         raise
 
 
-if __name__ == "__main__":
+def cli_main(argv=None):
+    """Console entry point for the installed dabmpi command."""
     runtime = GlobalRuntime()
     try:
-        main(runtime)
+        main(runtime, argv)
     except Exception:
         if getattr(runtime, "logger", None):
             runtime.logger.exception("Fatal error in main execution")
         else:
             print("Fatal error in main execution")
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    cli_main()

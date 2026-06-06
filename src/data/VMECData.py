@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-
 import os
 import sys
 from array import array
-from xml.dom import minidom
+import yaml
 
 from .Parameter import ParamType
 from .ParameterVMEC import ParameterVMEC
@@ -13,9 +12,9 @@ from .ParameterVMEC import ParameterVMEC
 class VMECData:
     """
     This class stores all the data required by VMEC.
-    It also provides methods to read the input xml file that, for each
+    It provides methods to read the input YAML file that, for each
     parameter, specifies the min/max/default values, the gap, the index,...
-    It can also create an XML output file with the data it contains
+    It can also create an XML/text output file with the data it contains.
     """
 
     # We define the strict order of parameters here to eliminate boilerplate in getters/setters.
@@ -108,15 +107,14 @@ class VMECData:
     def __init__(self, runtime, comms):
         self._runtime = runtime
         self._comms = comms
-        self._numParams = 0
-        self._maxRange = 0
+        self._num_parameters = 0
+        self._max_range = 0
         self._show_indata = True
         self._show_optimum = True
         self._show_bootin = True
         self._fInput = None
 
-        # Keeping explicit definitions prevents breaking any code
-        # that relies on instance attribute access, and keeps IDE auto-complete happy.
+        # Keeping explicit definitions for IDE auto-complete and attribute access.
         self.mgrid_file = None
         self.loldout = None
         self.lwouttxt = None
@@ -214,85 +212,58 @@ class VMECData:
             del self.rbc[:]
             del self.zbc[:]
             del self.ftol[:]
-        except:
-            pass
+        except Exception:
+            raise Exception("Error while deleting VMECData object")
 
-    def getNumParams(self):
-        """Returns the number of parameters that can be actually modified"""
-        return self._numParams
+    @property
+    def num_parameters(self):
+        return self._num_parameters
 
-    def getMaxRange(self):
-        """
-        Returns the maximum range(maximum number of values) that a parameter
-        can take. This is the global maximum, meaning that most of the
-        parameters will take less values than this.
-        If param.max_value = 3, and param.min_value=1, and param.gap=1, the
-        range for param is 3 (it can take values 1,2,3)
-        """
-        return self._maxRange
+    @property
+    def max_range(self):
+        return self._max_range
 
     def _iter_params(self, include_config=False):
-        """
-        Helper generator that dynamically yields parameter objects in the correct order.
-        Handles both individual parameters and lists of parameters.
-        """
         names = (
             self._CONFIG_PARAMS + self._NUMERIC_PARAMS
             if include_config
             else self._NUMERIC_PARAMS
         )
-
         for name in names:
             val = getattr(self, name, None)
             if val is None:
                 continue
-
             if isinstance(val, list):
                 for item in val:
                     yield item
             else:
                 yield val
 
-    def getValsOfParameters(self):
-        """Returns a list of doubles with the values of the modifiable parameters"""
-        buff = array("f", [0]) * self._numParams
+    def get_parameters_values(self):
+        buff = array("f", [0]) * self._num_parameters
         idx = 0
-
         for param in self._iter_params(include_config=False):
-            if param.to_be_modified():
-                buff[idx] = float(param.get_value())
+            if param.to_be_modified:
+                buff[idx] = float(param.value)
                 idx += 1
-
         return buff
 
-    def setValsOfParameters(self, buff):
-        """
-        Receives as parameter (buff) a list of values corresponding to the values
-        that the parameters that can be modified must take.
-        """
+    def set_parameters_values(self, buff):
         self._runtime.logger.debug(
-            "VMECData. Setting parameters (number: " + str(len(buff)) + ")"
+            f"VMECData. Setting parameters (number: {len(buff)})"
         )
         idx = 0
-
         for param in self._iter_params(include_config=False):
-            if param.to_be_modified():
-                param.set_value(buff[idx])
+            if param.to_be_modified:
+                param.value = buff[idx]
                 idx += 1
 
-    def getParameters(self):
-        """Return a list with all the parameters (list of Parameter objects)"""
+    def get_parameters(self):
         parameters = []
-
         for param in self._iter_params(include_config=True):
-            if param.to_be_modified():
+            if param.to_be_modified:
                 parameters.append(param)
-
         return parameters
-
-    """
-    Assign a parameter with a new value to an older version of the same parameter
-    """
 
     def _assign_to_list(self, attr_name, pos, parameter):
         lst = getattr(self, attr_name)
@@ -388,186 +359,209 @@ class VMECData:
             (871, 901, "sigma_balloon"),
             (902, 932, "sigma_pgrad"),
         ]
-        index = parameter.get_index()
+        index = parameter.index
 
-        # Direct assignments
         if attr := DIRECT_ASSIGNMENTS.get(index):
             setattr(self, attr, parameter)
             return 1
 
-        # Standard ranged assignments
         for start, end, target in RANGE_ASSIGNMENTS:
             if start <= index <= end:
                 return self._assign_to_list(target, index - start, parameter)
 
-        # Special alternating rbc/zbc case
         if 151 <= index <= 550:
             offset = index - 151
             target = "rbc" if offset % 2 == 0 else "zbc"
             return self._assign_to_list(target, offset // 2, parameter)
-        # If we reach this point, the parameter index is unrecognized.
-        # Only log a warning if the parameter is meant to be displayed, otherwise silently ignore it.
-        if parameter.get_display():
+
+        if parameter.display:
             self._runtime.logger.warning(f"Unassigned element with index: {index}")
         return -1
 
-    """
-    Method that reads the xml input file. Puts into memory all the data
-    contained in that file (min-max values, initial value, gap,...)
-    Argument:
-        - filepath: path to the XML input file
-    """
-
     def initialize(self, filepath):
+        """
+        Method that reads the YAML input file, fixes structural key changes,
+        and sanitizes stringified YAML or dictionary values into native Python types.
+        """
         try:
+            self._runtime.logger.debug("VMEC data initialization")
             if not os.path.exists(filepath):
                 filepath = "../" + filepath
-            xmldoc = minidom.parse(filepath)
-            pNode = xmldoc.childNodes[0]
-            for namelists in pNode.childNodes:
-                if namelists.nodeType == namelists.ELEMENT_NODE:
-                    if namelists.attributes["display"].value == "False":
-                        if namelists.localName == "indata":
-                            self._show_indata = False
-                        if namelists.localName == "optimum":
-                            self._show_optimum = False
-                        if namelists.localName == "bootin":
-                            self._show_bootin = False
-                    for node in namelists.childNodes:
-                        if node.nodeType == node.ELEMENT_NODE:
-                            c = ParameterVMEC(self._runtime)
-                            for node_param in node.childNodes:
-                                if node_param.nodeType == node_param.ELEMENT_NODE:
-                                    name = node_param.localName
-                                    # helper to safely read text
-                                    text = None
-                                    if node_param.firstChild is not None:
-                                        text = node_param.firstChild.data
 
-                                    if name == "display" and text is not None:
-                                        c.set_display(text)
+            with open(filepath, "r", encoding="utf-8") as f:
+                # Use CSafeLoader for optimized performance if available
+                try:
+                    from yaml import CSafeLoader as SafeLoader
+                except ImportError:
+                    from yaml import SafeLoader
 
-                                    if name == "fixed" and text is not None:
-                                        c.set_fixed(text)
+                raw_data = yaml.load(f, Loader=SafeLoader) or {}
 
-                                    if name == "type" and text is not None:
-                                        t = text.strip().lower()
-                                        mapping = {
-                                            "float": ParamType.FLOAT,
-                                            "double": ParamType.FLOAT,
-                                            "int": ParamType.INT,
-                                            "bool": ParamType.BOOL,
-                                            "string": ParamType.STRING,
-                                        }
-                                        c.set_type(mapping.get(t, ParamType.STRING))
+            # Handle the top-level 'parameters_config' wrapper if present
+            data = raw_data.get("parameters_config", raw_data)
 
-                                    if name == "value" and text is not None:
-                                        c.set_value(text)
-                                        try:
-                                            if node_param.hasAttribute("x"):
-                                                x_index = node_param.getAttribute("x")
-                                                c.set_x_index(x_index)
-                                            if node_param.hasAttribute("y"):
-                                                y_index = node_param.getAttribute("y")
-                                                c.set_y_index(y_index)
-                                        except Exception:
-                                            pass
+            sections = ["indata", "optimum", "bootin"]
 
-                                    if name == "min_value" and text is not None:
-                                        c.set_min_value(text)
+            # Helper to normalize stringified booleans from the YAML
+            def to_bool(val):
+                if isinstance(val, bool):
+                    return val
+                if isinstance(val, str):
+                    return val.strip().lower() in ("true", "t", "yes", "1")
+                return bool(val)
 
-                                    if name == "max_value" and text is not None:
-                                        c.set_max_value(text)
+            # 1. Evaluate section visibility flags safely (checking for '@display')
+            for section in sections:
+                if section in data:
+                    display_flag = data[section].get(
+                        "@display", data[section].get("display", True)
+                    )
+                    if to_bool(display_flag) is False:
+                        setattr(self, f"_show_{section}", False)
 
-                                    if name == "index" and text is not None:
-                                        c.set_index(text)
+            # 2. Map structural values into native Parameter types
+            type_mapping = {
+                "float": ParamType.FLOAT,
+                "double": ParamType.FLOAT,
+                "int": ParamType.INT,
+                "bool": ParamType.BOOL,
+                "string": ParamType.STRING,
+            }
 
-                                    if name == "name" and text is not None:
-                                        c.set_name(text)
+            for section in sections:
+                if section not in data:
+                    continue
 
-                                    if name == "gap" and text is not None:
-                                        c.set_gap(text)
-                            try:
-                                self.assign_parameter(c)
-                                if c.to_be_modified():
-                                    self._numParams += 1
-                                    values = 1 + int(
-                                        round(
-                                            (c.get_max_value() - c.get_min_value())
-                                            / c.get_gap()
-                                        )
-                                    )
-                                    self._maxRange = max(values, self._maxRange)
-                            except Exception:
-                                self._runtime.logger.exception(
-                                    f"VMECData. Exception assigning parameter with index {c.get_index()} and name {c.get_name()}"
+                # Read from the 'param' key instead of 'parameters'
+                parameters_list = data[section].get("param", [])
+                if not isinstance(parameters_list, list):
+                    continue
+
+                for p_data in parameters_list:
+                    pname = p_data.get("name")
+                    index = p_data.get("index")
+
+                    if index is None:
+                        continue
+
+                    # Force clean native types regardless of single quotes in YAML
+                    index = int(index)
+                    display = to_bool(p_data.get("display", True))
+                    fixed = to_bool(p_data.get("fixed", False))
+
+                    raw_type = str(p_data.get("type", "")).strip().lower()
+                    ptype = type_mapping.get(raw_type, ParamType.STRING)
+
+                    # Intercept structural coordinates and scalar value payloads
+                    value = p_data.get("value")
+                    x_index = p_data.get("x")
+                    y_index = p_data.get("y")
+
+                    # Handle case where 'value' became a dictionary due to XML attributes (e.g., rbc/zbc)
+                    if isinstance(value, dict):
+                        if x_index is None:
+                            x_index = value.get("@x", value.get("x"))
+                        if y_index is None:
+                            y_index = value.get("@y", value.get("y"))
+
+                        # Fallback parsing ladder to extract the native raw scalar string/number
+                        value = value.get(
+                            "#text", value.get("content", value.get("value"))
+                        )
+
+                    # Now safely strip quotes if the remaining payload is a string
+                    if isinstance(value, str):
+                        value = value.strip("'\" ").strip()
+
+                    # Safely convert bounds to floats/ints to prevent downstream math errors
+                    def safe_float(val):
+                        if val is None or val == "":
+                            return None
+                        try:
+                            return float(str(val).strip("'\" "))
+                        except ValueError:
+                            return None
+
+                    min_value = safe_float(p_data.get("min_value"))
+                    max_value = safe_float(p_data.get("max_value"))
+                    gap = safe_float(p_data.get("gap"))
+
+                    try:
+                        c = ParameterVMEC(
+                            name=pname,
+                            index=index,
+                            ptype=ptype,
+                            value=value,
+                            gap=gap,
+                            min_value=min_value,
+                            max_value=max_value,
+                            x_index=x_index if x_index is None else int(x_index),
+                            y_index=y_index if y_index is None else int(y_index),
+                            fixed=fixed,
+                            display=display,
+                        )
+                        self.assign_parameter(c)
+
+                        if c.to_be_modified:
+                            self._num_parameters += 1
+                            if (
+                                c.max_value is not None
+                                and c.min_value is not None
+                                and c.gap
+                            ):
+                                values = 1 + int(
+                                    round((c.max_value - c.min_value) / c.gap)
                                 )
-                                raise
+                                self._max_range = max(values, self._max_range)
+
+                    except Exception:
+                        self._runtime.logger.exception(
+                            f"VMECData. Exception assigning parameter with index {index} and name {pname}"
+                        )
+                        raise
+
         except Exception:
             self._runtime.logger.exception(
-                "VMECData. Exception while initializing from XML file"
+                "VMECData. Exception while initializing from YAML file"
             )
             sys.exit(111)
+        self._runtime.logger.debug("VMECData initialized")
         return
 
     def _write_bool(self, f, name, param):
-        if param.get_display():
-            value = "T" if param.get_value() else "F"
+        if param.display:
+            value = "T" if param.value else "F"
             f.write(f"  {name} = {value}\n")
 
     def _write_scalar(self, f, name, param, fmt="{}"):
-        if param.get_display():
-            value = fmt.format(param.get_value())
+        if param.display:
+            value = fmt.format(param.value)
             f.write(f"  {name} = {value}\n")
 
     def _write_array(
-        self,
-        f,
-        name,
-        params,
-        fmt="{:.4E}",
-        per_line=5,
-        header_suffix=" = ",
+        self, f, name, params, fmt="{:.4E}", per_line=5, header_suffix=" = "
     ):
-        displayed = [p for p in params if p.get_display()]
-
+        displayed = [p for p in params if p.display]
         if not displayed:
             return
-
-        values = [fmt.format(float(p.get_value())) for p in displayed]
-
+        values = [fmt.format(float(p.value)) for p in displayed]
         lines = [
             " ".join(values[i : i + per_line]) for i in range(0, len(values), per_line)
         ]
-
         f.write(f"  {name}{header_suffix}")
         f.write("\n".join(lines))
         f.write("\n")
 
     def _write_group(self, f, params):
-        """
-        params:
-            [
-                ("NAME", parameter, format),
-                ...
-            ]
-        """
-        if not all(param.get_display() for _, param, _ in params):
+        if not all(param.display for _, param, _ in params):
             return
-        values = [
-            f"{name}={fmt.format(param.get_value())}" for name, param, fmt in params
-        ]
+        values = [f"{name}={fmt.format(param.value)}" for name, param, fmt in params]
         f.write(f"  {', '.join(values)}\n")
 
     def __write_indata(self, f_input):
         try:
             f_input.write("&INDATA\n")
-
-            self._write_scalar(
-                f_input,
-                "MGRID_FILE",
-                self.mgrid_file,
-            )
+            self._write_scalar(f_input, "MGRID_FILE", self.mgrid_file)
 
             for name, param in [
                 ("LFREEB", self.lfreeb),
@@ -601,78 +595,26 @@ class VMECData:
             for name, param, fmt in scalar_fields:
                 self._write_scalar(f_input, name, param, fmt)
 
-            if self.mpol.get_display() and self.ntor.get_display():
-                f_input.write(
-                    f"  MPOL = {self.mpol.get_value()}  "
-                    f"NTOR = {self.ntor.get_value()}\n"
-                )
+            if self.mpol.display and self.ntor.display:
+                f_input.write(f"  MPOL = {self.mpol.value}  NTOR = {self.ntor.value}\n")
 
-            self._write_array(
-                f_input,
-                "NS_ARRAY",
-                self.ns,
-                fmt="{}",
-            )
-
-            self._write_array(
-                f_input,
-                "FTOL_ARRAY",
-                self.ftol,
-                fmt="{:.6E}",
-            )
-
-            self._write_array(
-                f_input,
-                "EXTCUR( 1)",
-                self.extcur,
-                fmt="{:.6E}",
-            )
-
-            self._write_array(
-                f_input,
-                "AM",
-                self.am,
-            )
-
-            self._write_array(
-                f_input,
-                "AI",
-                self.ai,
-            )
-
-            self._write_array(
-                f_input,
-                "AC",
-                self.ac,
-            )
-
-            self._write_array(
-                f_input,
-                "RAXIS",
-                self.raxis,
-            )
-
-            self._write_array(
-                f_input,
-                "ZAXIS",
-                self.zaxis,
-            )
+            self._write_array(f_input, "NS_ARRAY", self.ns, fmt="{}")
+            self._write_array(f_input, "FTOL_ARRAY", self.ftol, fmt="{:.6E}")
+            self._write_array(f_input, "EXTCUR( 1)", self.extcur, fmt="{:.6E}")
+            self._write_array(f_input, "AM", self.am)
+            self._write_array(f_input, "AI", self.ai)
+            self._write_array(f_input, "AC", self.ac)
+            self._write_array(f_input, "RAXIS", self.raxis)
+            self._write_array(f_input, "ZAXIS", self.zaxis)
 
             for rbc, zbs in zip(self.rbc, self.zbc):
-                if not rbc.get_display():
+                if not rbc.display:
                     continue
-
                 f_input.write(
-                    f"  RBC({rbc.get_x_index():3d},"
-                    f"{rbc.get_y_index()}) = "
-                    f"{float(rbc.get_value()): .4E}     "
-                    f"ZBS({zbs.get_x_index():3d},"
-                    f"{zbs.get_y_index()}) = "
-                    f"{float(zbs.get_value()): .4E}\n"
+                    f"  RBC({rbc.x_index:3d},{rbc.y_index}) = {float(rbc.value): .4E}     "
+                    f"ZBS({zbs.x_index:3d},{zbs.y_index}) = {float(zbs.value): .4E}\n"
                 )
-
             f_input.write("/\n")
-
         except Exception:
             self._runtime.logger.exception("Error writing INDATA section")
             raise
@@ -680,7 +622,6 @@ class VMECData:
     def __write_optimum(self, f_input):
         try:
             f_input.write("\n/\n&OPTIMUM\n")
-
             for name, param in [
                 ("LRESET_OPT", self.lreset_opt),
                 ("LPROF_OPT", self.lprof_opt),
@@ -743,16 +684,9 @@ class VMECData:
                     per_line=per_line,
                     header_suffix=" =\n",
                 )
-
         except Exception:
             self._runtime.logger.exception("Error writing OPTIMUM section")
             raise
-
-    """
-    Writes the /bootin section of VMEC's input file
-    Argument:
-      - fInput: file struct that will store the input
-    """
 
     def __write_bootin(self, f_input):
         try:
@@ -774,19 +708,11 @@ class VMECData:
                     ("ATE", self.ate, "{}"),
                 ],
             )
-            self._write_scalar(
-                f_input,
-                "ATI",
-                self.ati,
-            )
+            self._write_scalar(f_input, "ATI", self.ati)
             f_input.write("/\n\n")
         except Exception:
             self._runtime.logger.exception("Error writing BOOTIN section")
             raise
-
-    """
-    Main method for creating the input file
-    """
 
     def create_input_file(self, filename) -> bool:
         try:

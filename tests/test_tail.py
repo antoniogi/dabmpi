@@ -34,11 +34,7 @@ def test_tail_single_line_with_newline(tmp_path):
 def test_tail_multiple_lines(tmp_path):
     f = tmp_path / "multi.txt"
 
-    f.write_text(
-        "line1\n"
-        "line2\n"
-        "line3\n"
-    )
+    f.write_text("line1\nline2\nline3\n")
 
     assert tail(str(f)) == "line3"
 
@@ -46,10 +42,7 @@ def test_tail_multiple_lines(tmp_path):
 def test_tail_no_trailing_newline(tmp_path):
     f = tmp_path / "no_newline.txt"
 
-    f.write_text(
-        "line1\n"
-        "line2"
-    )
+    f.write_text("line1\nline2")
 
     assert tail(str(f)) == "line2"
 
@@ -57,11 +50,7 @@ def test_tail_no_trailing_newline(tmp_path):
 def test_tail_unicode(tmp_path):
     f = tmp_path / "unicode.txt"
 
-    f.write_text(
-        "hello\n"
-        "κόσμος\n",
-        encoding="utf-8"
-    )
+    f.write_text("hello\nκόσμος\n", encoding="utf-8")
 
     assert tail(str(f)) == "κόσμος"
 

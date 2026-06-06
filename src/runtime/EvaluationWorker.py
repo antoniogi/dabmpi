@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from array import array
+from copy import deepcopy
 from time import time
 
 from mpi4py import MPI
@@ -17,15 +18,17 @@ from solution.SolutionNonSeparable import SolutionNonSeparable
 
 
 class EvaluationWorker:
+    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+
     def __init__(self, runtime: GlobalRuntime, comm: GlobalComms):
         try:
-            self._comm = comm
-            self._runtime = runtime
-            self._rank = self._comm.comm.Get_rank()
-            self._endRequest = None
+            self._comm: GlobalComms = comm
+            self._runtime: GlobalRuntime = runtime
+            self._rank: int = self._comm.comm.Get_rank()
+            self._endRequest: MPI.Request | None = None
 
             self._end = array("i", [0])
-            self._requestsEnd = []
+            self._requestsEnd: list[MPI.Request] = []
             if self._runtime.problem_type == ProblemType.FUSION:
                 self._problem = ProblemFusion(runtime, comm)
             elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
@@ -65,17 +68,33 @@ class EvaluationWorker:
                 # Send a request for data
                 status = MPI.Status()
                 if self._runtime.problem_type == ProblemType.FUSION:
-                    solution = SolutionFusion(self._runtime, self._comm)
+                    template = SolutionFusion.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionFusion(
+                        self._runtime, self._comm, data=deepcopy(template)
+                    )
+                    # solution = SolutionFusion(self._runtime, self._comm)
                 elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                    solution = SolutionNonSeparable(self._runtime, self._comm)
+                    template = SolutionNonSeparable.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionNonSeparable(
+                        self._runtime, self._comm, deepcopy(template)
+                    )
                 elif self._runtime.problem_type == ProblemType.CRISTINA:
-                    solution = SolutionCristina(self._runtime, self._comm)
+                    template = SolutionCristina.get_template_data(
+                        self._runtime, self._comm
+                    )
+                    solution = SolutionCristina(
+                        self._runtime, self._comm, deepcopy(template)
+                    )
                 else:
                     raise ValueError(
                         f"Unknown problem type: {self._runtime.problem_type}"
                     )
 
-                num_params = solution.getNumberofParams()
+                num_params = solution.get_number_of_params()
                 buff = array("f", [0]) * num_params
                 solution_value = array("f", [0]) * 1
                 dump = array("i", [0]) * 1
@@ -97,13 +116,13 @@ class EvaluationWorker:
                 self._runtime.logger.info(
                     f"WORKER ( {self._rank} ) has received a solution to evaluate from bee {agent_idx[0]}"
                 )
-                solution.setParametersValues(buff)
+                solution.set_parameters_values(buff)
 
                 # Evalute the solution
                 self._problem.solve(solution)
 
-                buff = solution.getParametersValues()
-                solution_value[0] = float(solution.getValue())
+                buff = solution.get_parameters_values()
+                solution_value[0] = float(solution.value)
 
                 # Send the solution back together with the bee id
                 req = self._comm.comm.Isend([dump, MPI.INT], 0, Tags.REQSENDINPUT)

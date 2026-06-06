@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from copy import deepcopy
 import math
 import os
 
@@ -21,13 +22,13 @@ class SolutionsQueue:
         writeToFile: bool,
         isPriority: bool = False,
     ):
-        self._queue = []
+        self._queue: list[tuple[str, float, int]] = []
         self._filename = solutions_file
         self._solType = runtime.solution_type
         self._isPriority = isPriority
         self._infile = runtime.input_file
         self._writeToFile = writeToFile
-        self._maxSize = math.inf
+        self._max_size = math.inf
         self._runtime = runtime
         self._comms = comms
 
@@ -47,16 +48,22 @@ class SolutionsQueue:
         }
 
         solution_class, solution_name = solution_map.get(self._solType, (None, None))
+        assert solution_class is not None, (
+            f"Type {self._solType} is missing from solution_map"
+        )
 
         try:
-            self._solutionBase = solution_class(self._runtime, self._comms)
+            template = solution_class.get_template_data(self._runtime, self._comms)
+            self._solutionBase = solution_class(
+                self._runtime, self._comms, deepcopy(template)
+            )
 
             self._runtime.logger.info(
                 f"Queue: Initialized {solution_name} queue "
                 f"({self._filename}) {self._infile}"
             )
 
-            self._numParams = self._solutionBase.getNumberofParams()
+            self._numParams = self._solutionBase.get_number_of_params()
 
             if os.path.exists(self._filename):
                 self.load_queue()
@@ -69,10 +76,16 @@ class SolutionsQueue:
         if self._filename == "top.queue":
             self.write_all_solutions()
 
-    def setMaxSize(self, maxS):
-        self._maxSize = maxS
+    @property
+    def max_size(self):
+        return self._max_size
 
-    def qSize(self):
+    @max_size.setter
+    def max_size(self, maxS):
+        self._max_size = maxS
+
+    @property
+    def queue_size(self):
         return len(self._queue)
 
     """
@@ -96,7 +109,7 @@ class SolutionsQueue:
             return
 
         try:
-            parameters = solution.getParameters()
+            parameters = solution.get_parameters()
 
             if len(parameters) != self._numParams:
                 self._runtime.logger.warning(
@@ -106,14 +119,12 @@ class SolutionsQueue:
                 )
                 return
 
-            sol = ",".join(
-                f"{param.get_index()}:{param.get_value()}" for param in parameters
-            )
+            sol = ",".join(f"{param.index}:{param.value}" for param in parameters)
 
             sol_tuple = (sol, value, agent_idx)
 
             if not self._isPriority:
-                if self.qSize() < self._maxSize:
+                if self.queue_size < self._max_size:
                     self._queue.append(sol_tuple)
 
             else:
@@ -135,7 +146,7 @@ class SolutionsQueue:
                             continue
 
                     if (
-                        index > self._maxSize / 10
+                        index > self._max_size / 10
                         and len(origins) <= 1
                         and agent_idx in origins
                     ):
@@ -147,9 +158,9 @@ class SolutionsQueue:
 
                 if not inserted and len(origins) < sources:
                     if agent_idx not in origins:
-                        if self.qSize() > 0:
+                        if self.queue_size > 0:
                             for index in range(
-                                self.qSize() - 1,
+                                self.queue_size - 1,
                                 -1,
                                 -1,
                             ):
@@ -159,7 +170,7 @@ class SolutionsQueue:
 
                         self._queue.append(sol_tuple)
 
-                if self.qSize() > self._maxSize:
+                if self.queue_size > self._max_size:
                     self._queue.pop()
 
         except Exception:
@@ -214,10 +225,10 @@ class SolutionsQueue:
     def write_all_solutions(self) -> None:
         try:
             with open(self._filename, "w", encoding="utf-8") as file:
-                while self.qSize() > 0:
+                while self.queue_size > 0:
                     solution_tuple = self.get_solution_tuple(True)
 
-                    parameters = solution_tuple[0].getParameters()
+                    parameters = solution_tuple[0].get_parameters()
 
                     if len(parameters) != self._numParams:
                         self._runtime.logger.warning(
@@ -228,8 +239,7 @@ class SolutionsQueue:
                         return
 
                     solution = ",".join(
-                        f"{param.get_index()}:{param.get_value()}"
-                        for param in parameters
+                        f"{param.index}:{param.value}" for param in parameters
                     )
 
                     file.write(f"{solution}#{solution_tuple[1]}#{solution_tuple[2]}\n")
@@ -245,13 +255,13 @@ class SolutionsQueue:
     """
 
     def get_solution_tuple(self, remove=True) -> tuple[SolutionBase, float, int]:
-        solution = None
+        # solution = None
         val = -1.0
         agent_idx = -1
-        if self.qSize() == 0:
+        if self.queue_size == 0:
             raise IndexError("Queue is empty")
             # return solution, val, agent_idx
-        solution = self._solutionBase
+        # solution = self._solutionBase
         if remove:
             sol_tuple = self._queue.pop(0)
         else:
@@ -267,7 +277,7 @@ class SolutionsQueue:
             params.append(float(p.split(":")[1]))
 
         # this method expects a list of parameters
-        self._solutionBase.setParametersValues(params)
+        self._solutionBase.set_parameters_values(params)
 
         return self._solutionBase, float(val), int(agent_idx)
 
@@ -295,9 +305,13 @@ class SolutionsQueue:
             parameters = sol_tuple[0].split(",")
             # iterate through the elements in the list
             self._runtime.logger.debug(
-                "QUEUE. Number of parameters: " + str(len(parameters))
+                f"QUEUE. Number of parameters: {len(parameters)}"
             )
             for p in parameters:
+                parts = p.split(":")
+                if len(parts) == 0:
+                    self._runtime.logger.error("Incorrect parameter received (empty)")
+                    raise
                 self._runtime.logger.debug("Appending: " + str(p.split(":")[1]))
                 solution.append(float(p.split(":")[1]))
         except Exception:
@@ -357,10 +371,10 @@ class SolutionsQueue:
                 self._runtime.logger.info(
                     "Queue. Returning solution in position "
                     f"{index} / {temp_sum} / {value} / "
-                    f"{self.qSize()} / {total_val}"
+                    f"{self.queue_size} / {total_val}"
                 )
 
-                self._solutionBase.setParametersValues(params)
+                self._solutionBase.set_parameters_values(params)
 
                 return (
                     self._solutionBase,

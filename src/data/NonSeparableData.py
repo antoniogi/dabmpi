@@ -1,144 +1,162 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
-import sys
 from array import array
-from xml.dom import minidom
+import xml.etree.ElementTree as ET
 
-from .Parameter import Parameter
+from .Parameter import Parameter, ParamType
 
 
 class NonSeparableData:
     """
     This class stores all the data required by VMEC.
-    It also provides methods to read the input xml file that, for each
-    parameter, specifies the min/max/default values, the gap, the index,...
-    It can also create an XML output file with the data it contains
+    Handles non-separable structural configuration parameter groups.
     """
 
-    def __init__(self, runtime):
-        self._numParams = 0
+    def __init__(self, runtime) -> None:
         self._maxRange = 0
         self._fInput = None
-        self._params = []
+        self._params: list[Parameter] = []
         self._logger = runtime.logger
-        return
 
-    def __del__(self):
-        try:
-            del self._params[:]
-        except:
-            pass
+    @property
+    def num_params(self) -> int:
+        """Dynamically returns the number of active parameters."""
+        return len(self._params)
 
-    # returns the number of parameters that can be actually modified
-    def getNumParams(self):
-        return self._numParams
+    @property
+    def max_range(self) -> int:
+        return self._maxRange
 
-    """
-    Returns a list of doubles with the values of the modificable parameters
-    """
+    @property
+    def params(self) -> list[Parameter]:
+        """Exposes the collection of Parameter objects."""
+        return self._params
 
-    def getValsOfParameters(self):
-        buff = array("f", [0]) * self._numParams
-        for i in range(self._numParams):
-            buff[i] = float(self._params[i].get_value())
-        return buff
+    @params.setter
+    def params(self, parameters: list[Parameter]) -> None:
+        self._params = parameters
 
-    """
-    Receives as parameter (buff) a list of values corresponding to
-    the values that the parameters that can be modified must take.
-    Goes through all of the parameters and changes the values of the
-    modificable parameters to the value specified in this list
-    """
+    def get_params_values(self) -> array:
+        """Returns a float array containing the current values of the parameters."""
+        return array("f", [float(p.value) for p in self._params])
 
-    def setValsOfParameters(self, buff):
+    def set_params_values(self, buff: list[float] | array) -> None:
+        """Updates internal parameter states sequence-wise from an iterable buffer."""
         self._logger.debug(
-            "NonSeparableData. Setting parameters (number: " + str(len(buff)) + ")"
+            f"NonSeparableData. Setting parameters (number: {len(buff)})"
         )
-        for i in range(len(buff)):
-            self._params[i].set_value(buff[i])
+        for i, val in enumerate(buff):
+            if i < len(self._params):
+                self._params[i].value = val
 
-    def setParameters(self, parameters):
+    def set_parameters(self, parameters: list[Parameter]) -> None:
         for param in parameters:
             self.assign_parameter(param)
 
-    """
-    Return a list with all the parameters (list of Parameter objects)
-    """
+    def assign_parameter(self, parameter: Parameter) -> None:
+        """Assigns or appends a Parameter structural object."""
+        try:
+            index = (
+                int(parameter.index)
+                if parameter.index is not None
+                else len(self._params)
+            )
+        except (TypeError, ValueError):
+            index = len(self._params)
 
-    def getParameters(self):
-        return self._params
-
-    """
-    Assign a parameter with a new value to an older version of the
-    same parameter
-    """
-
-    def assign_parameter(self, parameter):
-        index = parameter.get_index()
         if index >= len(self._params):
             self._params.append(parameter)
 
-    def getMaxRange(self):
-        return self._maxRange
+    def initialize(self, filepath: str) -> None:
+        """Reads the XML input file and instantiates immutable-ready parameter states."""
+        if not os.path.exists(filepath):
+            filepath = os.path.join("..", filepath)
 
-    """
-    Method that reads the xml input file. Puts into memory all the data
-    contained in that file (min-max values, initial value, gap,...)
-    Argument:
-        - filepath: path to the XML input file
-    """
-
-    def initialize(self, filepath):
         try:
-            if not os.path.exists(filepath):
-                filepath = "../" + filepath
-            xmldoc = minidom.parse(filepath)
-            pNode = xmldoc.childNodes[0]
-            for node in pNode.childNodes:
-                if node.nodeType == node.ELEMENT_NODE:
-                    c = Parameter()
-                    for node_param in node.childNodes:
-                        if node_param.nodeType == node_param.ELEMENT_NODE:
-                            if node_param.localName == "type":
-                                c.set_type(node_param.firstChild.data)
-                            if node_param.localName == "value":
-                                c.set_value(node_param.firstChild.data)
-                            if node_param.localName == "min_value":
-                                c.set_min_value(node_param.firstChild.data)
-                            if node_param.localName == "max_value":
-                                c.set_max_value(node_param.firstChild.data)
-                            if node_param.localName == "index":
-                                c.set_index(node_param.firstChild.data)
-                            if node_param.localName == "name":
-                                c.set_name(node_param.firstChild.data)
-                            if node_param.localName == "gap":
-                                c.set_gap(node_param.firstChild.data)
-                    try:
-                        self.assign_parameter(c)
-                        self._numParams += 1
+            tree = ET.parse(filepath)
+            root = tree.getroot()
+
+            for node in root:
+                # 1. Use explicitly typed local variables to keep Mypy happy
+                p_name = ""
+                p_index_str: str | None = None
+                p_type_str = "string"
+                p_value: str | None = None
+                p_gap_str: str | None = None
+                p_min_value: str | None = None
+                p_max_value: str | None = None
+
+                for param_node in node:
+                    tag = param_node.tag
+                    val = param_node.text
+                    if tag == "name" and val is not None:
+                        p_name = val
+                    elif tag == "index":
+                        p_index_str = val
+                    elif tag == "type" and val is not None:
+                        p_type_str = val
+                    elif tag == "value":
+                        p_value = val
+                    elif tag == "gap":
+                        p_gap_str = val
+                    elif tag == "min_value":
+                        p_min_value = val
+                    elif tag == "max_value":
+                        p_max_value = val
+
+                try:
+                    # Resolve string to ParamType Enum to satisfy expected type
+                    type_mapping = {
+                        "float": ParamType.FLOAT,
+                        "double": ParamType.FLOAT,
+                        "int": ParamType.INT,
+                        "bool": ParamType.BOOL,
+                        "string": ParamType.STRING,
+                    }
+                    ptype_enum = type_mapping.get(
+                        p_type_str.strip().lower(), ParamType.STRING
+                    )
+
+                    # Safely convert primitives with explicit fallbacks
+                    p_index = int(p_index_str) if p_index_str is not None else 0
+                    p_gap = float(p_gap_str) if p_gap_str is not None else 0.0
+
+                    # 2. Instantiate Parameter using clean, typed arguments
+                    c = Parameter(
+                        name=p_name,
+                        index=p_index,
+                        ptype=ptype_enum,
+                        value=p_value,
+                        gap=p_gap,
+                        min_value=p_min_value,
+                        max_value=p_max_value,
+                    )
+
+                    self.assign_parameter(c)
+
+                    # 3. Add parentheses to is_numeric() to resolve truthy function error
+                    if c.is_numeric() and c.gap:
                         values = 1 + int(
-                            round((c.get_max_value() - c.get_min_value()) / c.get_gap())
+                            round((float(c.max_value) - float(c.min_value)) / c.gap)
                         )
                         self._maxRange = max(values, self._maxRange)
-                    except Exception:
-                        self._logger.exception(
-                            "Problem calculating max range for parameter with index "
-                            + str(c.get_index())
-                            + " and name "
-                            + str(c.get_name())
-                        )
-                        raise
+
+                except Exception:
+                    self._logger.exception(
+                        f"Problem calculating max range for parameter with index "
+                        f"{p_index_str} and name {p_name}"
+                    )
+                    raise
+
             self._logger.debug(
-                "Number of parameters "
-                + str(self._numParams)
-                + "("
-                + str(len(self._params))
-                + ")"
+                f"Number of parameters {self.num_params}({len(self._params)})"
             )
-        except Exception:
+
+        except Exception as e:
             self._logger.exception(
                 "NonSeparableData. Exception while initializing from XML file"
             )
-            sys.exit(111)
-        return
+            raise RuntimeError(
+                "Failed to safely build framework structural elements from configuration source."
+            ) from e

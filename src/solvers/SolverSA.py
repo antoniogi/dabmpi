@@ -12,6 +12,8 @@ import configparser
 import random
 import sys
 
+from core.comms import GlobalComms
+from core.runtime import GlobalRuntime
 from solvers.SolverBase import SolverBase
 
 
@@ -23,7 +25,7 @@ class SolverSA(SolverBase):
             runtime.logger.critical("SA section not specified in the ini file")
             sys.exit(-1)
 
-    def __init__(self, problem_type, infile, runtime):
+    def __init__(self, runtime: GlobalRuntime, comms: GlobalComms):
         runtime.logger.info("SolverSA init")
         self.readConfigFile(runtime)
         random.seed()

@@ -3,7 +3,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,7 +20,7 @@ class TestGlobalRuntimeInitialization:
     def test_default_initialization(self) -> None:
         """Test that GlobalRuntime initializes with correct defaults."""
         runtime = GlobalRuntime()
-        
+
         assert runtime.config_file == ""
         assert runtime.start_time == 0
         assert runtime.iterations == 10
@@ -37,9 +37,9 @@ class TestGlobalRuntimeInitialization:
             iterations=50,
             objective=e.ObjectiveType.MAXIMIZE,
             comm_model=e.CommModelType.ALL2ALL,
-            logger=mock_logger
+            logger=mock_logger,
         )
-        
+
         assert runtime.config_file == "test.xml"
         assert runtime.start_time == 100
         assert runtime.iterations == 50
@@ -49,11 +49,8 @@ class TestGlobalRuntimeInitialization:
 
     def test_partial_custom_initialization(self) -> None:
         """Test GlobalRuntime with some custom values and some defaults."""
-        runtime = GlobalRuntime(
-            config_file="config.xml",
-            iterations=20
-        )
-        
+        runtime = GlobalRuntime(config_file="config.xml", iterations=20)
+
         assert runtime.config_file == "config.xml"
         assert runtime.iterations == 20
         assert runtime.start_time == 0  # default
@@ -102,10 +99,10 @@ class TestValidation:
     def test_validate_after_modification(self) -> None:
         """Test validation after modifying fields."""
         runtime = GlobalRuntime(iterations=50)
-        
+
         # Manually set invalid value (bypassing validation)
         runtime.iterations = -1
-        
+
         # validate() should catch it
         with pytest.raises(ValueError, match="iterations must be positive"):
             runtime.validate()
@@ -118,13 +115,11 @@ class TestLoggingConfiguration:
         """Test log_configuration when logger is present."""
         mock_logger = MagicMock()
         runtime = GlobalRuntime(
-            config_file="test.xml",
-            iterations=25,
-            logger=mock_logger
+            config_file="test.xml", iterations=25, logger=mock_logger
         )
-        
+
         runtime.log_configuration()
-        
+
         # Verify logger.info was called
         assert mock_logger.info.call_count >= 2
         calls = [str(call) for call in mock_logger.info.call_args_list]
@@ -148,19 +143,19 @@ class TestResetMethod:
             start_time=500,
             iterations=100,
             objective=e.ObjectiveType.MAXIMIZE,
-            comm_model=e.CommModelType.ALL2ALL
+            comm_model=e.CommModelType.ALL2ALL,
         )
-        
+
         # Verify changed values
         assert runtime.config_file == "test.xml"
         assert runtime.start_time == 500
         assert runtime.iterations == 100
         assert runtime.objective == e.ObjectiveType.MAXIMIZE
         assert runtime.comm_model == e.CommModelType.ALL2ALL
-        
+
         # Reset
         runtime.reset()
-        
+
         # Verify defaults restored
         assert runtime.config_file == ""
         assert runtime.start_time == 0
@@ -171,13 +166,10 @@ class TestResetMethod:
     def test_reset_with_logger_unchanged(self) -> None:
         """Test that reset() does not affect logger reference."""
         mock_logger = MagicMock()
-        runtime = GlobalRuntime(
-            config_file="test.xml",
-            logger=mock_logger
-        )
-        
+        runtime = GlobalRuntime(config_file="test.xml", logger=mock_logger)
+
         runtime.reset()
-        
+
         # Logger should be unchanged (not reset to None)
         assert runtime.logger == mock_logger
 
@@ -198,16 +190,16 @@ class TestSingletonPattern:
         """Test that get_runtime() returns the same instance."""
         runtime1 = get_runtime()
         runtime2 = get_runtime()
-        
+
         assert runtime1 is runtime2
 
     def test_set_runtime_changes_instance(self) -> None:
         """Test that set_runtime() changes the global instance."""
         original = get_runtime()
-        
+
         new_runtime = GlobalRuntime(iterations=50)
         set_runtime(new_runtime)
-        
+
         current = get_runtime()
         assert current is new_runtime
         assert current is not original
@@ -218,17 +210,17 @@ class TestSingletonPattern:
         # Get initial instance
         runtime1 = get_runtime()
         assert runtime1.iterations == 10
-        
+
         # Modify it
         runtime1.iterations = 100
-        
+
         # Get same instance (should show modification)
         runtime2 = get_runtime()
         assert runtime2.iterations == 100
-        
+
         # Reset
         reset_runtime()
-        
+
         # Get new instance (should have defaults)
         runtime3 = get_runtime()
         assert runtime3.iterations == 10
@@ -238,12 +230,12 @@ class TestSingletonPattern:
         """Test singleton behavior after set and reset."""
         new_runtime = GlobalRuntime(config_file="custom.xml")
         set_runtime(new_runtime)
-        
+
         current = get_runtime()
         assert current.config_file == "custom.xml"
-        
+
         reset_runtime()
-        
+
         another = get_runtime()
         assert another.config_file == ""
         assert another is not new_runtime
@@ -259,21 +251,21 @@ class TestThreadSafety:
     def test_concurrent_get_runtime_calls(self) -> None:
         """Test that concurrent get_runtime() calls are safe."""
         import threading
-        
+
         instances = []
-        
+
         def get_and_store():
             instance = get_runtime()
             instances.append(instance)
-        
+
         threads = [threading.Thread(target=get_and_store) for _ in range(10)]
-        
+
         for thread in threads:
             thread.start()
-        
+
         for thread in threads:
             thread.join()
-        
+
         # All instances should be the same object
         first_instance = instances[0]
         for instance in instances:
@@ -282,23 +274,23 @@ class TestThreadSafety:
     def test_concurrent_set_and_get(self) -> None:
         """Test concurrent set and get operations."""
         import threading
-        
+
         results = []
-        
+
         def set_and_get(value: int) -> None:
             runtime = GlobalRuntime(iterations=value)
             set_runtime(runtime)
             retrieved = get_runtime()
             results.append(retrieved.iterations)
-        
+
         threads = [threading.Thread(target=set_and_get, args=(i,)) for i in range(1, 6)]
-        
+
         for thread in threads:
             thread.start()
-        
+
         for thread in threads:
             thread.join()
-        
+
         # All results should be valid iteration values
         assert all(1 <= val <= 5 for val in results)
 

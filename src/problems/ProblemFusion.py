@@ -1,12 +1,14 @@
 #!/usr/bin/env python
+from typing import Any
 
 from data.VMECProcess import VMECProcess
 from problems.ProblemBase import ProblemBase
 
 
 class ProblemFusion(ProblemBase):
-    def __init__(self, runtime, comms):
-        self._vmec: VMECProcess | None = None
+    _vmec: VMECProcess
+
+    def __init__(self, runtime: Any, comms: Any) -> None:
         try:
             super().__init__(runtime, comms)
             self._vmec = VMECProcess(runtime, comms)
@@ -34,9 +36,7 @@ class ProblemFusion(ProblemBase):
             self._runtime.logger.debug("Start solving Fusion problem")
 
             self.create_input_file(solution)
-            value = self.execute_configuration()
-
-            solution.setValue(value)
+            solution.value = self.execute_configuration()
 
             self._runtime.logger.debug("Finished solving Fusion problem")
 

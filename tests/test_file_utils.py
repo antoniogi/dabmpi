@@ -2,11 +2,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.file_utils import SMALL_FILE_THRESHOLD, tail
+from core.file_utils import tail
 
 
 def test_tail_returns_last_line():
