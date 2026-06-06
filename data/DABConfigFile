@@ -2,7 +2,7 @@
 #Number of employed bees
 nemployed: 5
 #Number of onlooker bees
-nonlooker: 3
+nonlooker: 2
 #Modification factor used by the onlooker bees
 onlookerModFactor: 0.0001
 #Number of iterations before a solution is abandoned

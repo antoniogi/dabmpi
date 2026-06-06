@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import configparser
+import contextlib
 import glob
 import math
 import os
@@ -216,6 +217,16 @@ class VMECProcess:
     or won't call the precompiled executables
     """
 
+    # A clean context manager to safely swap directories and guarantee a return home
+    @contextlib.contextmanager
+    def working_directory(self, path):
+        prev_cwd = os.getcwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(prev_cwd)
+
     def execute_configuration(self) -> float:
         """
         Execute the current configuration and return its objective value.
@@ -231,54 +242,54 @@ class VMECProcess:
             -INFINITY if self._runtime.objective == ObjectiveType.MAXIMIZE else INFINITY
         )
 
-        value = failure_value
-
+        # Use the context manager to completely isolate the execution path changes
         try:
-            os.chdir(self._execPath)
-            self.clean_folder()
+            with self.working_directory(self._execPath):
+                self.clean_folder()
 
-            if not self.run_vmec():
-                return failure_value
-
-            if not self.run_mercier():
-                return failure_value
-
-            if not self.run_threed():
-                return failure_value
-
-            value = self._beta
-
-            if not self.run_ballooning():
-                return failure_value
-
-            if self._bgradb:
-                if not self.run_b_grad_b():
+                # Execute sequential physics steps. If run_vmec() hits an unhandled
+                # FileNotFoundError, it will bubble out past this function, but the
+                # working_directory context manager will STILL safely restore your path first.
+                if not self.run_vmec():
                     return failure_value
-                value = self._bgradbval
 
-            if self._dkes:
-                if not self.run_dkes():
+                if not self.run_mercier():
                     return failure_value
-                value = self._bootstrap
 
-            if not self._is_mercier_stable:
-                self._runtime.logger.info("Unstable mercier")
-                return failure_value
+                if not self.run_threed():
+                    return failure_value
 
-            self.save_configuration()
+                # Base objective starting value
+                value = self._beta
 
-            self._runtime.logger.info(
-                f"VALID configuration({self._comms.rank}). Val: {value}"
-            )
+                if not self.run_ballooning():
+                    return failure_value
 
-            return value
+                if self._bgradb:
+                    if not self.run_b_grad_b():
+                        return failure_value
+                    value = self._bgradbval
+
+                if self._dkes:
+                    if not self.run_dkes():
+                        return failure_value
+                    value = self._bootstrap
+
+                if not self._is_mercier_stable:
+                    self._runtime.logger.info("Unstable mercier")
+                    return failure_value
+
+                self.save_configuration()
+
+                self._runtime.logger.info(
+                    f"VALID configuration({self._comms.rank}). Val: {value}"
+                )
+                return value
 
         except Exception:
+            # Captures unexpected runtime/calculation failures inside the pipeline
             self._runtime.logger.exception("VMECProcess: error executing configuration")
             return failure_value
-
-        finally:
-            os.chdir(self._currentPath)
 
     def save_configuration(self):
         try:
@@ -781,38 +792,72 @@ class VMECProcess:
     """
 
     def run_vmec(self):
-        try:
-            if not os.path.exists(f"input.tj{self._comms.rank}"):
-                return False
-            if not os.path.exists("/home/fraguas/bin/xvmec2000nc"):
-                self._runtime.logger.error(
-                    f"VMECProcess({self._comms.rank}). xvmec2000nc executable doesn't exist"
-                )
-                return False
-            proc = subprocess.Popen(
-                ["/home/fraguas/bin/xvmec2000nc", f"tj{self._comms.rank}"],
-                stdout=subprocess.PIPE,
+        # --- 1. Critical Environment Checks (Halts execution if failed) ---
+        input_file = f"input.tj{self._comms.rank}"
+        executable = "/home/fraguas/bin/xvmec2000nc"
+
+        if not os.path.exists(input_file):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). {input_file} doesn't exist"
             )
-            output = proc.stdout.read()
+
+        if not os.path.exists(executable):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). {executable} doesn't exist"
+            )
+
+        if not os.access(executable, os.X_OK):
+            raise PermissionError(
+                f"VMECProcess({self._comms.rank}). {executable} is not executable"
+            )
+
+        # --- 2. Runtime Execution ---
+        try:
+            with subprocess.Popen(
+                [executable, f"tj{self._comms.rank}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,  # Capture stderr to avoid buffer blocks
+                text=True,  # Automatically decodes bytes to strings
+            ) as proc:
+                try:
+                    output, errors = proc.communicate(timeout=30600)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    output, errors = proc.communicate()
+                    self._runtime.logger.error(
+                        f"VMECProcess({self._comms.rank}): Timed out."
+                    )
+                    return False
+
             self._runtime.logger.debug(output)
+            if errors:
+                self._runtime.logger.warning(f"VMEC stderr: {errors}")
+
+            # Clean up core dumps
             if os.path.exists("core"):
                 os.remove("core")
-            if not os.path.exists(f"wout_tj{self._comms.rank}.txt"):
+
+            # --- 3. Output Validation ---
+            wout_file = f"wout_tj{self._comms.rank}.txt"
+            if not os.path.exists(wout_file):
                 self._runtime.logger.debug(
                     f"VMECProcess({self._comms.rank}): Invalid configuration"
                 )
                 return False
-            last_line = tail(f"wout_tj{self._comms.rank}.txt")
-            if last_line.find("mgrid") != -1:
-                # Invalid configuration
+
+            last_line = tail(wout_file)
+            if "mgrid" in last_line:  # Cleaner Pythonic substring check
                 return False
+
             filenameMercier = f"mercier.tj{self._comms.rank}"
             if not os.path.exists(filenameMercier):
                 return False
+
             self._runtime.logger.info(
-                f"WORKER({self._comms.rank}). Configuration VMEC OK"
+                f"VMECProcess({self._comms.rank}). Good configuration evaluated"
             )
             return True
+
         except Exception:
             self._runtime.logger.exception("VMECProcess: error when running VMEC.")
             return False
@@ -823,40 +868,84 @@ class VMECProcess:
 
     def run_x_grid(self):
         fullpath = f"{self._comms.rank}/{self._filename}"
+        mgrid_dest = f"mgrid.tj{self._comms.rank}"
+        cmd_file = f"cmd_xgrid.tj{self._comms.rank}"
+        coils_dest = f"coils.tj{self._comms.rank}"
+
+        # --- 1. Pre-checks on Input Files ---
+        if not os.path.exists(fullpath):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). Input file {fullpath} doesn't exist."
+            )
+
+        # Check if xgrid execution is actually necessary
         with open(fullpath) as fileinput:
-            line = fileinput.readline()
-            line = fileinput.readline()
-            """
-            Check if we have to run xgrid
-            """
-            runxgrid = True
-            if line.find("mgrid.") == -1:
-                # In this case, running xgrid is not necessary
+            fileinput.readline()  # Skip first line
+            second_line = fileinput.readline()
+
+            if "mgrid." not in second_line:
+                # Running xgrid is not necessary, exit successfully early
                 return True
 
-        if runxgrid:
-            if not os.path.exists("../external/mgrid.tj0"):
-                self._runtime.logger.error("File Mgrid.tj0 doesn't exist")
-                return False
+        # --- 2. Critical Environment Checks (Halts execution if failed) ---
+        if not os.path.exists("../external/mgrid.tj0"):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). External mgrid base file '../external/mgrid.tj0' doesn't exist."
+            )
 
-            shutil.copy2("../external/mgrid.tj0", f"mgrid.tj{self._comms.rank}")
-            if not os.path.exists(f"mgrid.tj{self._comms.rank}"):
-                try:
-                    with open(f"cmd_xgrid.tj{self._comms.rank}", "w") as fcmd_xgrid:
-                        fcmd_xgrid.write(f"tj{self._comms.rank}\n")
-                        fcmd_xgrid.write("y\n")
-                        fcmd_xgrid.write("1.08\n")
-                        fcmd_xgrid.write("1.92\n")
-                        fcmd_xgrid.write("-0.42\n")
-                        fcmd_xgrid.write("0.42\n")
-                        fcmd_xgrid.write("64")
-                    if not os.path.exists("../external/coils"):
-                        self._runtime.logger.error("File coils doesn't exist")
-                        return False
-                    if not os.path.exists(f"coils.tj{self._comms.rank}"):
-                        shutil.copy2("../external/coils", f"coils.tj{self._comms.rank}")
-                    subprocess.call(["./xgrid", f"< cmd_xgrid.tj{self._comms.rank}"])
-                    return True
-                except Exception:
-                    self._runtime.logger.exception("VMECProcess. Error executing xgrid")
-        return False
+        if not os.path.exists("../external/coils"):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). External coils file '../external/coils' doesn't exist."
+            )
+
+        if not os.path.exists("./xgrid"):
+            raise FileNotFoundError(
+                f"VMECProcess({self._comms.rank}). './xgrid' executable not found in current directory."
+            )
+
+        if not os.access("./xgrid", os.X_OK):
+            raise PermissionError(
+                f"VMECProcess({self._comms.rank}). './xgrid' is not executable."
+            )
+
+        # --- 3. Runtime Execution ---
+        try:
+            # Copy the base mgrid file over
+            shutil.copy2("../external/mgrid.tj0", mgrid_dest)
+
+            # Write the interactive command inputs for xgrid
+            with open(cmd_file, "w") as fcmd_xgrid:
+                fcmd_xgrid.write(f"tj{self._comms.rank}\n")
+                fcmd_xgrid.write("y\n")
+                fcmd_xgrid.write("1.08\n")
+                fcmd_xgrid.write("1.92\n")
+                fcmd_xgrid.write("-0.42\n")
+                fcmd_xgrid.write("0.42\n")
+                fcmd_xgrid.write("64\n")  # Added missing newline for the last argument
+
+            # Copy coils file if it's not already in place
+            if not os.path.exists(coils_dest):
+                shutil.copy2("../external/coils", coils_dest)
+
+            # Execute xgrid feeding the command file into stdin safely without shell=True
+            with open(cmd_file, "r") as stdin_file:
+                result = subprocess.run(
+                    ["./xgrid"],
+                    stdin=stdin_file,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    timeout=120,  # Safeguard against xgrid hanging
+                )
+
+            # Log outputs for debugging
+            if result.stdout:
+                self._runtime.logger.debug(f"xgrid stdout: {result.stdout}")
+            if result.stderr:
+                self._runtime.logger.warning(f"xgrid stderr: {result.stderr}")
+
+            return True
+
+        except Exception:
+            self._runtime.logger.exception("VMECProcess. Error executing xgrid")
+            return False
