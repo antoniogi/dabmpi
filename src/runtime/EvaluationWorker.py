@@ -58,9 +58,9 @@ class EvaluationWorker:
                 if elapsed_time + 300 >= float(self._runtime.max_execution_time):
                     break
                 self._runtime.logger.debug(
-                    "WORKER ("
+                    "Worker ("
                     + str(self._rank)
-                    + ") elapsed "
+                    + "). Elapsed "
                     + str(elapsed_time)
                     + " - Runtime "
                     + str(self._runtime)
@@ -99,7 +99,7 @@ class EvaluationWorker:
                 solution_value = array("f", [0]) * 1
                 dump = array("i", [0]) * 1
                 self._runtime.logger.debug(
-                    "WORKER (" + str(self._rank) + ") waiting for a solution"
+                    "Worker (" + str(self._rank) + "). Waiting for a solution"
                 )
                 # self._comm.Isend(dump, dest=0, tag=u.tags.REQINPUT)
                 self._comm.comm.Send(dump, dest=0, tag=Tags.REQINPUT)
@@ -114,7 +114,7 @@ class EvaluationWorker:
                 req.wait(status)
 
                 self._runtime.logger.info(
-                    f"WORKER ( {self._rank} ) has received a solution to evaluate from bee {agent_idx[0]}"
+                    f"Worker ( {self._rank} ). Received a solution to evaluate from bee {agent_idx[0]}"
                 )
                 solution.set_parameters_values(buff)
 
@@ -129,10 +129,10 @@ class EvaluationWorker:
                 req.Wait(status)
 
                 self._runtime.logger.debug(
-                    f"WORKER ( {self._rank} ) Buffer size: {len(buff)}"
+                    f"Worker ( {self._rank} ). Buffer size: {len(buff)}"
                 )
-                self._runtime.logger.debug(
-                    f"WORKER ( {self._rank} ) found solution with value {solution_value[0]}"
+                self._runtime.logger.info(
+                    f"Worker ( {self._rank} ). Found solution with value {solution_value[0]}"
                 )
 
                 self._comm.comm.Send(buff, 0, Tags.COMMSOLUTION)
@@ -141,7 +141,7 @@ class EvaluationWorker:
 
                 solutions_evaluated += 1
             self._runtime.logger.info(
-                f"WORKER ( {self._rank} ) configurations evaluated: {solutions_evaluated}"
+                f"Worker ( {self._rank} ). Configurations evaluated: {solutions_evaluated}"
             )
         except Exception:
             self._runtime.logger.exception("Worker run failed")
@@ -153,4 +153,6 @@ class EvaluationWorker:
     def finish(self):
         end = array("i", [0]) * 1
         self._comm.comm.Send([end, MPI.INT], 0, Tags.ENDSIM)
-        self._runtime.logger.info(f"WORKER ( {self._rank} ) Sent end request to driver")
+        self._runtime.logger.info(
+            f"Worker ( {self._rank} ). Sent end request to driver"
+        )

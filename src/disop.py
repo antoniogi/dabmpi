@@ -170,33 +170,34 @@ def create_mpi_comms() -> GlobalComms:
 
 def run_driver(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the driver-side MPI execution path."""
-    runtime.logger.info("DRIVER - BEGIN OF THE EXECUTION")
+    runtime.logger.warning("Driver. Starting execution")
     solver = create_solver(runtime, global_comms)
     solver.initialize()
     solver.solve()
-    runtime.logger.info("DRIVER has finished solve")
+    runtime.logger.warning("Driver. Finished evaluating solutions")
     solver.finish()
-    runtime.logger.info("DRIVER - END OF THE EXECUTION")
+    runtime.logger.warning("Driver. End of the execution")
 
 
 def run_worker(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the worker-side MPI execution path."""
-    runtime.logger.info(f"WORKER {global_comms.rank} - BEGIN OF THE EXECUTION")
+    runtime.logger.warning(f"Worker {global_comms.rank}. Starting execution")
     worker = EvaluationWorker(runtime, global_comms)
     worker.run()
+    runtime.logger.warning(f"Worker {global_comms.rank}. Finished evaluating solutions")
     worker.finish()
-    runtime.logger.info(f"WORKER {global_comms.rank} - END OF THE EXECUTION")
+    runtime.logger.warning(f"Worker {global_comms.rank}. End of the execution")
 
 
 def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     """Run the ALL2ALL execution path."""
-    runtime.logger.info("ALL2ALL - BEGIN OF THE EXECUTION")
+    runtime.logger.warning("ALL2ALL. Starting execution")
     solver = create_solver(runtime, global_comms)
     solver.initialize()
     solver.solve()
-    runtime.logger.debug(f"Rank {global_comms.rank} has finished solve")
+    runtime.logger.warning(f"Rank {global_comms.rank}. Finished evaluating solutions")
     solver.finish()
-    runtime.logger.info(f"RANK {global_comms.rank} - END OF THE EXECUTION")
+    runtime.logger.warning(f"Rank {global_comms.rank}. End of the execution")
 
 
 def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
@@ -219,7 +220,6 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
     runtime.config_file = cfile
     runtime.start_time = time.time()
     runtime.validate()
-    runtime.log_configuration()
     runtime.comm_model = CommModelType.DRIVERWORKER  # Set default communication model
     runtime.objective = ObjectiveType.MINIMIZE  # Set default objective
 
@@ -259,7 +259,7 @@ def main(runtime, argv=None):
         global_comms = create_mpi_comms()
 
         if global_comms.rank == 0:
-            runtime.logger.info(f"Verbosity level: {args.verbose}")
+            runtime.logger.debug(f"Verbosity level: {args.verbose}")
 
         if runtime.comm_model == CommModelType.DRIVERWORKER:
             if global_comms.rank == 0:

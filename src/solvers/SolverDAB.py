@@ -103,16 +103,16 @@ class BeeBase:
             self._bestGlobalSolution.value = math.inf
 
         self._matrix = matrix
-        self._runtime.logger.info(
+        self._runtime.logger.debug(
             f"Problem initialized (type {self._runtime.problem_type})"
         )
-        self._runtime.logger.info(
+        self._runtime.logger.debug(
             f"Solution initialized (type {self._runtime.problem_type})"
         )
-        self._runtime.logger.info(
+        self._runtime.logger.debug(
             f"Best local solution initialized {self._bestLocalSolution}"
         )
-        self._runtime.logger.info(
+        self._runtime.logger.debug(
             f"Best global solution initialized {self._bestGlobalSolution}"
         )
 
@@ -133,7 +133,7 @@ class BeeBase:
         topSolutions: SolutionsQueue,
         totalSumGoodSolutions: float,
     ):
-        self._runtime.logger.error("Solver DAB. Create new candidate base")
+        self._runtime.logger.error("SolverDAB. Create new candidate base")
         raise NotImplementedError("Abstract bee (calling create new candidate)")
 
     def is_new(
@@ -158,7 +158,7 @@ class BeeBase:
     """
 
     def createRandomSolution(self, pendingSolutions, finishedSolutions):
-        self._runtime.logger.info("Create a new random solution")
+        self._runtime.logger.debug("Create a new random solution")
         solution = None
         params = []
 
@@ -167,7 +167,7 @@ class BeeBase:
                 solution = deepcopy(self.getBestLocalSolution())
                 params = solution.get_parameters()
 
-                self._runtime.logger.debug(f"number of parameters: {len(params)}")
+                self._runtime.logger.debug(f"Number of parameters: {len(params)}")
 
                 for param in params:
                     ptype = param.type
@@ -776,26 +776,28 @@ class SolverDAB(SolverBase):
 
     def print_configuration(self):
         self._runtime.logger.info("SolverDAB configuration:")
-        self._runtime.logger.info("Number of scout bees: 1")
-        self._runtime.logger.info(f"Number of employed bees: {self._nEmployed}")
-        self._runtime.logger.info(f"Number of onlooker bees: {self._nOnlooker}")
+        self._runtime.logger.info("   Number of scout bees: 1")
+        self._runtime.logger.info(f"   Number of employed bees: {self._nEmployed}")
+        self._runtime.logger.info(f"   Number of onlooker bees: {self._nOnlooker}")
         self._runtime.logger.info(
-            f"Onlooker modification factor: {self._onlookerModFactor}"
+            f"   Onlooker modification factor: {self._onlookerModFactor}"
         )
         self._runtime.logger.info(
-            f"Iterations before abandoning a solution: {self._iterAbandoned}"
+            f"   Iterations before abandoning a solution: {self._iterAbandoned}"
         )
         self._runtime.logger.info(
-            f"Probability of change for employed bees: {self._probEmployedChange}"
+            f"   Probability of change for employed bees: {self._probEmployedChange}"
         )
         self._runtime.logger.info(
-            f"Probability of change for onlooker bees: {self._probOnlookerChange}"
+            f"   Probability of change for onlooker bees: {self._probOnlookerChange}"
         )
-        self._runtime.logger.info(f"Use probability matrix: {self._useMatrix}")
-        self._runtime.logger.info(f"Execution time (seconds): {self._exectime}")
-        self._runtime.logger.info(f"Pending solutions queue size: {self._pendingSize}")
+        self._runtime.logger.info(f"   Use probability matrix: {self._useMatrix}")
+        self._runtime.logger.info(f"   Execution time (seconds): {self._exectime}")
         self._runtime.logger.info(
-            f"Maximum number of top solutions stored: {self._maxNumTopSolutions}"
+            f"   Pending solutions queue size: {self._pendingSize}"
+        )
+        self._runtime.logger.info(
+            f"   Maximum number of top solutions stored: {self._maxNumTopSolutions}"
         )
 
     """
@@ -803,7 +805,7 @@ class SolverDAB(SolverBase):
     """
 
     def initialize(self):
-        self._runtime.logger.info("Initializing DAB solver")
+        self._runtime.logger.debug("SolverDAB. Initializing solver")
         try:
             if self._runtime.comm_model == CommModelType.DRIVERWORKER:
                 # initialises the lists of requests
@@ -821,7 +823,7 @@ class SolverDAB(SolverBase):
                     )
 
                 while self._pendingSolutions.queue_size < self._pendingSize:
-                    self._runtime.logger.info(
+                    self._runtime.logger.debug(
                         "Creating initial solutions. Pending queue size: "
                         + str(self._pendingSolutions.queue_size)
                     )
@@ -836,7 +838,9 @@ class SolverDAB(SolverBase):
                         -1.0,
                         -1,
                     )
-            self._runtime.logger.debug("created initial set of solutions")
+            self._runtime.logger.info(
+                "SolverDAB. Initialized. Created initial set of solutions"
+            )
         except Exception:
             self._runtime.logger.exception("SolverDAB exception during initialization")
             raise
@@ -877,7 +881,7 @@ class SolverDAB(SolverBase):
                 # Check if there are abandoned solutions
                 for bee in range(self._nEmployed):
                     if self._bees[bee].getIter() > self._iterAbandoned:
-                        self._runtime.logger.info(
+                        self._runtime.logger.debug(
                             "Bee " + str(bee) + ". Abandoning food source"
                         )
                         solution = self._scout.createNewCandidate(
@@ -971,8 +975,8 @@ class SolverDAB(SolverBase):
                         self._dump, source=destination, tag=Tags.REQINPUT
                     )
                     self._requestsInput[destination] = req
-                    self._runtime.logger.info(
-                        "DRIVER. Solution sent to worker " + str(destination)
+                    self._runtime.logger.debug(
+                        "SolverDAB. Driver. Solution sent to worker " + str(destination)
                     )
                 except Exception:
                     self._runtime.logger.exception(
@@ -1015,7 +1019,7 @@ class SolverDAB(SolverBase):
                 )
                 raise
             try:
-                self._runtime.logger.info(
+                self._runtime.logger.debug(
                     f"SolverDAB. Received solution with value {solVal[0]} from bee {beeIdx[0]}"
                 )
                 if (
@@ -1147,7 +1151,7 @@ class SolverDAB(SolverBase):
                     self._finishedSolutions.put_solution(
                         solutionTemp, solVal[0], beeIdx[0]
                     )
-                    self._runtime.logger.info(
+                    self._runtime.logger.debug(
                         f"SolverDAB. Solution (value {solVal[0]}) added to the list of finished solutions"
                     )
                     if float(solVal[0]) >= 0.0 and float(solVal[0]) < (
@@ -1189,12 +1193,12 @@ class SolverDAB(SolverBase):
                                     and float(solVal[0])
                                     < float(self._bees[beeIdx[0]].getBestLocalValue())
                                 ):
-                                    self._runtime.logger.info(
+                                    self._runtime.logger.debug(
                                         "Bee " + str(beeIdx[0]) + ". Resetting counter"
                                     )
                                     self._bees[beeIdx[0]].setIter(0)
                                     solutionTemp.value = solVal[0]
-                                    self._runtime.logger.info(
+                                    self._runtime.logger.debug(
                                         "Bee "
                                         + str(beeIdx[0])
                                         + ". Best local "
@@ -1208,7 +1212,7 @@ class SolverDAB(SolverBase):
                             self._bees[beeIdx[0]].setIter(
                                 self._bees[beeIdx[0]].getIter() + 1
                             )
-                            self._runtime.logger.info(
+                            self._runtime.logger.debug(
                                 f"Bee {beeIdx[0]}. Current iterations {self._bees[beeIdx[0]].getIter()}"
                             )
             except Exception:
@@ -1217,7 +1221,9 @@ class SolverDAB(SolverBase):
                 )
                 raise
 
-            self._runtime.logger.info(f"SolverDAB. Received solution (worker {source})")
+            self._runtime.logger.debug(
+                f"SolverDAB. Received solution (worker {source})"
+            )
             sourceIdx, flag = MPI.Request.Testany(self._requestSolution, status)
 
     """
@@ -1225,7 +1231,7 @@ class SolverDAB(SolverBase):
     """
 
     def solve(self):
-        self._runtime.logger.info("DAB solver started")
+        self._runtime.logger.info("SolverDAB. Solver started")
 
         if self._runtime.comm_model == CommModelType.DRIVERWORKER:
             while not self.check_finish():
@@ -1341,7 +1347,7 @@ class SolverDAB(SolverBase):
             # Check if there are abandoned solutions
             for bee in range(self._nEmployed):
                 if self._bees[bee].getIter() > self._iterAbandoned:
-                    self._runtime.logger.info(
+                    self._runtime.logger.debug(
                         "Bee " + str(bee) + ". Abandoning food source"
                     )
                     newSolution = self._scout.createNewCandidate(
@@ -1427,8 +1433,8 @@ class SolverDAB(SolverBase):
                 return False
             all_null = all(request == MPI.REQUEST_NULL for request in self._requestsEnd)
             if all_null:
-                self._runtime.logger.info(
-                    "SolverDAB[Driver]. All workers have finished"
+                self._runtime.logger.debug(
+                    "SolverDAB [Driver]. All workers have finished"
                 )
                 return True
             status = MPI.Status()
@@ -1437,7 +1443,7 @@ class SolverDAB(SolverBase):
                 source = status.source
                 self._requestsEnd[source] = MPI.REQUEST_NULL
                 self._runtime.logger.info(
-                    f"SolverDAB. Received a termination request from worker {source}"
+                    f"SolverDAB [Driver]. Received a termination request from worker {source}"
                 )
             return False
         except Exception:
@@ -1446,4 +1452,4 @@ class SolverDAB(SolverBase):
 
     def finish(self):
         self._pendingSolutions.write_all_solutions()
-        self._runtime.logger.info("DAB Driver finished")
+        self._runtime.logger.info("SolverDAB [Driver] finished")

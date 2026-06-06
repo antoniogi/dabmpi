@@ -61,12 +61,6 @@ class GlobalRuntime:
                 f"max_valid_solution_value must be > 0, got {self.max_valid_solution_value}"
             )
 
-    def log_configuration(self) -> None:
-        """Log current configuration for debugging."""
-        if self.logger:
-            self.logger.info(f"  Iterations: {self.iterations}")
-            self.logger.info(f"  Config File: {self.config_file}")
-
     def reset(self) -> None:
         """Reset to default values (primarily for testing)."""
         self.config_file = ""

@@ -108,31 +108,6 @@ class TestValidation:
             runtime.validate()
 
 
-class TestLoggingConfiguration:
-    """Test logging functionality."""
-
-    def test_log_configuration_with_logger(self) -> None:
-        """Test log_configuration when logger is present."""
-        mock_logger = MagicMock()
-        runtime = GlobalRuntime(
-            config_file="test.xml", iterations=25, logger=mock_logger
-        )
-
-        runtime.log_configuration()
-
-        # Verify logger.info was called
-        assert mock_logger.info.call_count >= 2
-        calls = [str(call) for call in mock_logger.info.call_args_list]
-        assert any("25" in str(call) for call in calls)
-        assert any("test.xml" in str(call) for call in calls)
-
-    def test_log_configuration_without_logger(self) -> None:
-        """Test log_configuration when logger is None."""
-        runtime = GlobalRuntime(logger=None)
-        # Should not raise exception
-        runtime.log_configuration()
-
-
 class TestResetMethod:
     """Test the reset() method."""
 
