@@ -115,7 +115,6 @@ class BeeBase:
         self._runtime.logger.info(
             f"Best global solution initialized {self._bestGlobalSolution}"
         )
-        return
 
     def getIter(self):
         return self._itersinceLastUpdate
@@ -135,10 +134,7 @@ class BeeBase:
         totalSumGoodSolutions: float,
     ):
         self._runtime.logger.error("Solver DAB. Create new candidate base")
-        raise NotImplementedError(
-            "Abstract bee (calling create\
-                                   new candidate)"
-        )
+        raise NotImplementedError("Abstract bee (calling create new candidate)")
 
     def is_new(
         self,
@@ -147,15 +143,10 @@ class BeeBase:
         finished_solutions: SolutionsQueue,
     ) -> bool:
         try:
-            # if pending_solutions is None or finished_solutions is None:
-            #    return True
             pending = pending_solutions.get_all_solutions()
             finished = finished_solutions.get_all_solutions()
             return solution not in pending and solution not in finished
-            # pending = set(pending_solutions.get_all_solutions())
-            # finished = set(finished_solutions.get_all_solutions())
-            # return solution not in pending and solution not in finished
-        except:
+        except Exception:
             self._runtime.logger.exception("Error checking if solution is new")
             raise
 
@@ -173,7 +164,7 @@ class BeeBase:
 
         try:
             for _ in range(self._max_attempts):
-                solution = self.getBestLocalSolution()
+                solution = deepcopy(self.getBestLocalSolution())
                 params = solution.get_parameters()
 
                 self._runtime.logger.debug(f"number of parameters: {len(params)}")
@@ -213,35 +204,22 @@ class BeeBase:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
 
                     param.value = new_value
+                solution.set_parameters(params)
                 if self.is_new(solution, pendingSolutions, finishedSolutions):
                     break
             else:
                 raise RuntimeError(
                     f"Failed to generate a new unique solution after {self._max_attempts} attempts"
                 )
-
         except:
             self._runtime.logger.exception("Error creating random solution")
             raise
 
-        solution.set_parameters(params)
         solution.print()
-
         return solution
-
-    """
-    This function is used to check the value of the best local solution. This
-    will be used to decide whether an employed bee becomes a scout
-    """
 
     def getBestLocalValue(self):
         return self._bestLocalSolution.value
-
-    """
-    Allows to modify the best local solution. When a scout generates a new
-    a new solution after one solution has been abandoned, it replaces the
-    best local solution of the employed by this new solution
-    """
 
     def setSolution(self, solution):
         self._bestLocalSolution = solution
@@ -275,7 +253,6 @@ class Employed(BeeBase):
         self._neighbours = []
         self._probEmployedChange = change
         self._useMatrix = useMatrix
-        return
 
     def getSolutionBasedOnMatrix(self, solution):
         if not self._useMatrix:
@@ -339,7 +316,7 @@ class Employed(BeeBase):
                 )
                 return solution, -1
 
-            solution = self.getBestLocalSolution()
+            solution = deepcopy(self.getBestLocalSolution())
 
             if self._useMatrix:
                 if random.randint(0, 10) == 0:
@@ -403,10 +380,11 @@ class Employed(BeeBase):
 
                         minVal, maxVal = sorted((minVal, maxVal))
 
-                        if minVal == maxVal:
-                            new_value = minVal
-                        else:
-                            new_value = random.randint(int(minVal), int(maxVal))
+                        new_value = (
+                            minVal
+                            if minVal == maxVal
+                            else random.randint(int(minVal), int(maxVal))
+                        )
 
                     else:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
@@ -427,7 +405,7 @@ class Employed(BeeBase):
             )
 
         except Exception:
-            self._runtime.logger.exception("SolverDAB exception.")
+            self._runtime.logger.exception("SolverDAB exception inside Employed Bee.")
             raise
 
 
@@ -440,7 +418,6 @@ class Scout(BeeBase):
     def __init__(self, runtime, comms, matrix):
         runtime.logger.info("Creating scout bee")
         super().__init__(runtime, comms, matrix)
-        return
 
     """
     Creates a new random solution
@@ -463,7 +440,7 @@ class Scout(BeeBase):
             solution = self.createRandomSolution(pendingSolutions, finishedSolutions)
             return solution, -1
         except Exception:
-            self._runtime.logger.exception("SolverDAB exception.")
+            self._runtime.logger.exception("SolverDAB exception inside Scout Bee.")
             raise
 
 
@@ -485,7 +462,6 @@ class Onlooker(BeeBase):
         super().__init__(runtime, comms, matrix)
         self._modFactor = modFactor
         self._probOnlookerChange = probChange
-        return
 
     def createNewCandidate(
         self,
@@ -500,9 +476,9 @@ class Onlooker(BeeBase):
         val = random.uniform(0.0, totalSumGoodSolutions)
 
         solutionTuple = topSolutions.get_tuple_on_priority_by_value(val)
-        solution = solutionTuple[0]
+        base_solution = solutionTuple[0]
 
-        if solution is None:
+        if base_solution is None:
             self._runtime.logger.debug(
                 "Onlooker. Couldn't select a solution "
                 "from the list of finished solutions"
@@ -513,10 +489,10 @@ class Onlooker(BeeBase):
 
         try:
             for _ in range(self._max_attempts):
-                for param in solution.get_parameters():
-                    val = random.randint(0, self._probOnlookerChange)
-
-                    if val != 0:
+                solution = deepcopy(base_solution)
+                params = solution.get_parameters()
+                for param in params:
+                    if random.randint(0, int(self._probOnlookerChange)) != 0:
                         continue
 
                     ptype = param.type
@@ -526,63 +502,53 @@ class Onlooker(BeeBase):
                         continue
 
                     elif ptype is ParamType.FLOAT:
-                        minVal = param.min_value
-                        maxVal = param.max_value
                         currentVal = param.value
                         minNewVal = currentVal - self._modFactor * currentVal
                         maxNewVal = currentVal + self._modFactor * currentVal
 
-                        minVal = max(minVal, minNewVal)
-                        maxVal = min(maxVal, maxNewVal)
-
+                        minVal = max(param.min_value, minNewVal)
+                        maxVal = min(param.max_value, maxNewVal)
                         minVal, maxVal = sorted((minVal, maxVal))
 
                         if minVal == maxVal:
                             new_value = minVal
-
                         else:
-                            gap = param.gap
-
-                            if not gap:
-                                new_value = random.uniform(minVal, maxVal)
-                            else:
-                                new_value = self.randrange_float(minVal, maxVal, gap)
-
+                            new_value = (
+                                random.uniform(minVal, maxVal)
+                                if not param.gap
+                                else self.randrange_float(minVal, maxVal, param.gap)
+                            )
                     elif ptype is ParamType.BOOL:
                         new_value = random.choice((True, False))
 
                     elif ptype is ParamType.INT:
-                        minVal = param.min_value
-                        maxVal = param.max_value
                         currentVal = param.value
                         gap = abs(param.gap)
 
-                        minNewVal = int(currentVal - 2 * gap)
-                        maxNewVal = int(currentVal + 2 * gap)
-
-                        if minNewVal != currentVal:
-                            minVal = max(minVal, minNewVal)
-
-                        if maxNewVal != currentVal:
-                            maxVal = min(maxVal, maxNewVal)
-
-                        if minVal == maxVal:
-                            minVal = maxVal - 1
-
+                        minVal = max(param.min_value, int(currentVal - 2 * gap))
+                        maxVal = min(param.max_value, int(currentVal + 2 * gap))
                         minVal, maxVal = sorted((minVal, maxVal))
 
-                        new_value = random.randint(int(minVal), int(maxVal))
-                        if minVal == maxVal == currentVal:
-                            continue  # Prevents infinite loop in case the only possible value is the current one
-                        while new_value == currentVal:
+                        if minVal == maxVal:
+                            new_value = minVal
+                        else:
                             new_value = random.randint(int(minVal), int(maxVal))
-
+                            # Quick protection logic to ensure structural change if possible
+                            if new_value == currentVal and minVal != maxVal:
+                                alternatives = [
+                                    v
+                                    for v in range(int(minVal), int(maxVal) + 1)
+                                    if v != currentVal
+                                ]
+                                if alternatives:
+                                    new_value = random.choice(alternatives)
                     else:
                         raise ValueError(f"Unsupported parameter type: {ptype}")
 
                     if new_value != param.value:
                         param.value = new_value
 
+                solution.set_parameters(params)
                 if self.is_new(solution, pendingSolutions, finishedSolutions):
                     self._runtime.logger.debug(
                         "Onlooker. Selected a solution "
@@ -601,10 +567,8 @@ class Onlooker(BeeBase):
             )
 
         except Exception:
-            self._runtime.logger.exception("SolverDAB exception.")
+            self._runtime.logger.exception("SolverDAB exception inside Onlooker Bee.")
             raise
-
-        return None, None
 
 
 """
@@ -645,7 +609,7 @@ class SolverDAB(SolverBase):
             self._requestsEnd: list[MPI.Request] = []
             self._requestsInput: list[MPI.Request] = []
             self._requestSolution: list[MPI.Request] = []
-            for i in range(self._comms.size):
+            for _ in range(self._comms.size):
                 self._requestSolution.append(MPI.REQUEST_NULL)
 
             self._dump = array("i", [0]) * 1
@@ -873,7 +837,7 @@ class SolverDAB(SolverBase):
                         -1,
                     )
             self._runtime.logger.debug("created initial set of solutions")
-        except:
+        except Exception:
             self._runtime.logger.exception("SolverDAB exception during initialization")
             raise
 
@@ -1349,7 +1313,7 @@ class SolverDAB(SolverBase):
                         self._runtime.objective == ObjectiveType.MINIMIZE
                         and float(solutionValue) < float(self._bestGlobalSolution.value)
                     ):
-                        self._bestGlobalSolution = self._bestSolution
+                        self._bestGlobalSolution = deepcopy(self._bestSolution)
 
                     # buff = self._bestSolution.get_parameters_values()
                     solValue[0] = solutionValue
@@ -1421,7 +1385,7 @@ class SolverDAB(SolverBase):
                             and float(solutionValue)
                             < float(self._bestGlobalSolution.value)
                         ):
-                            self._bestGlobalSolution = self._bestSolution
+                            self._bestGlobalSolution = deepcopy(self._bestSolution)
 
                         # buff = self._bestSolution.get_parameters_values()
                         solValue[0] = solutionValue
