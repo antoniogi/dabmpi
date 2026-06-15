@@ -67,7 +67,7 @@ class BeeBase:
         random.seed()
         # Number of iterations since the local solution
         # was created
-        self._itersinceLastUpdate = 0
+        self.iterations_since_update = 0
         self._runtime = runtime
         self._comms = comms
         self._max_attempts = 1000
@@ -116,11 +116,11 @@ class BeeBase:
             f"Best global solution initialized {self._bestGlobalSolution}"
         )
 
-    def getIter(self):
-        return self._itersinceLastUpdate
+    def increase_iterations(self) -> None:
+        self.iterations_since_update += 1
 
-    def setIter(self, val):
-        self._itersinceLastUpdate = val
+    def reset_iterations(self) -> None:
+        self.iterations_since_update = 0
 
     def getBestLocalSolution(self):
         return self._bestLocalSolution
@@ -728,7 +728,7 @@ class SolverDAB(SolverBase):
                 Create bees
                 """
                 idxBees = 0
-                for i in range(self._nEmployed):
+                for _ in range(self._nEmployed):
                     self._bees.insert(
                         idxBees,
                         Employed(
@@ -740,11 +740,11 @@ class SolverDAB(SolverBase):
                         ),
                     )
                     idxBees += 1
-                self._runtime.logger.debug(
+                self._runtime.logger.info(
                     "Created " + str(self._nEmployed) + " employed bees"
                 )
 
-                for i in range(self._nOnlooker):
+                for _ in range(self._nOnlooker):
                     self._bees.insert(
                         idxBees,
                         Onlooker(
@@ -756,7 +756,7 @@ class SolverDAB(SolverBase):
                         ),
                     )
                     idxBees += 1
-                self._runtime.logger.debug(
+                self._runtime.logger.info(
                     "Created " + str(self._nOnlooker) + " onlooker bees"
                 )
 
@@ -768,7 +768,7 @@ class SolverDAB(SolverBase):
                 it is just called when needed
                 """
                 self._scout = Scout(self._runtime, self._comms, self._probMatrix)
-                self._runtime.logger.debug("Created 1 scout bee")
+                self._runtime.logger.info("Created 1 scout bee")
                 self.print_configuration()
         except Exception:
             self._runtime.logger.exception("SolverDAB exception during initialization")
@@ -880,7 +880,7 @@ class SolverDAB(SolverBase):
 
                 # Check if there are abandoned solutions
                 for bee in range(self._nEmployed):
-                    if self._bees[bee].getIter() > self._iterAbandoned:
+                    if self._bees[bee].iterations_since_update > self._iterAbandoned:
                         self._runtime.logger.debug(
                             "Bee " + str(bee) + ". Abandoning food source"
                         )
@@ -891,7 +891,7 @@ class SolverDAB(SolverBase):
                             self._topSolutions,
                             self._totalSumGoodSolutions,
                         )[0]
-                        self._bees[bee].setIter(0)
+                        self._bees[bee].reset_iterations()
                         self._bees[bee].setSolution(solution)
                         self._runtime.logger.debug(
                             "Scout bee putting solution on pending queue"
@@ -1145,76 +1145,68 @@ class SolverDAB(SolverBase):
                         f"SolverDAB. Solution is None after creation (type {self._runtime.problem_type})"
                     )
                     raise
-                else:
-                    solutionTemp.set_parameters_values(buff)
 
-                    self._finishedSolutions.put_solution(
-                        solutionTemp, solVal[0], beeIdx[0]
-                    )
-                    self._runtime.logger.debug(
-                        f"SolverDAB. Solution (value {solVal[0]}) added to the list of finished solutions"
-                    )
-                    if float(solVal[0]) >= 0.0 and float(solVal[0]) < (
-                        math.inf / 100.0
-                    ):
-                        if isNewBest:
-                            parameters = solutionTemp.get_parameters()
-                            if self._useMatrix:
-                                try:
-                                    for i in range(self._probMatrix.get_num_rows()):
-                                        for j in range(self._probMatrix.get_num_cols()):
-                                            val = self._probMatrix.getitem(i, j)
-                                            newVal = max(1.0, val - 0.5)
-                                            self._probMatrix.setitem(i, j, newVal)
-                                    for i in range(len(parameters)):
-                                        idx = (
-                                            parameters[i].value
-                                            - parameters[i].min_value
-                                        )
-                                        idx = idx / parameters[i].gap
-                                        idx = round(idx)
-                                        idx = int(idx)
-                                        val = self._probMatrix.getitem(i, idx)
-                                        self._probMatrix.setitem(i, idx, val + 5.0)
-                                except Exception:
-                                    self._runtime.logger.exception(
-                                        "SolverDAB. Exception updating probability matrix for new best solution"
-                                    )
-                        # Update the best local solution in the bees
-                        reset = False
-                        if int(beeIdx[0]) >= 0 and int(beeIdx[0]) < len(self._bees):
-                            if float(solVal[0]) >= 0.0:
-                                if (
-                                    self._runtime.objective == ObjectiveType.MAXIMIZE
-                                    and float(solVal[0])
-                                    > float(self._bees[beeIdx[0]].getBestLocalValue())
-                                ) or (
-                                    self._runtime.objective == ObjectiveType.MINIMIZE
-                                    and float(solVal[0])
-                                    < float(self._bees[beeIdx[0]].getBestLocalValue())
-                                ):
-                                    self._runtime.logger.debug(
-                                        "Bee " + str(beeIdx[0]) + ". Resetting counter"
-                                    )
-                                    self._bees[beeIdx[0]].setIter(0)
-                                    solutionTemp.value = solVal[0]
-                                    self._runtime.logger.debug(
-                                        "Bee "
-                                        + str(beeIdx[0])
-                                        + ". Best local "
-                                        + str(self._bees[beeIdx[0]].getBestLocalValue())
-                                        + " new best "
-                                        + str(solVal[0])
-                                    )
-                                    self._bees[beeIdx[0]].setSolution(solutionTemp)
-                                    reset = True
-                        if not reset:
-                            self._bees[beeIdx[0]].setIter(
-                                self._bees[beeIdx[0]].getIter() + 1
-                            )
+                solutionTemp.set_parameters_values(buff)
+
+                self._finishedSolutions.put_solution(solutionTemp, solVal[0], beeIdx[0])
+                self._runtime.logger.debug(
+                    f"SolverDAB. Solution (value {solVal[0]}) added to the list of finished solutions"
+                )
+                if float(solVal[0]) >= 0.0 and float(solVal[0]) < (math.inf / 100.0):
+                    if isNewBest:
+                        parameters = solutionTemp.get_parameters()
+                        if self._useMatrix:
+                            try:
+                                for i in range(self._probMatrix.get_num_rows()):
+                                    for j in range(self._probMatrix.get_num_cols()):
+                                        val = self._probMatrix.getitem(i, j)
+                                        newVal = max(1.0, val - 0.5)
+                                        self._probMatrix.setitem(i, j, newVal)
+                                for i in range(len(parameters)):
+                                    idx = parameters[i].value - parameters[i].min_value
+                                    idx = round(idx / parameters[i].gap)
+                                    val = self._probMatrix.getitem(i, idx)
+                                    self._probMatrix.setitem(i, idx, val + 5.0)
+                            except Exception:
+                                self._runtime.logger.exception(
+                                    "SolverDAB. Exception updating probability matrix for new best solution"
+                                )
+                    # Update the best local solution in the bees
+                    bee_idx = int(beeIdx[0])
+                    sol_val = float(solVal[0])
+
+                    if bee_idx >= len(self._bees):
+                        raise IndexError(
+                            f"Invalid bee index {bee_idx}. Number of bees: {len(self._bees)}"
+                        )
+
+                    bee = self._bees[bee_idx] if bee_idx >= 0 else self._scout
+                    reset = False
+                    if sol_val >= 0.0:
+                        best_local = float(bee.getBestLocalValue())
+                        if self._runtime.objective == ObjectiveType.MAXIMIZE:
+                            improved = sol_val > best_local
+                        else:
+                            improved = sol_val < best_local
+                        if improved:
                             self._runtime.logger.debug(
-                                f"Bee {beeIdx[0]}. Current iterations {self._bees[beeIdx[0]].getIter()}"
+                                f"Bee {bee_idx}. Resetting counter"
                             )
+                            bee.reset_iterations()
+                            solutionTemp.value = sol_val
+                            self._runtime.logger.debug(
+                                f"Bee {bee_idx}. Best local {best_local} "
+                                f"new best {sol_val}"
+                            )
+                            bee.setSolution(solutionTemp)
+                            reset = True
+
+                    if not reset:
+                        bee.increase_iterations()
+                        self._runtime.logger.debug(
+                            f"Bee {bee_idx}. Current iterations "
+                            f"{bee.iterations_since_update}"
+                        )
             except Exception:
                 self._runtime.logger.exception(
                     "SolverDAB. Exception while processing received solution"
@@ -1357,7 +1349,7 @@ class SolverDAB(SolverBase):
                         self._topSolutions,
                         self._totalSumGoodSolutions,
                     )[0]
-                    self._bees[bee].setIter(0)
+                    self._bees[bee].reset_iterations()
                     self._bees[bee].setSolution(newSolution)
                     self._problem.solve(newSolution)
                     solutionValue = float(newSolution.value)

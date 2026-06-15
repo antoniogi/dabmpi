@@ -133,7 +133,7 @@ class EvaluationWorker:
                     f"Worker ( {self._rank} ). Buffer size: {len(buff)}"
                 )
                 self._runtime.logger.info(
-                    f"Worker ( {self._rank} ). Found solution with value {solution_value[0]}"
+                    f"Worker ( {self._rank} ). Found solution with value {solution_value[0]} sent by bee {agent_idx[0]}"
                 )
 
                 self._comm.comm.Send(buff, 0, Tags.COMMSOLUTION)
