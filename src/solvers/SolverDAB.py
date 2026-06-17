@@ -245,16 +245,20 @@ Employed bees
 
 
 class Employed(BeeBase):
-    def __init__(self, runtime, comms, matrix, change, useMatrix):
+    def __init__(
+        self,
+        runtime: GlobalRuntime,
+        comms: GlobalComms,
+        matrix: Matrix,
+        change: int,
+        useMatrix: bool,
+    ):
         runtime.logger.info("Creating employed bee")
         super().__init__(runtime, comms, matrix)
-        # list of neighbours of the current best local solution. This list is
-        # used to create new solutions
-        self._neighbours = []
         self._probEmployedChange = change
         self._useMatrix = useMatrix
 
-    def getSolutionBasedOnMatrix(self, solution):
+    def getSolutionBasedOnMatrix(self, solution: SolutionBase):
         if not self._useMatrix:
             return solution
         values = self._matrix.__repr__()
@@ -455,8 +459,8 @@ class Onlooker(BeeBase):
         runtime: GlobalRuntime,
         comms: GlobalComms,
         matrix: Matrix,
-        modFactor,
-        probChange,
+        modFactor: float,
+        probChange: float,
     ):
         runtime.logger.info("Creating onlooker bee")
         super().__init__(runtime, comms, matrix)
