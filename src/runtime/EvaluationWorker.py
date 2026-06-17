@@ -9,6 +9,7 @@ from mpi4py import MPI
 from core.comms import GlobalComms
 from core.enums import ProblemType, Tags
 from core.runtime import GlobalRuntime
+from problems.ProblemBase import ProblemBase
 from problems.ProblemCristina import ProblemCristina
 from problems.ProblemFusion import ProblemFusion
 from problems.ProblemNonSeparable import ProblemNonSeparable
@@ -16,9 +17,15 @@ from solution.SolutionCristina import SolutionCristina
 from solution.SolutionFusion import SolutionFusion
 from solution.SolutionNonSeparable import SolutionNonSeparable
 
+PROBLEM_TYPE_REGISTRY = {
+    ProblemType.FUSION: (ProblemFusion, SolutionFusion),
+    ProblemType.NONSEPARABLE: (ProblemNonSeparable, SolutionNonSeparable),
+    ProblemType.CRISTINA: (ProblemCristina, SolutionCristina),
+}
+
 
 class EvaluationWorker:
-    _problem: ProblemFusion | ProblemNonSeparable | ProblemCristina
+    _problem: ProblemBase | ProblemFusion | ProblemNonSeparable | ProblemCristina
 
     def __init__(self, runtime: GlobalRuntime, comm: GlobalComms):
         try:
@@ -29,12 +36,10 @@ class EvaluationWorker:
 
             self._end = array("i", [0])
             self._requestsEnd: list[MPI.Request] = []
-            if self._runtime.problem_type == ProblemType.FUSION:
-                self._problem = ProblemFusion(runtime, comm)
-            elif self._runtime.problem_type == ProblemType.NONSEPARABLE:
-                self._problem = ProblemNonSeparable(runtime, comm)
-            elif self._runtime.problem_type == ProblemType.CRISTINA:
-                self._problem = ProblemCristina(runtime, comm)
+
+            if self._runtime.problem_type in PROBLEM_TYPE_REGISTRY:
+                problem_cls, _ = PROBLEM_TYPE_REGISTRY[self._runtime.problem_type]
+                self._problem = problem_cls(self._runtime, self._comm)
             else:
                 raise ValueError(f"Unknown problem type: {self._runtime.problem_type}")
         except Exception:
@@ -67,6 +72,13 @@ class EvaluationWorker:
                 )
                 # Send a request for data
                 status = MPI.Status()
+                _, solution_cls = PROBLEM_TYPE_REGISTRY[self._runtime.problem_type]
+                template = solution_cls.get_template_data(self._runtime, self._comm)
+                solution = solution_cls(
+                    self._runtime, self._comm, data=deepcopy(template)
+                )
+
+                """
                 if self._runtime.problem_type == ProblemType.FUSION:
                     template = SolutionFusion.get_template_data(
                         self._runtime, self._comm
@@ -93,7 +105,7 @@ class EvaluationWorker:
                     raise ValueError(
                         f"Unknown problem type: {self._runtime.problem_type}"
                     )
-
+                """
                 num_params = solution.get_number_of_params()
                 buff = array("f", [0]) * num_params
                 solution_value = array("f", [0]) * 1
