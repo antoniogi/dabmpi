@@ -144,12 +144,12 @@ def parse_arguments(argv=None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def configure_runtime(runtime: GlobalRuntime, args) -> None:
+def configure_runtime(runtime: GlobalRuntime, comms: GlobalComms, args) -> None:
     """Apply parsed CLI values to runtime and initialize config."""
     problem_type = PROBLEM_MAP[args.problem]
     solver_type = CLI_SOLVER_MAP[args.solver]
 
-    bootstrap_runtime(args.cfile, runtime, args.verbose)
+    bootstrap_runtime(args.cfile, runtime, comms, args.verbose)
 
     runtime.problem_type = problem_type
     runtime.solver_type = solver_type
@@ -200,7 +200,9 @@ def run_all2all(runtime: GlobalRuntime, global_comms: GlobalComms) -> None:
     runtime.logger.warning(f"Rank {global_comms.rank}. End of the execution")
 
 
-def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
+def bootstrap_runtime(
+    cfile: str, runtime: GlobalRuntime, comms: GlobalComms, verbose: int
+) -> None:
     """
     Initialize the global configuration and logging system.
 
@@ -214,7 +216,12 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
     logger = LoggerConfig.create_logger(
         log_file="disop.log",
         console_level=LOG_LEVELS[verbose],  # Map verbosity to log level
+        rank=comms.rank,
     )
+    # Call a barrier since only one rank inside the logger created a backup of the log files
+    # It's not really needed, but it's good to have
+    comms.comm.Barrier()
+    # logger.addFilter(MPIRankFilter(comms.rank))
     # Get runtime and update it
     runtime.logger = logger
     runtime.config_file = cfile
@@ -254,13 +261,12 @@ def bootstrap_runtime(cfile: str, runtime: GlobalRuntime, verbose: int) -> None:
 def main(runtime, argv=None):
     args = parse_arguments(argv)
     try:
-        configure_runtime(runtime, args)
-
         global_comms = create_mpi_comms()
 
         if global_comms.rank == 0:
             runtime.logger.debug(f"Verbosity level: {args.verbose}")
 
+        configure_runtime(runtime, global_comms, args)
         if runtime.comm_model == CommModelType.DRIVERWORKER:
             if global_comms.rank == 0:
                 run_driver(runtime, global_comms)
